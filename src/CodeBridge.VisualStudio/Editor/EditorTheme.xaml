@@ -35,6 +35,35 @@
         </Setter>
     </Style>
 
+    <!-- ===== PasswordBox ===== -->
+    <Style TargetType="PasswordBox">
+        <Setter Property="Background" Value="{DynamicResource VsInputBackground}"/>
+        <Setter Property="Foreground" Value="{DynamicResource VsToolWindowText}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource VsInputBorder}"/>
+        <Setter Property="CaretBrush" Value="{DynamicResource VsToolWindowText}"/>
+        <Setter Property="SelectionBrush" Value="{DynamicResource VsHighlight}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="4,2"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="PasswordBox">
+                    <Border x:Name="Chrome" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                        <ScrollViewer x:Name="PART_ContentHost" Padding="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Focusable="False"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource VsHighlight}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ===== ScrollBar ===== -->
     <Style x:Key="ScrollThumb" TargetType="Thumb">
         <Setter Property="Template">

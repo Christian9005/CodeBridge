@@ -21,6 +21,7 @@
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
+#include <ESPmDNS.h>
 #include <soc/soc_caps.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -412,22 +413,71 @@ void saveWifiConfig();
 void connectWifi();
 void handleTcpClients();
 
-// Wi-Fi saved in flash is joined in the background after boot: waiting for it here delayed the
-// CODEBRIDGE_READY banner by up to 10 seconds whenever the access point was not reachable.
-static bool wifiBootPending = false;
+// Wi-Fi saved in flash is joined in the background (waiting for it at boot delayed the CODEBRIDGE_READY banner by up to
+// 10 seconds when the access point was not reachable). serviceWifi() keeps trying for as long as the board is on, starts
+// the network services when the link comes up and stops them when it goes down, so a slow router, a router restart or a
+// power cut never leaves the board unreachable until someone presses reset.
+static bool wifiBootPending = false;          // a join attempt was started and is still within its time slot
 static unsigned long wifiBootStartedAt = 0;
-static const unsigned long WIFI_BOOT_TIMEOUT_MS = 15000;
+static const unsigned long WIFI_ATTEMPT_MS = 20000;
+static bool tcpServerRunning = false;
 
-static void pollBootWifi() {
-  if (!wifiBootPending) return;
+// "codebridge-a1b2.local": the last 4 hex digits of the MAC address make the name unique per board.
+static void startMdns() {
+  String mac = WiFi.macAddress();
+  mac.replace(":", "");
+  mac.toLowerCase();
+  String host = "codebridge-" + mac.substring(mac.length() - 4);
 
-  if (WiFi.status() == WL_CONNECTED) {
-    wifiBootPending = false;
-    wifiConnected = true;
-    wifiEnabled = true;
+  MDNS.end();
+  if (!MDNS.begin(host.c_str())) return;
+  MDNS.addService("codebridge", "tcp", TCP_PORT);
+  MDNS.addServiceTxt("codebridge", "tcp", "id", mac);
+  MDNS.addServiceTxt("codebridge", "tcp", "fw", FIRMWARE_VERSION);
+  MDNS.addServiceTxt("codebridge", "tcp", "board", ESP.getChipModel());
+  MDNS.addServiceTxt("codebridge", "tcp", "auth", strlen(apiToken) > 0 ? "1" : "0");
+}
+
+static void startNetworkServices() {
+  wifiConnected = true;
+  wifiEnabled = true;
+  wifiBootPending = false;
+  WiFi.setSleep(false);  // modem sleep adds ~100 ms to every answer
+  if (!tcpServerRunning) {
     tcpServer.begin();
-  } else if (millis() - wifiBootStartedAt > WIFI_BOOT_TIMEOUT_MS) {
-    wifiBootPending = false;  // keep working over USB serial only
+    tcpServerRunning = true;
+  }
+  startMdns();
+}
+
+static void stopNetworkServices() {
+  wifiConnected = false;
+  for (int i = 0; i < MAX_TCP_CLIENTS; i++) {
+    if (tcpClients[i]) tcpClients[i].stop();
+    tcpCmdIndexes[i] = 0;
+    tcpOverflow[i] = false;
+    tcpAuthed[i] = false;
+  }
+  if (tcpServerRunning) {
+    tcpServer.end();
+    tcpServerRunning = false;
+  }
+}
+
+static void serviceWifi() {
+  if (WiFi.status() == WL_CONNECTED) {
+    if (!wifiConnected) startNetworkServices();
+    return;
+  }
+
+  if (wifiConnected) stopNetworkServices();  // the link was lost
+  if (strlen(wifiSSID) == 0) return;
+
+  if (!wifiBootPending || millis() - wifiBootStartedAt > WIFI_ATTEMPT_MS) {
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(wifiSSID, wifiPassword);
+    wifiBootPending = true;
+    wifiBootStartedAt = millis();
   }
 }
 
@@ -480,7 +530,7 @@ void setup() {
 //  MAIN LOOP
 // ══════════════════════════════════════════════════════════════
 void loop() {
-  pollBootWifi();
+  serviceWifi();
 
   // Handle Serial
   while (Serial.available()) {
@@ -564,9 +614,7 @@ void connectWifi() {
   }
 
   if (WiFi.status() == WL_CONNECTED) {
-    wifiConnected = true;
-    wifiEnabled = true;
-    tcpServer.begin();
+    startNetworkServices();
 
     Serial.println(" Connected!");
     Serial.print("WiFi: IP = ");
@@ -1191,7 +1239,7 @@ static void applyWifiConfig(const String& ssid, const String& pass) {
 
   if (wifiConnected) {
     WiFi.disconnect();
-    wifiConnected = false;
+    stopNetworkServices();
   }
 
   connectWifi();
@@ -1236,7 +1284,21 @@ void handleWifiStatus() {
 
 // WSCAN — Scan available WiFi networks
 void handleWifiScan() {
+  // A join attempt in progress (for example to a saved network that is not around) makes the scan fail and return nothing:
+  // stop it for the scan and resume it afterwards.
+  if (!wifiConnected) {
+    wifiBootPending = false;
+    WiFi.disconnect();
+    delay(150);
+  }
+  WiFi.mode(WIFI_STA);
   int n = WiFi.scanNetworks();
+  if (n < 0) {
+    sendError("Wi-Fi scan failed");
+    n = 0;
+    if (!wifiConnected && strlen(wifiSSID) > 0) { WiFi.begin(wifiSSID, wifiPassword); wifiBootPending = true; wifiBootStartedAt = millis(); }
+    return;
+  }
 
   JsonDocument doc;
   JsonArray networks = doc["networks"].to<JsonArray>();
@@ -1249,6 +1311,12 @@ void handleWifiScan() {
   }
 
   WiFi.scanDelete();
+
+  if (!wifiConnected && strlen(wifiSSID) > 0) {
+    WiFi.begin(wifiSSID, wifiPassword);
+    wifiBootPending = true;
+    wifiBootStartedAt = millis();
+  }
 
   String json;
   serializeJson(doc, json);

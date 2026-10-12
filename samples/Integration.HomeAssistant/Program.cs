@@ -6,6 +6,7 @@
 //
 //  Before the first run, in Home Assistant:
 //    1. Install and start the "Mosquitto broker" add-on and the MQTT integration.
+//       (Home Assistant in Docker has no add-ons: run an eclipse-mosquitto container instead, see docs/home-assistant.md.)
 //    2. Create a user for CodeBridge (Settings -> People -> Users) and note its name and password.
 //
 //  Then:

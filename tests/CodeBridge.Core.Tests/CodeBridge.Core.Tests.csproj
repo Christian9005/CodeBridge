@@ -27,6 +27,7 @@
     <ProjectReference Include="..\..\src\CodeBridge.ESP32\CodeBridge.ESP32.csproj" />
     <ProjectReference Include="..\..\src\CodeBridge.Transport\CodeBridge.Transport.csproj" />
     <ProjectReference Include="..\..\src\CodeBridge.Hosting\CodeBridge.Hosting.csproj" />
+    <ProjectReference Include="..\..\src\CodeBridge.PlatformIO\CodeBridge.PlatformIO.csproj" />
   </ItemGroup>
 
   <ItemGroup>

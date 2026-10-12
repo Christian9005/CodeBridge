@@ -47,6 +47,9 @@ public class WifiTransport : ITransport
         _token = string.IsNullOrEmpty(accessToken) ? null : accessToken;
     }
 
+    /// <summary>How long a command may take before it counts as lost. Raise it for slow operations such as an OTA update.</summary>
+    public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromSeconds(5);
+
     /// <summary>
     /// Maximum connection attempts when the ESP32 is not yet reachable (e.g., booting).
     /// </summary>
@@ -194,7 +197,7 @@ public class WifiTransport : ITransport
             if (_needsResync)
                 await ResyncAsync(ct);
 
-            var response = await ExchangeAsync(command, TimeSpan.FromSeconds(5), ct);
+            var response = await ExchangeAsync(command, CommandTimeout, ct);
             ThrowIfAccessDenied(response);
             return response;
         }

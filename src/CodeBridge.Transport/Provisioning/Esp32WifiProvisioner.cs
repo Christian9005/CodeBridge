@@ -10,10 +10,10 @@ namespace CodeBridge.Transport.Provisioning;
 public sealed record WifiNetwork(string Ssid, int Rssi, bool Secured);
 
 /// <summary>The board's current Wi-Fi state.</summary>
-public sealed record WifiStatus(bool Connected, string? Ssid, string? IpAddress, int Port, int Rssi);
+public sealed record WifiStatus(bool Connected, string? Ssid, string? IpAddress, int Port, int Rssi, string? Mac = null);
 
 /// <summary>What the board reported after joining the network, plus the token the PC must use from now on.</summary>
-public sealed record WifiProvisioningResult(string IpAddress, int Port, string AccessToken);
+public sealed record WifiProvisioningResult(string IpAddress, int Port, string AccessToken, string? DeviceId = null);
 
 /// <summary>
 /// Configures an ESP32's Wi-Fi over its USB connection: scans networks, stores the SSID and password in the board's flash
@@ -70,7 +70,8 @@ public sealed class Esp32WifiProvisioner
             root.TryGetProperty("ssid", out var ssid) ? ssid.GetString() : null,
             root.TryGetProperty("ip", out var ip) ? ip.GetString() : null,
             root.TryGetProperty("port", out var port) && port.TryGetInt32(out var p) ? p : 8080,
-            root.TryGetProperty("rssi", out var rssi) && rssi.TryGetInt32(out var rs) ? rs : 0);
+            root.TryGetProperty("rssi", out var rssi) && rssi.TryGetInt32(out var rs) ? rs : 0,
+            root.TryGetProperty("mac", out var mac) ? mac.GetString() : null);
     }
 
     /// <summary>
@@ -100,7 +101,21 @@ public sealed class Esp32WifiProvisioner
         // OK:<ip>:<port>
         var parts = data.Split(BridgeProtocol.SEPARATOR);
         var port = parts.Length > 1 && int.TryParse(parts[^1], out var p) ? p : 8080;
-        return new WifiProvisioningResult(parts[0], port, token);
+
+        // The MAC address is the board's stable identity (the same one it announces on the network), so the token can be
+        // found again after the router hands the board a different IP address.
+        string? deviceId = null;
+        try
+        {
+            var status = await GetStatusAsync(ct);
+            deviceId = status.Mac?.Replace(":", string.Empty).ToLowerInvariant();
+        }
+        catch (Exception)
+        {
+            // pairing worked; the id is a convenience
+        }
+
+        return new WifiProvisioningResult(parts[0], port, token, deviceId);
     }
 
     /// <summary>Removes the pairing token: the board stops accepting network clients until it is paired again.</summary>

@@ -31,6 +31,9 @@ public sealed record BoardProfile(
     /// <summary>The ESP32 family can also be controlled over Wi-Fi; the Arduino boards use USB only.</summary>
     public bool SupportsWifi => Family == CodeBridge.Core.Enums.BoardFamily.ESP32;
 
+    /// <summary>The pin of the on-board LED that a plain blink test can use, or null when the board has none that way.</summary>
+    public int? BuiltInLedPin { get; init; }
+
     /// <summary>Highest pin number of the board.</summary>
     public int MaxPin => Pins.Count == 0 ? 0 : Pins.Max(pin => pin.Number);
 

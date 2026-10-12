@@ -25,7 +25,8 @@ namespace CodeBridge.VisualStudio.Editor
             Testing,
             Uploading,
             Connecting,
-            Running
+            Running,
+            Publishing
         }
 
         private sealed class BoardItem
@@ -43,6 +44,7 @@ namespace CodeBridge.VisualStudio.Editor
             public string Name { get; set; } = string.Empty;
             public string? Description { get; set; }
             public string? SuggestedBoard { get; set; }
+            public string? DeviceId { get; set; }
             public override string ToString() => string.IsNullOrEmpty(Description) ? Name : $"{Name}  ({Description})";
         }
 
@@ -85,6 +87,7 @@ namespace CodeBridge.VisualStudio.Editor
             SetButton(ConnectButton, IconKind.Connect, "Connect");
             SetButton(UploadButton, IconKind.Upload, "Upload Firmware");
             SetButton(WifiButton, IconKind.Wifi, "Wi-Fi");
+            SetButton(HomeAssistantButton, IconKind.Home, "Home Assistant");
             SetButton(RunButton, IconKind.Run, "Run");
             SetButton(StopButton, IconKind.Stop, "Stop");
             SetButton(UndoButton, IconKind.Undo, null);
@@ -96,17 +99,19 @@ namespace CodeBridge.VisualStudio.Editor
             SetButton(FitButton, IconKind.Fit, null);
             SetButton(OutputButton, IconKind.Output, null);
             SetButton(BoardViewButton, IconKind.Board, "Pins");
+            SetButton(MonitorButton, IconKind.Monitor, "Monitor");
             SetButton(ClearOutputButton, IconKind.Clear, null);
 
             BoardCombo.ItemsSource = _boards;
             BoardCombo.SelectionChanged += OnBoardSelectionChanged;
-            PortCombo.DropDownOpened += (_, __) => _ = RefreshPortsAsync(keepSelection: true);
+            PortCombo.DropDownOpened += (_, __) => { _ = RefreshPortsAsync(keepSelection: true); _ = DiscoverWifiBoardsAsync(); };
             PortCombo.LostKeyboardFocus += (_, __) => RememberPort();
 
-            RefreshPortsButton.Click += (_, __) => _ = RefreshPortsAsync(keepSelection: true);
+            RefreshPortsButton.Click += (_, __) => { _ = RefreshPortsAsync(keepSelection: true); _ = DiscoverWifiBoardsAsync(); };
             ConnectButton.Click += (_, __) => TestConnection();
             UploadButton.Click += (_, __) => UploadFirmware();
             WifiButton.Click += (_, __) => ShowWifiSetup();
+            HomeAssistantButton.Click += (_, __) => ShowHomeAssistant();
             RunButton.Click += (_, __) => RunFlow();
             StopButton.Click += (_, __) => StopHost();
             UndoButton.Click += (_, __) => Undo();
@@ -117,6 +122,7 @@ namespace CodeBridge.VisualStudio.Editor
             ZoomInButton.Click += (_, __) => CanvasBorder.ZoomBy(1.2);
             FitButton.Click += (_, __) => FitView();
             OutputButton.Click += (_, __) => ShowOutput(OutputPanel.Visibility != Visibility.Visible);
+            MonitorButton.Click += (_, __) => Monitor.SerialMonitorLauncher.TryOpen(GetPort());
             BoardViewButton.Click += (_, __) => ShowBoardView(BoardPanel.Visibility != Visibility.Visible);
             ClearOutputButton.Click += (_, __) => OutputText.Clear();
 
@@ -156,6 +162,7 @@ namespace CodeBridge.VisualStudio.Editor
 
             _ = LoadBoardsAsync();
             _ = RefreshPortsAsync(keepSelection: false);
+            _ = DiscoverWifiBoardsAsync();
             ScheduleValidation();
         }
 
@@ -295,6 +302,9 @@ namespace CodeBridge.VisualStudio.Editor
                     .Where(p => p.Name.Length > 0)
                     .ToList();
 
+                _serialPorts = ports;
+                ports = ports.Concat(_wifiPorts).ToList();
+
                 var typed = PortCombo.Text;
                 PortCombo.ItemsSource = ports;
 
@@ -309,6 +319,51 @@ namespace CodeBridge.VisualStudio.Editor
                     PortCombo.Text = typed;
 
                 UpdateToolbarState();
+            });
+        }
+
+        private List<PortItem> _serialPorts = new List<PortItem>();
+        private List<PortItem> _wifiPorts = new List<PortItem>();
+
+        /// <summary>Looks for CodeBridge boards announcing themselves on the network and adds them to the Port list.</summary>
+        private async System.Threading.Tasks.Task DiscoverWifiBoardsAsync()
+        {
+            if (!HostClient.IsAvailable)
+                return;
+
+            var messages = await HostClient.QueryAsync("wifi-boards");
+            var message = messages.FirstOrDefault(m => m.Type == "wifi-boards");
+            if (message == null)
+                return;
+
+            await Dispatcher.InvokeAsync(() =>
+            {
+                _wifiPorts = message.List("boards")
+                    .Select(b => new PortItem
+                    {
+                        Name = b.Str("target") ?? string.Empty,
+                        Description = $"Wi-Fi · {b.Str("name")} · firmware {b.Str("firmware") ?? "?"}",
+                        SuggestedBoard = b.Str("suggestedBoard"),
+                        DeviceId = b.Str("id")
+                    })
+                    .Where(p => p.Name.Length > 0)
+                    .ToList();
+
+                if (_wifiPorts.Count == 0)
+                    return;
+
+                var typed = PortCombo.Text;
+                var selected = GetPort();
+                PortCombo.ItemsSource = _serialPorts.Concat(_wifiPorts).ToList();
+                PortCombo.Text = typed;
+                if (!string.IsNullOrEmpty(selected))
+                {
+                    var match = _wifiPorts.FirstOrDefault(p => string.Equals(p.Name, selected, StringComparison.OrdinalIgnoreCase));
+                    if (match != null)
+                        PortCombo.SelectedItem = match;
+                }
+
+                AppendOutput($"Found {_wifiPorts.Count} board(s) on the network: " + string.Join(", ", _wifiPorts.Select(p => p.Name)));
             });
         }
 
@@ -368,7 +423,19 @@ namespace CodeBridge.VisualStudio.Editor
         }
 
         /// <summary>The saved pairing token when the port box holds a Wi-Fi address; USB ports need none.</summary>
-        private static string? TokenFor(string port) => BoardTokens.IsSerialPort(port) ? null : BoardTokens.Get(port);
+        private string? TokenFor(string port)
+        {
+            if (BoardTokens.IsSerialPort(port))
+                return null;
+
+            // By address first; a board that got a new IP address is recognized by its identity (its MAC address).
+            var token = BoardTokens.Get(port);
+            if (token != null)
+                return token;
+
+            var found = _wifiPorts.FirstOrDefault(p => string.Equals(p.Name, port, StringComparison.OrdinalIgnoreCase));
+            return found?.DeviceId == null ? null : BoardTokens.Get(found.DeviceId);
+        }
 
         private void ShowWifiSetup()
         {
@@ -401,12 +468,65 @@ namespace CodeBridge.VisualStudio.Editor
             window.ShowDialog();
         }
 
+        private void ShowHomeAssistant()
+        {
+            if (!RequireHost())
+                return;
+
+            var publishing = _state == RunState.Publishing;
+            if (!publishing && _state != RunState.Idle)
+                return;
+
+            var inputs = _document.Nodes.Count(n => n.Type.StartsWith("gpio.", StringComparison.OrdinalIgnoreCase));
+            var summary = _document.Nodes.Count == 0
+                ? "The flow is empty: add Digital Output, PWM Output, Analog Read or Digital Read blocks first."
+                : $"This flow has {inputs} GPIO block(s) to share.";
+            var window = new HomeAssistantWindow(publishing, summary) { Owner = Window.GetWindow(this) };
+            window.StopRequested += StopHost;
+            window.PublishRequested += StartHomeAssistant;
+            window.ShowDialog();
+        }
+
+        private void StartHomeAssistant(HomeAssistantSettings settings)
+        {
+            if (_state != RunState.Idle || !RequirePort(out var port))
+                return;
+
+            if (_document.Nodes.Count == 0)
+            {
+                ShowOutput(true);
+                AppendOutput("The flow is empty. Add Digital Output, PWM Output, Analog Read or Digital Read blocks first.");
+                return;
+            }
+
+            var path = WriteTempFlow();
+            if (path == null)
+                return;
+
+            RememberPort();
+            var board = CurrentBoardItem?.Id ?? _document.BoardId;
+            StartHost(
+                $"ha-bridge --flow {HostClient.Quote(path)} --board {board} --port {HostClient.Quote(port)}",
+                RunState.Publishing,
+                $"Publishing to Home Assistant ({settings.Broker})...",
+                TokenFor(port),
+                settings.ToHostJson());
+        }
+
         private void UploadFirmware()
         {
             if (_state != RunState.Idle || !RequireHost() || !RequirePort(out var port))
                 return;
 
             var board = CurrentBoardItem ?? _boards[0];
+
+            // A Wi-Fi address instead of a COM port: update over the air.
+            if (!BoardTokens.IsSerialPort(port) && !port.Equals("simulator", StringComparison.OrdinalIgnoreCase))
+            {
+                UpdateOverWifi(board, port);
+                return;
+            }
+
             if (!board.CanFlash)
             {
                 ShowOutput(true);
@@ -428,6 +548,29 @@ namespace CodeBridge.VisualStudio.Editor
 
             RememberPort();
             StartHost($"upload --board {board.Id} --port {HostClient.Quote(port)}", RunState.Uploading, $"Uploading firmware to {port}...");
+        }
+
+        private void UpdateOverWifi(BoardItem board, string host)
+        {
+            if (!board.SupportsWifi)
+            {
+                ShowOutput(true);
+                AppendOutput($"{board.DisplayName} has no Wi-Fi. Pick its USB port to upload the firmware.");
+                return;
+            }
+
+            var answer = MessageBox.Show(
+                $"Update the firmware of {board.DisplayName} at {host} over Wi-Fi?\n\n" +
+                "The board downloads the new firmware from this PC and restarts (about 30 seconds). " +
+                "Windows may ask to allow this program through the firewall: allow it on private networks.",
+                "Update firmware over Wi-Fi",
+                MessageBoxButton.OKCancel,
+                MessageBoxImage.Question);
+            if (answer != MessageBoxResult.OK)
+                return;
+
+            RememberPort();
+            StartHost($"ota --board {board.Id} --host {HostClient.Quote(host)}", RunState.Uploading, $"Updating firmware over Wi-Fi ({host})...", TokenFor(host));
         }
 
         private void RunFlow()
@@ -468,8 +611,16 @@ namespace CodeBridge.VisualStudio.Editor
 
         private bool _stopRequested;
 
-        private void StartHost(string arguments, RunState state, string message, string? accessToken = null)
+        private void StartHost(string arguments, RunState state, string message, string? accessToken = null, string? stdinLine = null)
         {
+            // The serial monitor keeps its port open; a flow, a connection test or a firmware upload needs the port to itself.
+            var port = GetPort();
+            if (port.Length > 0 && Monitor.SerialPortLease.Release(port))
+            {
+                AppendOutput($"The serial monitor was closed so {port} can be used here.");
+                System.Threading.Thread.Sleep(400); // let the operating system release the port
+            }
+
             _stopRequested = false;
             _sawResult = false;
             _lastResultSuccess = false;
@@ -483,7 +634,8 @@ namespace CodeBridge.VisualStudio.Editor
                     arguments,
                     m => Dispatcher.BeginInvoke(new Action(() => HandleHostMessage(m))),
                     (code, error) => Dispatcher.BeginInvoke(new Action(() => OnHostExit(code, error))),
-                    accessToken);
+                    accessToken,
+                    stdinLine);
             }
             catch (Exception ex)
             {
@@ -505,6 +657,12 @@ namespace CodeBridge.VisualStudio.Editor
                     AppendOutput(message.Str("text") ?? string.Empty);
                     break;
 
+                case "ha-entities":
+                    AppendOutput("Shown in Home Assistant as device '" + message.Str("device") + "':");
+                    foreach (var entity in message.List("entities"))
+                        AppendOutput($"  {entity.Str("kind")}: {entity.Str("name")}");
+                    break;
+
                 case "connected":
                     _lastConnectionSummary = $"{message.Str("name")} · firmware {message.Str("firmware")}";
                     AppendOutput($"Connected to {message.Str("name")} (firmware {message.Str("firmware")}).");
@@ -512,6 +670,10 @@ namespace CodeBridge.VisualStudio.Editor
                         SetBaseStatus($"Connected · {_lastConnectionSummary}", DotOk);
                     else
                         SetBaseStatus($"Running · {_lastConnectionSummary}", DotBusy);
+                    break;
+
+                case "ota-progress":
+                    SetBaseStatus($"Updating over Wi-Fi... {message.Str("percent")}%", DotBusy);
                     break;
 
                 case "pin":
@@ -612,6 +774,9 @@ namespace CodeBridge.VisualStudio.Editor
                 case RunState.Uploading:
                     SetBaseStatus(ok ? "Firmware uploaded. Press Connect or Run." : "Firmware upload failed", ok ? DotOk : DotError);
                     break;
+                case RunState.Publishing:
+                    SetBaseStatus(ok ? "Stopped publishing to Home Assistant" : "Publishing to Home Assistant stopped with errors", ok ? DotIdle : DotError);
+                    break;
                 default:
                     SetBaseStatus(ok ? "Flow finished" : "Flow stopped with errors", ok ? DotOk : DotError);
                     break;
@@ -678,6 +843,7 @@ namespace CodeBridge.VisualStudio.Editor
             ConnectButton.IsEnabled = idle && host;
             UploadButton.IsEnabled = idle && host && (CurrentBoardItem?.CanFlash ?? true);
             WifiButton.IsEnabled = idle && host && CurrentBoardItem?.SupportsWifi == true;
+            HomeAssistantButton.IsEnabled = host && (idle || _state == RunState.Publishing);
             RunButton.IsEnabled = idle && host;
             ArrangeButton.IsEnabled = idle;
             ExportButton.IsEnabled = idle && host;
@@ -686,7 +852,7 @@ namespace CodeBridge.VisualStudio.Editor
 
             var tip = host ? null : "Unavailable: the CodeBridge FlowHost is missing from the extension.";
             ConnectButton.ToolTip = tip ?? "Test the connection with the board and read its firmware version";
-            UploadButton.ToolTip = tip ?? "Install the CodeBridge firmware on the board (bootloader + firmware)";
+            UploadButton.ToolTip = tip ?? "Install the CodeBridge firmware on the board: over USB, or over Wi-Fi (no cable) when a network address is selected";
             RunButton.ToolTip = tip ?? "Run this flow on the board";
         }
 

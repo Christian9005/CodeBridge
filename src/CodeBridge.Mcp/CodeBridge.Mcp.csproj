@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>CodeBridge.Mcp</PackageId>
+    <AssemblyName>codebridge-mcp</AssemblyName>
+    <RootNamespace>CodeBridge.Mcp</RootNamespace>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>codebridge-mcp</ToolCommandName>
+    <Description>MCP server for CodeBridge: lets an AI assistant learn a board (pins, capabilities, rules), design and validate flows, and test them on the built-in simulator before touching hardware.</Description>
+    <PackageTags>$(PackageTags);mcp;model-context-protocol;ai;agents</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CodeBridge.Hosting\CodeBridge.Hosting.csproj" />
+    <ProjectReference Include="..\CodeBridge.Flow\CodeBridge.Flow.csproj" />
+    <ProjectReference Include="..\CodeBridge.PlatformIO\CodeBridge.PlatformIO.csproj" />
+  </ItemGroup>
+
+</Project>

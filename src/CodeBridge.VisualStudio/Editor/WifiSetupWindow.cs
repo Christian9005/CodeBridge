@@ -170,6 +170,7 @@ namespace CodeBridge.VisualStudio.Editor
 
             var ip = provisioned.Str("ip") ?? string.Empty;
             var token = provisioned.Str("token");
+            var deviceId = provisioned.Str("deviceId");
             if (ip.Length == 0 || string.IsNullOrEmpty(token))
             {
                 SetBusy(false, "The board answered without an address. Try again.");
@@ -179,6 +180,8 @@ namespace CodeBridge.VisualStudio.Editor
             try
             {
                 BoardTokens.Set(ip, token!);
+                if (!string.IsNullOrEmpty(deviceId))
+                    BoardTokens.Set(deviceId!, token!); // the board keeps this identity when the router gives it another IP address
             }
             catch (Exception ex)
             {

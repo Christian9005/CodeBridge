@@ -92,7 +92,7 @@
     <Content Include="LICENSE.txt">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="..\..\artifacts\packages\CodeBridge.*.$(Version).nupkg" Exclude="..\..\artifacts\packages\CodeBridge.VisualStudio.*.nupkg;..\..\artifacts\packages\CodeBridge.Hosting.*.nupkg;..\..\artifacts\packages\CodeBridge.Blazor.*.nupkg;..\..\artifacts\packages\CodeBridge.HomeAssistant.*.nupkg">
+    <Content Include="..\..\artifacts\packages\CodeBridge.*.$(Version).nupkg" Exclude="..\..\artifacts\packages\CodeBridge.VisualStudio.*.nupkg;..\..\artifacts\packages\CodeBridge.Hosting.*.nupkg;..\..\artifacts\packages\CodeBridge.Blazor.*.nupkg;..\..\artifacts\packages\CodeBridge.HomeAssistant.*.nupkg;..\..\artifacts\packages\CodeBridge.Mcp.*.nupkg;..\..\artifacts\packages\CodeBridge.PlatformIO.*.nupkg">
       <Link>Packages\%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>

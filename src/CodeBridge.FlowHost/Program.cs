@@ -8,6 +8,9 @@ using CodeBridge.Flow.CodeGeneration;
 using CodeBridge.Flow.Execution;
 using CodeBridge.Flow.Serialization;
 using CodeBridge.Flow.Validation;
+using CodeBridge.PlatformIO;
+using CodeBridge.Transport.Discovery;
+using CodeBridge.Transport.Ota;
 using CodeBridge.Transport.Provisioning;
 using CodeBridge.Transport.Serial;
 
@@ -15,9 +18,9 @@ namespace CodeBridge.FlowHost;
 
 /// <summary>
 /// Usage: CodeBridge.FlowHost &lt;command&gt; [--option value]...
-/// Commands: boards | ports | catalog | validate | export | test | upload | run | wifi-scan | wifi-status | wifi-config | wifi-unpair
+/// Commands: boards | ports | wifi-boards | catalog | validate | export | test | upload | ota | run | wifi-scan | wifi-status | wifi-config | wifi-unpair | monitor | ha-find | ha-test | ha-bridge | pio-info | pio-new | pio-build | pio-upload | pio-clean
 /// </summary>
-internal static class Program
+internal static partial class Program
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {
@@ -51,6 +54,17 @@ internal static class Program
             {
                 "boards" => Boards(),
                 "ports" => Ports(),
+                "wifi-boards" => await WifiBoardsAsync(cancellation.Token),
+                "ha-find" => await HomeAssistantFindAsync(cancellation.Token),
+                "ha-test" => await HomeAssistantTestAsync(cancellation.Token),
+                "ha-bridge" => await HomeAssistantBridgeAsync(options, cancellation),
+                "ota" => await OtaAsync(options, cancellation.Token),
+                "monitor" => await MonitorAsync(options, cancellation.Token),
+                "pio-info" => PioInfo(),
+                "pio-new" => PioNew(options),
+                "pio-build" => await PioRunAsync(options, "build", cancellation.Token),
+                "pio-upload" => await PioRunAsync(options, "upload", cancellation.Token),
+                "pio-clean" => await PioRunAsync(options, "clean", cancellation.Token),
                 "catalog" => Catalog(options),
                 "validate" => Validate(options),
                 "export" => Export(options),
@@ -274,6 +288,355 @@ internal static class Program
         }
     }
 
+    // ---------------------------------------------------------------- code mode (PlatformIO)
+
+    private static int PioInfo()
+    {
+        var tool = PioLocator.Find();
+        Emit(new { type = "pio-info", found = tool is not null, version = tool?.Version, tool = tool?.Description, hint = tool is null ? PioLocator.InstallHint : null });
+        return 0;
+    }
+
+    /// <summary>Creates a firmware project. "--template bridge" starts from the CodeBridge bridge firmware itself, ready to customize.</summary>
+    private static int PioNew(Options options)
+    {
+        var board = ResolveBoard(options)!;
+        var directory = options.Get("dir") ?? throw new InvalidOperationException("Choose the folder for the new project.");
+        var template = (options.Get("template") ?? "blink").ToLowerInvariant();
+
+        IReadOnlyList<string> files;
+        if (template == "bridge")
+        {
+            var firmware = HardwareToolLocator.ResolveFirmwareDirectory(board.Id)
+                ?? throw new DirectoryNotFoundException("The bridge firmware sources were not found. Reinstall CodeBridge Visual Studio Tools.");
+            var sources = new[] { "platformio.ini", Path.Combine("src", "main.cpp") }.Select(f => Path.Combine(firmware, f)).ToList();
+            if (sources.Any(f => !File.Exists(f)))
+                throw new FileNotFoundException("The bridge firmware sources are incomplete in this installation.");
+
+            files = PioProject.Create(directory, board.Id, FirmwareTemplate.Empty);
+            File.Copy(sources[0], Path.Combine(directory, "platformio.ini"), overwrite: true);
+            File.Copy(sources[1], Path.Combine(directory, "src", "main.cpp"), overwrite: true);
+        }
+        else
+        {
+            var kind = template switch { "serial" or "plot" or "serialplot" => FirmwareTemplate.SerialPlot, "empty" => FirmwareTemplate.Empty, _ => FirmwareTemplate.Blink };
+            files = PioProject.Create(directory, board.Id, kind);
+        }
+
+        Emit(new { type = "pio-created", directory, files, entry = Path.Combine(directory, "src", "main.cpp") });
+        return 0;
+    }
+
+    private static async Task<int> PioRunAsync(Options options, string action, CancellationToken ct)
+    {
+        var tool = PioLocator.Find();
+        if (tool is null)
+        {
+            Emit(new { type = "error", message = PioLocator.InstallHint });
+            return 1;
+        }
+
+        var directory = PioProject.FindRoot(options.Get("dir")) ?? throw new InvalidOperationException("That folder is not a PlatformIO project (no platformio.ini was found).");
+        var environment = options.Get("env");
+        Emit(new { type = "status", state = "building", message = $"PlatformIO {action} in {directory}..." });
+
+        var onLine = new Action<string>(line => Emit(new { type = "log", text = line }));
+        PioRunResult result;
+        switch (action)
+        {
+            case "upload":
+                var port = options.Get("port") ?? throw new InvalidOperationException("Select the board's USB port first.");
+                result = await PioRunner.UploadAsync(tool, directory, port, environment, onLine, ct);
+                break;
+            case "clean":
+                result = await PioRunner.CleanAsync(tool, directory, environment, onLine, ct);
+                break;
+            default:
+                result = await PioRunner.BuildAsync(tool, directory, environment, onLine, ct);
+                break;
+        }
+
+        foreach (var d in result.Diagnostics)
+            Emit(new { type = "diagnostic", severity = d.Severity, message = d.Message, file = d.File, line = d.Line, column = d.Column });
+
+        Emit(new
+        {
+            type = "result",
+            success = result.Success,
+            message = result.Success
+                ? $"PlatformIO {action} finished in {result.Duration.TotalSeconds:0.#} s ({result.Warnings} warning(s))."
+                : $"PlatformIO {action} failed: {result.Errors} error(s), {result.Warnings} warning(s).",
+            errors = result.Errors,
+            warnings = result.Warnings
+        });
+        return result.Success ? 0 : 1;
+    }
+
+    // ---------------------------------------------------------------- serial monitor
+
+    /// <summary>
+    /// Streams what a board prints on its serial port ("lines" messages, batched every 40 ms) and sends what the user types.
+    /// Standard input: "stop", "reset" (pulses the reset line like the flashing tools do) or "&gt;text" (sent to the board followed by
+    /// the chosen line ending). "--port simulator" produces demo data so the plotter can be tried without a board.
+    /// </summary>
+    private static async Task<int> MonitorAsync(Options options, CancellationToken ct)
+    {
+        var port = options.Get("port") ?? throw new InvalidOperationException("Select a serial port first.");
+        var newline = (options.Get("newline") ?? "lf").ToLowerInvariant() switch { "crlf" => "\r\n", "cr" => "\r", "none" => string.Empty, _ => "\n" };
+        var baud = options.GetInt("baud", 115200);
+        var simulated = port.Equals("simulator", StringComparison.OrdinalIgnoreCase);
+
+        using var stop = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var pending = new List<string>();
+        var gate = new object();
+        System.IO.Ports.SerialPort? serial = null;
+        var outbox = System.Threading.Channels.Channel.CreateUnbounded<string>();
+
+        if (!simulated)
+        {
+            serial = new System.IO.Ports.SerialPort(port, baud) { DtrEnable = false, RtsEnable = false, ReadTimeout = 500, WriteTimeout = 2000 };
+            serial.Open(); // opening with DTR/RTS low does not reset the board
+        }
+
+        Emit(new { type = "connected", port = simulated ? "Simulator" : port, baud });
+
+        void Add(string line)
+        {
+            lock (gate)
+            {
+                if (pending.Count < 5000) // a runaway board cannot flood the editor
+                    pending.Add(line);
+            }
+        }
+
+        // reads lines from the board (or invents some)
+        var reader = Task.Run(async () =>
+        {
+            try
+            {
+                if (serial is null)
+                {
+                    var tick = 0;
+                    var random = new Random(7);
+                    while (!stop.IsCancellationRequested)
+                    {
+                        var t = tick++ * 0.1;
+                        Add($"light:{(int)(2048 + 1800 * Math.Sin(t / 2)):D}, temp:{23.5 + 2 * Math.Sin(t / 7) + random.NextDouble() * 0.2:0.0}, button:{(Math.Sin(t) > 0.8 ? 1 : 0)}");
+                        while (outbox.Reader.TryRead(out var text))
+                            Add(text.Trim().Equals("ping", StringComparison.OrdinalIgnoreCase) ? "pong" : "> " + text.TrimEnd());
+                        await Task.Delay(100, stop.Token);
+                    }
+
+                    return;
+                }
+
+                var buffer = new byte[2048];
+                var line = new System.Text.StringBuilder();
+                var stream = serial.BaseStream;
+                while (!stop.IsCancellationRequested)
+                {
+                    int read;
+                    try
+                    {
+                        read = await stream.ReadAsync(buffer, stop.Token);
+                    }
+                    catch (TimeoutException)
+                    {
+                        continue;
+                    }
+
+                    if (read == 0)
+                        continue;
+
+                    for (var i = 0; i < read; i++)
+                    {
+                        var b = buffer[i];
+                        if (b == '\n')
+                        {
+                            Add(line.ToString());
+                            line.Clear();
+                        }
+                        else if (b != '\r') // the CR of a CR+LF line ending is not part of the text
+                        {
+                            if (line.Length >= 4096)
+                            {
+                                Add(line.ToString()); // an endless line is cut instead of growing without bound
+                                line.Clear();
+                            }
+
+                            line.Append(b < 32 && b != '\t' ? '·' : (char)b);
+                        }
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex) when (ex is IOException or InvalidOperationException or UnauthorizedAccessException)
+            {
+                Emit(new { type = "error", message = "The serial port stopped responding (was the board unplugged?): " + ex.Message });
+                stop.Cancel();
+            }
+        });
+
+        // sends to the board
+        var writer = Task.Run(async () =>
+        {
+            try
+            {
+                while (await outbox.Reader.WaitToReadAsync(stop.Token))
+                {
+                    if (serial is null)
+                        break; // the simulator reader consumes the outbox itself
+
+                    while (outbox.Reader.TryRead(out var text))
+                        serial.Write(text + newline);
+                }
+            }
+            catch (Exception ex) when (ex is OperationCanceledException or IOException or TimeoutException or InvalidOperationException)
+            {
+            }
+        });
+
+        // flushes batches to the editor
+        var flusher = Task.Run(async () =>
+        {
+            try
+            {
+                while (!stop.IsCancellationRequested)
+                {
+                    await Task.Delay(40, stop.Token);
+                    string[] batch;
+                    lock (gate)
+                    {
+                        if (pending.Count == 0)
+                            continue;
+
+                        batch = pending.ToArray();
+                        pending.Clear();
+                    }
+
+                    Emit(new { type = "lines", lines = batch });
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        });
+
+        // commands from the editor
+        _ = Task.Run(async () =>
+        {
+            while (!stop.IsCancellationRequested)
+            {
+                var input = await Console.In.ReadLineAsync();
+                if (input is null || input == "stop")
+                {
+                    stop.Cancel();
+                    return;
+                }
+
+                if (input == "reset" && serial is not null)
+                {
+                    // same sequence the ESP32 flashing tools use: EN low for 100 ms
+                    serial.DtrEnable = false;
+                    serial.RtsEnable = true;
+                    await Task.Delay(100);
+                    serial.RtsEnable = false;
+                }
+                else if (input.StartsWith('>'))
+                {
+                    outbox.Writer.TryWrite(input[1..]);
+                }
+            }
+        });
+
+        try
+        {
+            await Task.WhenAny(reader, flusher);
+            stop.Cancel();
+            await Task.WhenAll(reader, flusher, writer).WaitAsync(TimeSpan.FromSeconds(2));
+        }
+        catch (Exception ex) when (ex is TimeoutException or OperationCanceledException)
+        {
+        }
+        finally
+        {
+            try { serial?.Close(); } catch (IOException) { }
+            serial?.Dispose();
+        }
+
+        Emit(new { type = "result", success = true, message = "Monitor closed." });
+        return 0;
+    }
+
+    // ---------------------------------------------------------------- Wi-Fi boards found on the network, OTA update
+
+    private static async Task<int> WifiBoardsAsync(CancellationToken ct)
+    {
+        var found = await WifiBoardFinder.FindAsync(TimeSpan.FromSeconds(1.5), ct);
+        var boards = found.Select(board => new
+        {
+            id = board.Id,
+            name = board.Name,
+            host = board.Host,
+            address = board.Address,
+            target = board.Target,
+            port = board.Port,
+            firmware = board.Firmware,
+            chip = board.Chip,
+            requiresToken = board.RequiresToken,
+            suggestedBoard = SuggestBoardForChip(board.Chip)
+        });
+
+        Emit(new { type = "wifi-boards", boards });
+        return 0;
+    }
+
+    private static string SuggestBoardForChip(string? chip) =>
+        chip is not null && chip.Contains("S3", StringComparison.OrdinalIgnoreCase) ? BuiltInBoardProfiles.Esp32S3DevKit.Id
+        : chip is not null && chip.Contains("C3", StringComparison.OrdinalIgnoreCase) ? BuiltInBoardProfiles.Esp32C3DevKit.Id
+        : BuiltInBoardProfiles.Esp32DevKit.Id;
+
+    /// <summary>Updates the firmware over Wi-Fi: this PC serves the image, the board downloads it and restarts.</summary>
+    private static async Task<int> OtaAsync(Options options, CancellationToken ct)
+    {
+        var profile = ResolveBoard(options)!;
+        if (!profile.SupportsWifi)
+            throw new InvalidOperationException($"{profile.DisplayName} has no Wi-Fi: update it over USB.");
+
+        var host = options.Get("host") ?? options.Get("port")
+            ?? throw new InvalidOperationException("Pick the board's Wi-Fi address in the Port box first.");
+        if (host.StartsWith("COM", StringComparison.OrdinalIgnoreCase) || host.StartsWith("/dev/", StringComparison.Ordinal) || host.Equals("simulator", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Updating over Wi-Fi needs the board's network address, not a USB port. Pair the board with Wi-Fi first (the Wi-Fi button), or use Upload Firmware over USB.");
+
+        var directory = HardwareToolLocator.ResolveFirmwareDirectory(profile.Id)
+            ?? throw new DirectoryNotFoundException("The firmware package was not found. Reinstall CodeBridge Visual Studio Tools.");
+        var image = options.Get("firmware") ?? HardwareToolLocator.ResolvePrebuiltFirmwarePath(directory, profile.Id)
+            ?? throw new FileNotFoundException($"No prebuilt firmware was found for {profile.DisplayName}.");
+        var token = options.Get("token") ?? Environment.GetEnvironmentVariable("CODEBRIDGE_TOKEN");
+
+        Emit(new { type = "status", state = "uploading", message = $"Updating {profile.DisplayName} at {host} over Wi-Fi..." });
+        var lastPercent = -1;
+        var progress = new Progress<int>(percent =>
+        {
+            if (percent == lastPercent) return;
+            lastPercent = percent;
+            Emit(new { type = "ota-progress", percent });
+        });
+
+        var result = await Esp32OtaUpdater.UpdateAsync(host, options.GetInt("tcp-port", 8080), token, await File.ReadAllBytesAsync(image, ct), progress, ct);
+        Emit(new
+        {
+            type = "result",
+            success = true,
+            message = result.NewVersion is null
+                ? "The board restarted with the new firmware."
+                : $"The board restarted with firmware {result.NewVersion}."
+        });
+        return 0;
+    }
+
     // ---------------------------------------------------------------- Wi-Fi pairing (USB only)
 
     private static async Task<(SerialTransport Serial, Esp32WifiProvisioner Provisioner)> OpenProvisionerAsync(Options options, CancellationToken ct)
@@ -334,7 +697,7 @@ internal static class Program
         {
             Emit(new { type = "status", state = "provisioning", message = $"Pairing the board and joining '{ssid}'..." });
             var result = await provisioner.ProvisionAsync(ssid, password, string.IsNullOrWhiteSpace(token) ? null : token, ct);
-            Emit(new { type = "wifi-provisioned", ip = result.IpAddress, port = result.Port, token = result.AccessToken });
+            Emit(new { type = "wifi-provisioned", ip = result.IpAddress, port = result.Port, token = result.AccessToken, deviceId = result.DeviceId });
         }
 
         return 0;

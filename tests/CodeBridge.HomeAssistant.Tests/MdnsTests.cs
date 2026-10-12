@@ -1,5 +1,6 @@
 using System.Text;
 using CodeBridge.HomeAssistant;
+using CodeBridge.Transport.Discovery;
 
 namespace CodeBridge.HomeAssistant.Tests;
 
@@ -57,7 +58,7 @@ public class MdnsTests
             .Record("homeassistant.local", 1, new byte[] { 192, 168, 1, 10 })
             .Build();
 
-        var instances = MdnsParser.ToInstances(MdnsParser.Parse(packet));
+        var instances = HomeAssistantFinder.ToInstances(MdnsParser.Parse(packet));
 
         var instance = Assert.Single(instances);
         Assert.Equal("Mi casa", instance.Name);
@@ -75,7 +76,7 @@ public class MdnsTests
             .Record("_printer._tcp.local", 12, NameBytes("Office._printer._tcp.local"))
             .Build();
 
-        Assert.Empty(MdnsParser.ToInstances(MdnsParser.Parse(packet)));
+        Assert.Empty(HomeAssistantFinder.ToInstances(MdnsParser.Parse(packet)));
     }
 
     [Fact]
@@ -108,7 +109,7 @@ public class MdnsTests
     [Fact]
     public void The_query_asks_for_the_Home_Assistant_service()
     {
-        var query = HomeAssistantFinder.BuildQuery();
+        var query = MdnsClient.BuildQuery("_home-assistant._tcp.local");
 
         Assert.Equal(1, query[5]); // one question
         Assert.Contains("home-assistant", Encoding.ASCII.GetString(query));

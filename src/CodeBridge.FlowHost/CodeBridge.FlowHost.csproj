@@ -21,6 +21,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CodeBridge.Designer.WinForms\CodeBridge.Designer.WinForms.csproj" />
+    <ProjectReference Include="..\CodeBridge.PlatformIO\CodeBridge.PlatformIO.csproj" />
+    <ProjectReference Include="..\CodeBridge.HomeAssistant\CodeBridge.HomeAssistant.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
   </ItemGroup>
 
   <!-- Firmware used by "Upload Firmware": copied next to the host (and into publish output / the VSIX). -->

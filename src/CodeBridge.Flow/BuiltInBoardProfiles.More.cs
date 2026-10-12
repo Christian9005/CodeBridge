@@ -133,6 +133,7 @@ public static partial class BuiltInBoardProfiles
             Family = BoardFamily.Arduino,
             FirmwareProject = "arduino-uno-bridge",
             Fqbn = fqbn,
+            BuiltInLedPin = 13,
             AnalogMaxValue = 1023,
             Runtime = AvrRuntime
         };
@@ -144,6 +145,7 @@ public static partial class BuiltInBoardProfiles
         Family = BoardFamily.Arduino,
         FirmwareProject = "arduino-uno-bridge",
         Fqbn = "arduino:avr:mega:cpu=atmega2560",
+        BuiltInLedPin = 13,
         AnalogMaxValue = 1023,
         Runtime = AvrRuntime
     };

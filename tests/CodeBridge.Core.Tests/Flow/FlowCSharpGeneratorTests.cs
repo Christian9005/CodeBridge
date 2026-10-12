@@ -271,14 +271,13 @@ public class FlowCSharpGeneratorTests
     }
 
     [Fact]
-    public void An_empty_input_range_is_reported_when_exporting()
+    public void An_empty_input_range_is_an_error_when_exporting()
     {
         var document = SensorToPwm(map => { map.Parameters["inMin"] = 10; map.Parameters["inMax"] = 10; });
 
-        var result = FlowCSharpGenerator.Generate(document);
+        var error = Assert.Throws<InvalidOperationException>(() => FlowCSharpGenerator.Generate(document));
 
-        Assert.Contains(result.Warnings, w => w.Contains("Input min equals Input max"));
-        Compile(result.Code);
+        Assert.Contains("input range is empty", error.Message);
     }
 
     [Fact]
