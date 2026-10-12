@@ -2,44 +2,104 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="CodeBridge.Samples.IntegrationMaui.MainPage"
-             Title="CodeBridge Control">
+             Title="CodeBridge">
 
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="16" MaximumWidthRequest="560">
+        <VerticalStackLayout Padding="20,16,20,32" Spacing="12" MaximumWidthRequest="560">
 
-            <Label Text="My board" FontSize="28" FontAttributes="Bold" />
+            <VerticalStackLayout Spacing="2" Margin="0,0,0,6">
+                <Label Text="My board" Style="{StaticResource PageTitle}" SemanticProperties.HeadingLevel="Level1" />
+                <Label Text="Use the built-in simulator, or the Wi-Fi address of a paired ESP32. Change the pins to match your wiring."
+                       Style="{StaticResource Muted}" />
+            </VerticalStackLayout>
 
-            <Border Padding="14" StrokeShape="RoundRectangle 10">
-                <VerticalStackLayout Spacing="8">
-                    <HorizontalStackLayout Spacing="8">
-                        <BoxView x:Name="StatusDot" WidthRequest="12" HeightRequest="12" CornerRadius="6" Color="Gray" VerticalOptions="Center" />
-                        <Label x:Name="StatusLabel" Text="Not connected" FontAttributes="Bold" />
-                    </HorizontalStackLayout>
-                    <Label x:Name="DetailLabel" FontSize="12" Opacity="0.7" />
-                    <Entry x:Name="AddressEntry" Placeholder="simulator, or the board's IP (192.168.1.50)" Text="simulator" Keyboard="Url" />
-                    <Entry x:Name="TokenEntry" Placeholder="Pairing token (Wi-Fi boards)" IsPassword="True" />
+            <!-- Connection -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <HorizontalStackLayout Spacing="10">
+                            <BoxView x:Name="StatusDot" WidthRequest="10" HeightRequest="10" CornerRadius="5" VerticalOptions="Center"
+                                     SemanticProperties.Description="Connection state" />
+                            <VerticalStackLayout>
+                                <Label x:Name="StatusLabel" Text="Board" Style="{StaticResource CardTitle}" />
+                                <Label x:Name="StateLabel" Text="Not connected" Style="{StaticResource Muted}" />
+                            </VerticalStackLayout>
+                        </HorizontalStackLayout>
+                        <Border x:Name="SimulatorChip" Grid.Column="1" Style="{StaticResource SimulatorChip}" IsVisible="False">
+                            <Label Text="SIMULATOR" Style="{StaticResource SimulatorText}" />
+                        </Border>
+                    </Grid>
+
+                    <Label x:Name="DetailLabel" Style="{StaticResource Muted}" />
+                    <Label x:Name="ErrorLabel" Style="{StaticResource ErrorText}" IsVisible="False" SemanticProperties.Description="Connection error" />
+
+                    <Border Style="{StaticResource InputFrame}">
+                        <Entry x:Name="AddressEntry" Placeholder="simulator, or the board's IP (192.168.1.50)" Text="simulator" Keyboard="Url"
+                               SemanticProperties.Description="Board address" />
+                    </Border>
+                    <Border Style="{StaticResource InputFrame}">
+                        <Entry x:Name="TokenEntry" Placeholder="Pairing token (Wi-Fi boards)" IsPassword="True"
+                               SemanticProperties.Description="Pairing token" />
+                    </Border>
                     <Button x:Name="ConnectButton" Text="Connect" Clicked="OnConnectClicked" />
                 </VerticalStackLayout>
             </Border>
 
-            <Border Padding="14" StrokeShape="RoundRectangle 10">
-                <HorizontalStackLayout Spacing="12">
-                    <Label Text="Built-in LED (pin 2)" VerticalOptions="Center" />
-                    <Switch x:Name="LedSwitch" Toggled="OnLedToggled" IsEnabled="False" />
-                </HorizontalStackLayout>
-            </Border>
-
-            <Border Padding="14" StrokeShape="RoundRectangle 10">
-                <VerticalStackLayout Spacing="6">
-                    <Label x:Name="LampLabel" Text="Lamp brightness (pin 4): 0" />
-                    <Slider x:Name="LampSlider" Minimum="0" Maximum="255" ValueChanged="OnLampChanged" IsEnabled="False" />
+            <!-- Digital output -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Built-in LED" Style="{StaticResource CardTitle}" />
+                        <Border Grid.Column="1" Style="{StaticResource PinChip}"><Label Text="GPIO 2" Style="{StaticResource PinText}" /></Border>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                        <Label Text="Digital output" Style="{StaticResource Muted}" VerticalOptions="Center" />
+                        <Label x:Name="LedState" Grid.Column="1" Text="OFF" Style="{StaticResource PinText}" VerticalOptions="Center" />
+                        <Switch x:Name="LedSwitch" Grid.Column="2" Toggled="OnLedToggled" IsEnabled="False" SemanticProperties.Description="Built-in LED" />
+                    </Grid>
                 </VerticalStackLayout>
             </Border>
 
-            <Border Padding="14" StrokeShape="RoundRectangle 10">
-                <VerticalStackLayout Spacing="6">
-                    <Label x:Name="LightLabel" Text="Light sensor (pin 34): —" />
-                    <ProgressBar x:Name="LightBar" Progress="0" />
+            <!-- PWM -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Lamp brightness" Style="{StaticResource CardTitle}" />
+                        <Border Grid.Column="1" Style="{StaticResource PinChip}"><Label Text="GPIO 4" Style="{StaticResource PinText}" /></Border>
+                    </Grid>
+                    <HorizontalStackLayout Spacing="4">
+                        <Label x:Name="LampReadout" Text="0" Style="{StaticResource Readout}" />
+                        <Label Text="% duty" Style="{StaticResource Muted}" VerticalOptions="End" Margin="0,0,0,5" />
+                    </HorizontalStackLayout>
+                    <Slider x:Name="LampSlider" Minimum="0" Maximum="255" ValueChanged="OnLampChanged" IsEnabled="False" SemanticProperties.Description="Lamp brightness" />
+                    <Grid ColumnDefinitions="*,Auto,*">
+                        <Label Text="0" Style="{StaticResource PinText}" />
+                        <Label x:Name="LampRaw" Grid.Column="1" Text="0 / 255" Style="{StaticResource PinText}" />
+                        <Label Grid.Column="2" Text="255" Style="{StaticResource PinText}" HorizontalOptions="End" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Analog input -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Light sensor" Style="{StaticResource CardTitle}" />
+                        <Border Grid.Column="1" Style="{StaticResource PinChip}"><Label Text="GPIO 34" Style="{StaticResource PinText}" /></Border>
+                    </Grid>
+                    <HorizontalStackLayout Spacing="4">
+                        <Label x:Name="LightReadout" Text="—" Style="{StaticResource Readout}" />
+                        <Label Text="%" Style="{StaticResource Muted}" VerticalOptions="End" Margin="0,0,0,5" />
+                    </HorizontalStackLayout>
+                    <Border Style="{StaticResource MeterTrack}" SemanticProperties.Description="Light level">
+                        <Grid x:Name="LightFill" ColumnDefinitions="0*,1*">
+                            <BoxView Color="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" CornerRadius="4" />
+                        </Grid>
+                    </Border>
+                    <Grid ColumnDefinitions="*,*">
+                        <Label Text="0" Style="{StaticResource PinText}" />
+                        <Label Grid.Column="1" Text="100" Style="{StaticResource PinText}" HorizontalOptions="End" />
+                    </Grid>
                 </VerticalStackLayout>
             </Border>
 

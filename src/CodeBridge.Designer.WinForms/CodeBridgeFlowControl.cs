@@ -27,7 +27,15 @@ public sealed class CodeBridgeFlowControl : Control
     private CancellationTokenSource? _runCancellation;
     private FlowExecutionEvent? _lastTraceEvent;
     private bool _isRunning;
+    private RunOutcome _outcome;
     private Component? _boardComponent;
+
+    private enum RunOutcome
+    {
+        None,
+        Completed,
+        Failed
+    }
 
     public CodeBridgeFlowControl()
     {
@@ -170,6 +178,7 @@ public sealed class CodeBridgeFlowControl : Control
 
         _runCancellation = stopSource;
         _isRunning = true;
+        _outcome = RunOutcome.None;
         _lastTraceEvent = null;
         InvalidateSafe();
 
@@ -182,6 +191,7 @@ public sealed class CodeBridgeFlowControl : Control
             {
                 linkedSource.Token.ThrowIfCancellationRequested();
                 lastResult = await ExecuteOnceAsync(board, linkedSource.Token);
+                _outcome = RunOutcome.Completed;
                 FlowCompleted?.Invoke(this, lastResult);
 
                 if (ExecutionMode != FlowExecutionMode.Loop)
@@ -203,6 +213,7 @@ public sealed class CodeBridgeFlowControl : Control
         }
         catch (Exception ex)
         {
+            _outcome = RunOutcome.Failed;
             FlowFailed?.Invoke(this, ex);
             throw;
         }
@@ -299,19 +310,54 @@ public sealed class CodeBridgeFlowControl : Control
         e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
         using var background = new SolidBrush(BackColor);
-        using var border = new Pen(Focused ? DesignerTheme.Signal : DesignerTheme.Border);
+        using var border = new Pen(Focused ? DesignerTheme.Copper : DesignerTheme.Border);
         var bounds = ClientRectangle;
         bounds.Width -= 1;
         bounds.Height -= 1;
         e.Graphics.FillRectangle(background, bounds);
         e.Graphics.DrawRectangle(border, bounds);
 
+        // The badge says the state twice, by colour and by shape: ready (blue ring), running (green dot), completed (green check), failed (red cross).
         var glyphBounds = new Rectangle(12, 14, 36, 36);
-        using var glyphBrush = new SolidBrush(DesignerTheme.Signal);
-        using var glyphPen = new Pen(DesignerTheme.Workbench, 2F);
-        e.Graphics.FillEllipse(glyphBrush, glyphBounds);
-        e.Graphics.DrawLine(glyphPen, glyphBounds.Left + 10, glyphBounds.Top + 18, glyphBounds.Left + 18, glyphBounds.Top + 25);
-        e.Graphics.DrawLine(glyphPen, glyphBounds.Left + 18, glyphBounds.Top + 25, glyphBounds.Left + 28, glyphBounds.Top + 11);
+        var accent = _isRunning ? DesignerTheme.Signal : _outcome switch
+        {
+            RunOutcome.Completed => DesignerTheme.Signal,
+            RunOutcome.Failed => DesignerTheme.Error,
+            _ => DesignerTheme.Copper
+        };
+        using var glyphBrush = new SolidBrush(accent);
+        using var glyphPen = new Pen(DesignerTheme.Workbench, 2.4F) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round };
+        if (!_isRunning && _outcome == RunOutcome.None)
+        {
+            using var ring = new Pen(accent, 2.4F);
+            e.Graphics.DrawEllipse(ring, Rectangle.Inflate(glyphBounds, -1, -1));
+            using var play = new SolidBrush(accent);
+            e.Graphics.FillPolygon(play, new[]
+            {
+                new Point(glyphBounds.Left + 14, glyphBounds.Top + 10),
+                new Point(glyphBounds.Left + 14, glyphBounds.Top + 26),
+                new Point(glyphBounds.Left + 27, glyphBounds.Top + 18)
+            });
+        }
+        else
+        {
+            e.Graphics.FillEllipse(glyphBrush, glyphBounds);
+            if (_isRunning)
+            {
+                using var hole = new SolidBrush(DesignerTheme.Workbench);
+                e.Graphics.FillEllipse(hole, Rectangle.Inflate(glyphBounds, -13, -13));
+            }
+            else if (_outcome == RunOutcome.Failed)
+            {
+                e.Graphics.DrawLine(glyphPen, glyphBounds.Left + 12, glyphBounds.Top + 12, glyphBounds.Left + 24, glyphBounds.Top + 24);
+                e.Graphics.DrawLine(glyphPen, glyphBounds.Left + 24, glyphBounds.Top + 12, glyphBounds.Left + 12, glyphBounds.Top + 24);
+            }
+            else
+            {
+                e.Graphics.DrawLine(glyphPen, glyphBounds.Left + 10, glyphBounds.Top + 18, glyphBounds.Left + 16, glyphBounds.Top + 24);
+                e.Graphics.DrawLine(glyphPen, glyphBounds.Left + 16, glyphBounds.Top + 24, glyphBounds.Left + 26, glyphBounds.Top + 12);
+            }
+        }
 
         var titleBounds = new Rectangle(58, 10, Math.Max(10, Width - 68), 22);
         var subtitleBounds = new Rectangle(58, 33, Math.Max(10, Width - 68), 20);
@@ -378,7 +424,13 @@ public sealed class CodeBridgeFlowControl : Control
         if (_isRunning && _lastTraceEvent is not null)
             return $"{FormatTraceKind(_lastTraceEvent.Kind)} | {_lastTraceEvent.NodeId}";
 
-        return $"{(_isRunning ? "Running" : ExecutionMode)} | {_document.Nodes.Count} blocks";
+        var state = _isRunning ? "Running" : _outcome switch
+        {
+            RunOutcome.Completed => "Completed",
+            RunOutcome.Failed => "Failed",
+            _ => "Ready"
+        };
+        return $"{state} | {ExecutionMode} | {_document.Nodes.Count} blocks";
     }
 
     private static string FormatTraceKind(FlowExecutionEventKind kind)

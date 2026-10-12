@@ -143,6 +143,11 @@ namespace CodeBridge.VisualStudio.Editor
                 panel.Children.Add(new TextBlock { Text = text, Margin = new Thickness(5, 0, 2, 0), VerticalAlignment = VerticalAlignment.Center });
 
             button.Content = panel;
+
+            // Icon-only buttons are named for screen readers from their tooltip.
+            var name = !string.IsNullOrEmpty(text) ? text : button.ToolTip as string;
+            if (!string.IsNullOrEmpty(name))
+                System.Windows.Automation.AutomationProperties.SetName(button, name);
         }
 
         private void OnEditorLoaded()

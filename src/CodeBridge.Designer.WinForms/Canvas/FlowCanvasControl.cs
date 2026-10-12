@@ -10,7 +10,7 @@ namespace CodeBridge.Designer.WinForms.Canvas;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public sealed class FlowCanvasControl : Control
 {
-    private const int NodeWidth = 178;
+    private const int NodeWidth = 206;
     private const int HeaderHeight = 34;
     private const int PortRowHeight = 20;
     private const int NodePadding = 12;
@@ -964,10 +964,11 @@ public sealed class FlowCanvasControl : Control
         {
             "Flow" => DesignerTheme.Magenta,
             "GPIO" => DesignerTheme.AccentSoft,
-            "Logic" => DesignerTheme.Warning,
-            "Actuators" => DesignerTheme.Signal,
+            "Logic" => Color.FromArgb(56, 189, 248),
+            "Math" => Color.FromArgb(236, 98, 170),
+            "Actuators" => Color.FromArgb(203, 166, 247),
             "Acquisition" => DesignerTheme.Copper,
-            "Dashboard" => DesignerTheme.Signal,
+            "Dashboard" => Color.FromArgb(129, 140, 248),
             "Debug" => DesignerTheme.MutedText,
             _ => DesignerTheme.Border
         };

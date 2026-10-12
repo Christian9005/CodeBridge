@@ -27,6 +27,7 @@ public partial class MainPage : ContentPage
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
+		RefreshStatus();
 		_timer.Start();
 	}
 
@@ -57,12 +58,15 @@ public partial class MainPage : ContentPage
 
 	private async void OnLedToggled(object? sender, ToggledEventArgs e)
 	{
+		LedState.Text = e.Value ? "ON" : "OFF";
+		LedState.SetAppThemeColor(Label.TextColorProperty, e.Value ? Ok.Light : Muted.Light, e.Value ? Ok.Dark : Muted.Dark);
 		await Guard(() => _board.WriteDigitalAsync(2, e.Value));
 	}
 
 	private async void OnLampChanged(object? sender, ValueChangedEventArgs e)
 	{
-		LampLabel.Text = $"Lamp brightness (pin 4): {(int)e.NewValue}";
+		LampReadout.Text = ((int)Math.Round(e.NewValue * 100 / 255)).ToString();
+		LampRaw.Text = $"{(int)e.NewValue} / 255";
 		await Guard(() => _board.WritePwmAsync(4, (int)e.NewValue));
 	}
 
@@ -74,8 +78,10 @@ public partial class MainPage : ContentPage
 		try
 		{
 			var raw = await _board.ReadAnalogAsync(34);
-			LightBar.Progress = Math.Clamp(raw / (double)_board.AnalogMax, 0, 1);
-			LightLabel.Text = $"Light sensor (pin 34): {raw * 100 / _board.AnalogMax}%";
+			var level = Math.Clamp(raw / (double)_board.AnalogMax, 0, 1);
+			LightFill.ColumnDefinitions[0].Width = new GridLength(level, GridUnitType.Star);
+			LightFill.ColumnDefinitions[1].Width = new GridLength(1 - level, GridUnitType.Star);
+			LightReadout.Text = (raw * 100 / _board.AnalogMax).ToString();
 		}
 		catch (Exception)
 		{
@@ -91,28 +97,42 @@ public partial class MainPage : ContentPage
 		}
 		catch (Exception ex)
 		{
-			DetailLabel.Text = ex.Message;
+			ShowError(ex.Message);
 		}
+	}
+
+	// Same state vocabulary as the Blazor cards and the editor: green live, blue connecting, red fault, grey idle; the word is always shown too.
+	private static readonly (Color Light, Color Dark) Ok = (Color.FromArgb("#0F7A55"), Color.FromArgb("#35C98C"));
+	private static readonly (Color Light, Color Dark) Bad = (Color.FromArgb("#C4243B"), Color.FromArgb("#FF7285"));
+	private static readonly (Color Light, Color Dark) Accent = (Color.FromArgb("#0A5FC2"), Color.FromArgb("#5AA9FF"));
+	private static readonly (Color Light, Color Dark) Muted = (Color.FromArgb("#566170"), Color.FromArgb("#9BA7B6"));
+	private static readonly (Color Light, Color Dark) Idle = (Color.FromArgb("#8A96A6"), Color.FromArgb("#4D596A"));
+
+	private void ShowError(string? message)
+	{
+		ErrorLabel.Text = message ?? string.Empty;
+		ErrorLabel.IsVisible = !string.IsNullOrWhiteSpace(message);
 	}
 
 	private void RefreshStatus()
 	{
 		var connected = _board.IsConnected;
-		StatusDot.Color = _board.State switch
+		var (dot, word, wordColor) = _board.State switch
 		{
-			BoardConnectionState.Connected => Colors.SeaGreen,
-			BoardConnectionState.Connecting => Colors.DodgerBlue,
-			BoardConnectionState.Faulted => Colors.IndianRed,
-			_ => Colors.Gray
+			BoardConnectionState.Connected => (Ok, "Connected", Ok),
+			BoardConnectionState.Connecting => (Accent, "Connecting", Muted),
+			BoardConnectionState.Faulted => (Bad, "Connection lost", Bad),
+			_ => (Idle, "Not connected", Muted)
 		};
-		StatusLabel.Text = _board.State switch
-		{
-			BoardConnectionState.Connected => (_board.IsSimulated ? "Simulator" : "Connected") + " · " + (_board.Info?.ChipModel ?? "board"),
-			BoardConnectionState.Connecting => "Connecting...",
-			BoardConnectionState.Faulted => "Connection lost",
-			_ => "Not connected"
-		};
-		DetailLabel.Text = connected ? $"{_board.Target} · firmware {_board.FirmwareVersion}" : _board.LastError ?? string.Empty;
+
+		StatusDot.SetAppThemeColor(BoxView.ColorProperty, dot.Light, dot.Dark);
+		StateLabel.SetAppThemeColor(Label.TextColorProperty, wordColor.Light, wordColor.Dark);
+		StateLabel.Text = word;
+		StatusLabel.Text = connected ? _board.Info?.ChipModel ?? "Board" : "Board";
+		SimulatorChip.IsVisible = connected && _board.IsSimulated;
+		DetailLabel.Text = connected ? $"{_board.Target} · firmware {_board.FirmwareVersion}" : "Waiting for a board";
+		ShowError(connected ? null : _board.LastError);
+		ConnectButton.Text = connected ? "Reconnect" : "Connect";
 		LedSwitch.IsEnabled = LampSlider.IsEnabled = connected;
 	}
 }

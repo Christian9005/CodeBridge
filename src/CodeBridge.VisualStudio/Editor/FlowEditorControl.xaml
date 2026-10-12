@@ -70,8 +70,18 @@
 
         <!-- ============ Toolbar ============ -->
         <Border Grid.Row="0" x:Name="ToolbarBorder" Background="{DynamicResource VsToolWindowHeader}" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource VsToolWindowBorder}" Padding="6,4">
-            <DockPanel LastChildFill="False">
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+            <DockPanel LastChildFill="True">
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                    <Button x:Name="ZoomOutButton" Style="{StaticResource ToolbarButton}" ToolTip="Zoom out"/>
+                    <TextBlock x:Name="ZoomText" Text="100%" Width="42" TextAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource VsGrayText}" ToolTip="Mouse wheel zooms. Middle button or Space + drag pans."/>
+                    <Button x:Name="ZoomInButton" Style="{StaticResource ToolbarButton}" ToolTip="Zoom in"/>
+                    <Button x:Name="FitButton" Style="{StaticResource ToolbarButton}" ToolTip="Fit all blocks in view"/>
+                    <Rectangle Width="1" Margin="8,2" Fill="{DynamicResource VsToolWindowBorder}"/>
+                    <Button x:Name="OutputButton" Style="{StaticResource ToolbarButton}" ToolTip="Show or hide the CodeBridge output panel"/>
+                    <Button x:Name="MonitorButton" Style="{StaticResource ToolbarButton}" ToolTip="Open the serial monitor and plotter for the selected port"/>
+                    <Button x:Name="BoardViewButton" Style="{StaticResource ToolbarButton}" ToolTip="Show or hide the board view: a live picture of the pins while the flow runs"/>
+                </StackPanel>
+                <WrapPanel Orientation="Horizontal">
                     <TextBlock Text="Board" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource VsGrayText}"/>
                     <ComboBox x:Name="BoardCombo" Width="130" Height="23" ToolTip="Target board. The block catalog and pin lists follow this choice."/>
                     <TextBlock Text="Port" VerticalAlignment="Center" Margin="12,0,6,0" Foreground="{DynamicResource VsGrayText}"/>
@@ -97,18 +107,8 @@
                     <Button x:Name="RedoButton" Style="{StaticResource ToolbarButton}" ToolTip="Redo (Ctrl+Y)"/>
                     <Button x:Name="ArrangeButton" Style="{StaticResource ToolbarButton}" ToolTip="Arrange blocks left to right and tidy the wires"/>
                     <Button x:Name="ExportButton" Style="{StaticResource ToolbarButton}" ToolTip="Export this flow as C# code that uses the CodeBridge SDK"/>
-                </StackPanel>
+                </WrapPanel>
 
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                    <Button x:Name="ZoomOutButton" Style="{StaticResource ToolbarButton}" ToolTip="Zoom out"/>
-                    <TextBlock x:Name="ZoomText" Text="100%" Width="42" TextAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource VsGrayText}" ToolTip="Mouse wheel zooms. Middle button or Space + drag pans."/>
-                    <Button x:Name="ZoomInButton" Style="{StaticResource ToolbarButton}" ToolTip="Zoom in"/>
-                    <Button x:Name="FitButton" Style="{StaticResource ToolbarButton}" ToolTip="Fit all blocks in view"/>
-                    <Rectangle Width="1" Margin="8,2" Fill="{DynamicResource VsToolWindowBorder}"/>
-                    <Button x:Name="OutputButton" Style="{StaticResource ToolbarButton}" ToolTip="Show or hide the CodeBridge output panel"/>
-                    <Button x:Name="MonitorButton" Style="{StaticResource ToolbarButton}" ToolTip="Open the serial monitor and plotter for the selected port"/>
-                    <Button x:Name="BoardViewButton" Style="{StaticResource ToolbarButton}" ToolTip="Show or hide the board view: a live picture of the pins while the flow runs"/>
-                </StackPanel>
             </DockPanel>
         </Border>
 

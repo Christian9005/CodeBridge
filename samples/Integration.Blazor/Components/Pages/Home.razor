@@ -2,16 +2,17 @@
 
 <PageTitle>CodeBridge dashboard</PageTitle>
 
-<h1 style="margin: 0 0 4px">My board</h1>
-<p style="margin: 0 0 20px; opacity: .7">Every card below talks to the same shared connection. Change the pins to match your wiring.</p>
+<header class="cb-page-head">
+    <h1>My board</h1>
+    <p>Every card talks to the same shared connection. Change the pins to match your wiring.</p>
+</header>
 
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px">
+<div class="cb-grid">
     <BoardStatus />
     <PinToggle Pin="2" Label="Built-in LED" />
     <PwmSlider Pin="4" Label="Lamp brightness" />
     <AnalogGauge Pin="34" Label="Light sensor" ScaledMax="100" Unit="%" />
-</div>
-
-<div style="margin-top: 14px; max-width: 460px">
-    <SensorChart Pin="34" Label="Light sensor history" Interval="250" />
+    <div class="cb-wide">
+        <SensorChart Pin="34" Label="Light sensor history" ScaledMax="100" Unit="%" Interval="250" />
+    </div>
 </div>

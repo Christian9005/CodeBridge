@@ -1,18 +1,33 @@
 @inherits PollingComponentBase<int>
 
 <div class="cb-card">
-    <div class="cb-row" style="justify-content:space-between">
-        <span class="cb-title">@(Label ?? $"Analog {Pin}")</span>
-        <span class="cb-value" style="font-size:18px">@(HasValue ? Value.ToString() : "—")</span>
+    <div class="cb-head">
+        <div class="cb-title">@(Label ?? $"Analog {Pin}")</div>
+        <span class="cb-pin">GPIO @Pin</span>
     </div>
-    <svg class="cb-chart" viewBox="0 0 @ViewWidth @Height" preserveAspectRatio="none" style="height:@(Height)px" role="img" aria-label="@(Label ?? $"Analog {Pin}") history">
-        <line x1="0" y1="@Height" x2="@ViewWidth" y2="@Height" />
-        <line x1="0" y1="@(Height / 2)" x2="@ViewWidth" y2="@(Height / 2)" />
-        <polyline points="@Points" />
-    </svg>
+    <div class="cb-value cb-readout">@(HasValue ? Scaled(Value) : "—")<span class="cb-unit">@Unit</span></div>
+    <div class="cb-chart-row">
+        <div class="cb-chart-axis" aria-hidden="true"><span>@Scaled(RawMax)</span><span>0</span></div>
+        <div class="cb-chart-plot">
+            <svg class="cb-chart" viewBox="0 0 @ViewWidth @Height" preserveAspectRatio="none" style="height:@(Height)px" role="img" aria-label="@(Label ?? $"Analog {Pin}") history">
+                <line x1="0" y1="0" x2="@ViewWidth" y2="0" />
+                <line x1="0" y1="@(Height / 2)" x2="@ViewWidth" y2="@(Height / 2)" />
+                <line x1="0" y1="@Height" x2="@ViewWidth" y2="@Height" />
+                @if (_history.Count >= 2)
+                {
+                    <polygon points="@AreaPoints" />
+                    <polyline points="@Points" />
+                }
+            </svg>
+            @if (_history.Count < 2)
+            {
+                <div class="cb-chart-empty">Waiting for readings...</div>
+            }
+        </div>
+    </div>
     @if (Error is not null)
     {
-        <div class="cb-error">@Error</div>
+        <div class="cb-error" role="alert">@Error</div>
     }
 </div>
 
@@ -25,6 +40,12 @@
 
     [Parameter] public string? Label { get; set; }
 
+    /// <summary>Text after the number, for example "lux" or "%".</summary>
+    [Parameter] public string Unit { get; set; } = string.Empty;
+
+    /// <summary>When set, the numbers are scaled to this range (0..Max → 0..ScaledMax), like <see cref="AnalogGauge"/>.</summary>
+    [Parameter] public double? ScaledMax { get; set; }
+
     /// <summary>How many readings the chart keeps. Older ones are dropped, so memory never grows.</summary>
     [Parameter] public int MaxPoints { get; set; } = 120;
 
@@ -34,16 +55,31 @@
     /// <summary>The raw value at the top of the chart (defaults to the board's ADC range).</summary>
     [Parameter] public int? Max { get; set; }
 
-    private string Points
+    private int RawMax => Math.Max(1, Max ?? Board.AnalogMax);
+
+    private string Scaled(int raw) => ScaledMax is { } scaled
+        ? (raw * scaled / RawMax).ToString("0.#", Invariant)
+        : raw.ToString(Invariant);
+
+    private IEnumerable<string> Coordinates()
+    {
+        var capacity = Math.Max(2, MaxPoints);
+        var offset = capacity - _history.Count;
+        return _history.Select((value, index) =>
+            ((index + offset) * (double)ViewWidth / (capacity - 1)).ToString("0.#", Invariant) + "," +
+            (Height - Math.Clamp(value, 0, RawMax) * (double)Height / RawMax).ToString("0.#", Invariant));
+    }
+
+    private string Points => string.Join(' ', Coordinates());
+
+    // The same line closed down to the baseline, filled softly under the curve.
+    private string AreaPoints
     {
         get
         {
-            var max = Math.Max(1, Max ?? Board.AnalogMax);
             var capacity = Math.Max(2, MaxPoints);
-            var offset = capacity - _history.Count;
-            return string.Join(' ', _history.Select((value, index) =>
-                ((index + offset) * (double)ViewWidth / (capacity - 1)).ToString("0.#", Invariant) + "," +
-                (Height - Math.Clamp(value, 0, max) * (double)Height / max).ToString("0.#", Invariant)));
+            var left = ((capacity - _history.Count) * (double)ViewWidth / (capacity - 1)).ToString("0.#", Invariant);
+            return $"{left},{Height} {Points} {ViewWidth},{Height}";
         }
     }
 

@@ -58,6 +58,7 @@ internal sealed class CodeBridgeNodeEditorDialog : Form
 
         Controls.Add(_tabs);
         Controls.Add(header);
+        DesignerTheme.ApplyDarkChrome(this);
         Controls.Add(footer);
 
         AcceptButton = _okButton;
@@ -197,11 +198,9 @@ internal sealed class CodeBridgeNodeEditorDialog : Form
             {
                 Dock = DockStyle.Fill,
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                FlatStyle = FlatStyle.Flat,
-                BackColor = DesignerTheme.InputBackground,
-                ForeColor = DesignerTheme.Text,
                 Margin = new Padding(0, 3, 0, 3)
             };
+            DesignerTheme.StyleCombo(combo);
 
             PropertyOptionItem? selected = null;
             foreach (var option in property.Options)
@@ -349,12 +348,7 @@ internal sealed class CodeBridgeNodeEditorDialog : Form
 
     private static void ConfigureButton(Button button)
     {
-        button.FlatStyle = FlatStyle.Flat;
-        button.FlatAppearance.BorderColor = DesignerTheme.Border;
-        button.FlatAppearance.MouseOverBackColor = DesignerTheme.SurfaceHover;
-        button.FlatAppearance.MouseDownBackColor = DesignerTheme.SurfaceSelected;
-        button.BackColor = DesignerTheme.ButtonBackground;
-        button.ForeColor = DesignerTheme.Text;
+        DesignerTheme.StyleButton(button, primary: button.DialogResult == DialogResult.OK);
     }
 
     private sealed class PropertyOptionItem

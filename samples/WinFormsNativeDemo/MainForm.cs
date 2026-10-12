@@ -25,6 +25,7 @@ public sealed class MainForm : Form
     private readonly Button _runButton = new();
     private readonly Button _stopButton = new();
     private readonly TextBox _log = new();
+    private readonly StatusBadge _status = new();
     private bool _closing;
 
     public MainForm()
@@ -33,7 +34,6 @@ public sealed class MainForm : Form
         MinimumSize = new Size(920, 560);
         Size = new Size(1080, 640);
         StartPosition = FormStartPosition.CenterScreen;
-        BackColor = Color.FromArgb(246, 247, 248);
         Font = new Font("Segoe UI", 9F);
 
         BuildLayout();
@@ -44,90 +44,105 @@ public sealed class MainForm : Form
         UpdateState();
     }
 
+    // The colours are the CodeBridge light scheme shared with the Blazor cards and the MAUI sample.
+    private static readonly Color PageColor = Color.FromArgb(238, 241, 245);
+    private static readonly Color CardColor = Color.White;
+    private static readonly Color LineColor = Color.FromArgb(214, 220, 228);
+    private static readonly Color InkColor = Color.FromArgb(21, 26, 33);
+    private static readonly Color MutedColor = Color.FromArgb(86, 97, 112);
+    private static readonly Color AccentColor = Color.FromArgb(10, 95, 194);
+    private static readonly Color SunkenColor = Color.FromArgb(243, 245, 248);
+
     private void BuildLayout()
     {
+        BackColor = PageColor;
+        ForeColor = InkColor;
+
         var root = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             ColumnCount = 2,
             RowCount = 1,
-            Padding = new Padding(14),
-            BackColor = BackColor
+            Padding = new Padding(16),
+            BackColor = PageColor
         };
-        root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 310));
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 340));
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-
-        var left = new TableLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            ColumnCount = 2,
-            RowCount = 14,
-            Padding = new Padding(0, 0, 14, 0)
-        };
-        left.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 95));
-        left.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
         _portInput.DropDownStyle = ComboBoxStyle.DropDown;
-        _portInput.Anchor = AnchorStyles.Left | AnchorStyles.Right;
-
         _baudRateInput.Minimum = 9600;
         _baudRateInput.Maximum = 921600;
         _baudRateInput.Increment = 9600;
         _baudRateInput.Value = 115200;
-        _baudRateInput.Anchor = AnchorStyles.Left | AnchorStyles.Right;
 
         _pinInput.DropDownStyle = ComboBoxStyle.DropDownList;
-        _pinInput.Anchor = AnchorStyles.Left | AnchorStyles.Right;
 
         _modeInput.DropDownStyle = ComboBoxStyle.DropDownList;
         _modeInput.Items.AddRange(Enum.GetNames<FlowExecutionMode>());
         _modeInput.SelectedItem = FlowExecutionMode.Trigger.ToString();
-        _modeInput.Anchor = AnchorStyles.Left | AnchorStyles.Right;
 
         _loopIntervalInput.Minimum = 100;
         _loopIntervalInput.Maximum = 60000;
         _loopIntervalInput.Increment = 100;
         _loopIntervalInput.Value = 1000;
-        _loopIntervalInput.Anchor = AnchorStyles.Left | AnchorStyles.Right;
 
         _traceDelayInput.Minimum = 0;
         _traceDelayInput.Maximum = 5000;
         _traceDelayInput.Increment = 50;
         _traceDelayInput.Value = 120;
-        _traceDelayInput.Anchor = AnchorStyles.Left | AnchorStyles.Right;
 
-        ConfigureButton(_refreshButton, "Refresh Ports");
-        ConfigureButton(_connectButton, "Connect");
+        ConfigureButton(_refreshButton, "Refresh");
+        ConfigureButton(_connectButton, "Connect", primary: true);
         ConfigureButton(_disconnectButton, "Disconnect");
-        ConfigureButton(_editButton, "Edit Flow");
-        ConfigureButton(_presetButton, "Choose Preset");
-        ConfigureButton(_blinkTemplateButton, "Load Blink");
-        ConfigureButton(_runButton, "Run");
+        ConfigureButton(_editButton, "Edit flow");
+        ConfigureButton(_presetButton, "Preset...");
+        ConfigureButton(_blinkTemplateButton, "Load blink");
+        ConfigureButton(_runButton, "Run", primary: true);
         ConfigureButton(_stopButton, "Stop");
 
-        AddRow(left, 0, "Port", _portInput);
-        AddRow(left, 1, "Baud", _baudRateInput);
-        AddRow(left, 2, string.Empty, _refreshButton);
-        AddRow(left, 3, string.Empty, _connectButton);
-        AddRow(left, 4, string.Empty, _disconnectButton);
-        AddRow(left, 5, "GPIO", _pinInput);
-        AddRow(left, 6, "Mode", _modeInput);
-        AddRow(left, 7, "Loop ms", _loopIntervalInput);
-        AddRow(left, 8, "Trace ms", _traceDelayInput);
-        AddRow(left, 9, string.Empty, _editButton);
-        AddRow(left, 10, string.Empty, _presetButton);
-        AddRow(left, 11, string.Empty, _blinkTemplateButton);
-        AddRow(left, 12, string.Empty, _runButton);
-        AddRow(left, 13, string.Empty, _stopButton);
+        var connection = new Card("Board connection");
+        connection.AddRow("State", _status);
+        connection.AddRow("Port", _portInput);
+        connection.AddRow("Baud", _baudRateInput);
+        connection.AddButtons(_refreshButton, _connectButton, _disconnectButton);
+
+        var flow = new Card("Flow");
+        flow.AddRow("GPIO", _pinInput);
+        flow.AddRow("Mode", _modeInput);
+        flow.AddRow("Loop (ms)", _loopIntervalInput);
+        flow.AddRow("Trace (ms)", _traceDelayInput);
+        flow.AddButtons(_editButton, _presetButton, _blinkTemplateButton);
+
+        var run = new Card("Run");
+        run.AddButtons(_runButton, _stopButton);
+
+        var left = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.TopDown,
+            WrapContents = false,
+            AutoScroll = true,
+            BackColor = PageColor,
+            Padding = new Padding(0, 0, 14, 0)
+        };
+        foreach (var card in new[] { connection, flow, run })
+        {
+            card.Width = 314;
+            card.FitHeight();
+            card.Margin = new Padding(0, 0, 0, 12);
+            left.Controls.Add(card);
+        }
 
         var right = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount = 3
+            RowCount = 3,
+            BackColor = PageColor
         };
-        right.RowStyles.Add(new RowStyle(SizeType.Absolute, 96));
-        right.RowStyles.Add(new RowStyle(SizeType.Absolute, 8));
+        right.RowStyles.Add(new RowStyle(SizeType.Absolute, 76));
+        right.RowStyles.Add(new RowStyle(SizeType.Absolute, 12));
         right.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
         _flow.Dock = DockStyle.Fill;
@@ -138,9 +153,9 @@ public sealed class MainForm : Form
         _log.ReadOnly = true;
         _log.ScrollBars = ScrollBars.Vertical;
         _log.Font = new Font("Consolas", 9F);
-        _log.BackColor = Color.FromArgb(30, 34, 37);
-        _log.ForeColor = Color.FromArgb(235, 238, 236);
-        _log.BorderStyle = BorderStyle.FixedSingle;
+        _log.BackColor = Color.FromArgb(11, 15, 20);
+        _log.ForeColor = Color.FromArgb(231, 237, 244);
+        _log.BorderStyle = BorderStyle.None;
 
         right.Controls.Add(_flow, 0, 0);
         right.Controls.Add(_log, 0, 2);
@@ -148,6 +163,105 @@ public sealed class MainForm : Form
         root.Controls.Add(left, 0, 0);
         root.Controls.Add(right, 1, 0);
         Controls.Add(root);
+    }
+
+    /// <summary>A white panel with a hairline border, a title and label/field rows.</summary>
+    private sealed class Card : Panel
+    {
+        private readonly TableLayoutPanel _rows = new()
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            ColumnCount = 2,
+            BackColor = CardColor
+        };
+
+        private int _next = 1;
+
+        public Card(string title)
+        {
+            BackColor = CardColor;
+            Padding = new Padding(14, 10, 14, 12);
+            _rows.RowCount = 1;
+            _rows.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            _rows.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
+            _rows.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            _rows.Controls.Add(
+                new Label
+                {
+                    Text = title,
+                    AutoSize = true,
+                    Font = new Font("Segoe UI Semibold", 9.5F),
+                    ForeColor = InkColor,
+                    Margin = new Padding(0, 0, 0, 8)
+                },
+                0,
+                0);
+            _rows.SetColumnSpan(_rows.GetControlFromPosition(0, 0)!, 2);
+            Controls.Add(_rows);
+        }
+
+        public void AddRow(string label, Control control)
+        {
+            var row = _next++;
+            _rows.RowCount = _next;
+            _rows.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            control.Dock = DockStyle.Fill;
+            control.Margin = new Padding(0, 3, 0, 3);
+            _rows.Controls.Add(
+                new Label
+                {
+                    Text = label,
+                    AutoSize = false,
+                    Dock = DockStyle.Fill,
+                    Height = 26,
+                    TextAlign = ContentAlignment.MiddleLeft,
+                    ForeColor = MutedColor,
+                    Margin = new Padding(0, 3, 0, 3)
+                },
+                0,
+                row);
+            _rows.Controls.Add(control, 1, row);
+        }
+
+        public void AddButtons(params Button[] buttons)
+        {
+            var strip = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoSize = true,
+                ColumnCount = buttons.Length,
+                RowCount = 1,
+                BackColor = CardColor,
+                Margin = new Padding(0, 8, 0, 0)
+            };
+            for (var i = 0; i < buttons.Length; i++)
+            {
+                strip.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / buttons.Length));
+                buttons[i].Margin = new Padding(i == 0 ? 0 : 3, 0, i == buttons.Length - 1 ? 0 : 3, 0);
+                strip.Controls.Add(buttons[i], i, 0);
+            }
+
+            var row = _next++;
+            _rows.RowCount = _next;
+            _rows.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            _rows.Controls.Add(strip, 0, row);
+            _rows.SetColumnSpan(strip, 2);
+        }
+
+        /// <summary>Sizes the card to its rows; call once the width is set.</summary>
+        public void FitHeight()
+        {
+            var inner = Width - Padding.Horizontal;
+            Height = _rows.GetPreferredSize(new Size(inner, 0)).Height + Padding.Vertical;
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            using var pen = new Pen(LineColor);
+            e.Graphics.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
+        }
     }
 
     private void WireEvents()
@@ -166,7 +280,11 @@ public sealed class MainForm : Form
 
         _esp32.Connected += (_, _) => AppendLog("ESP32 connected.");
         _esp32.Disconnected += (_, _) => AppendLog("ESP32 disconnected.");
-        _esp32.ConnectionFailed += (_, ex) => AppendLog("Connection failed: " + ex.Message);
+        _esp32.ConnectionFailed += (_, ex) =>
+        {
+            AppendLog("Connection failed: " + ex.Message);
+            _status.Set(BadgeState.Faulted, "Connection failed");
+        };
 
         _flow.FlowStarted += (_, _) => AppendLog("Flow started.");
         _flow.FlowCompleted += (_, result) => AppendLog($"Flow completed. Nodes: {result.NodeOutputs.Count}");
@@ -288,6 +406,19 @@ public sealed class MainForm : Form
         var isRunning = running || _flow.IsRunning;
         var isConnected = _esp32.IsConnected;
 
+        if (connecting)
+            _status.Set(BadgeState.Connecting, "Connecting");
+        else if (isRunning)
+            _status.Set(BadgeState.Connected, "Running a flow");
+        else if (isConnected)
+            _status.Set(BadgeState.Connected, "Connected");
+        else if (_status.State != BadgeState.Faulted)
+            _status.Set(BadgeState.Idle, "Not connected");
+
+        // One primary action at a time: Connect until a board is connected, then Run.
+        StylePrimary(_connectButton, !isConnected);
+        StylePrimary(_runButton, isConnected);
+
         _connectButton.Enabled = !connecting && !isConnected && !isRunning;
         _disconnectButton.Enabled = isConnected && !isRunning;
         _runButton.Enabled = !connecting && !isRunning;
@@ -333,29 +464,80 @@ public sealed class MainForm : Form
         };
     }
 
-    private static void ConfigureButton(Button button, string text)
+    private static void StylePrimary(Button button, bool primary)
     {
-        button.Text = text;
-        button.Height = 30;
-        button.Dock = DockStyle.Fill;
-        button.Margin = new Padding(0, 3, 0, 3);
+        button.FlatAppearance.BorderColor = primary ? AccentColor : LineColor;
+        button.FlatAppearance.MouseOverBackColor = primary ? Color.FromArgb(8, 78, 160) : Color.FromArgb(230, 235, 241);
+        button.FlatAppearance.MouseDownBackColor = primary ? Color.FromArgb(6, 62, 130) : Color.FromArgb(214, 221, 230);
+        button.BackColor = primary ? AccentColor : SunkenColor;
+        button.ForeColor = primary ? Color.White : InkColor;
     }
 
-    private static void AddRow(TableLayoutPanel panel, int row, string label, Control control)
+    private enum BadgeState
     {
-        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 38));
+        Idle,
+        Connecting,
+        Connected,
+        Faulted
+    }
 
-        var labelControl = new Label
+    /// <summary>A coloured dot and the state in words: colour is never the only signal.</summary>
+    private sealed class StatusBadge : Control
+    {
+        private string _text = "Not connected";
+
+        public StatusBadge()
         {
-            Text = label,
-            Dock = DockStyle.Fill,
-            TextAlign = ContentAlignment.MiddleLeft,
-            ForeColor = Color.FromArgb(54, 61, 66)
-        };
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
+            Height = 26;
+            BackColor = CardColor;
+            TabStop = false;
+        }
 
-        control.Margin = new Padding(0, 3, 0, 3);
-        panel.Controls.Add(labelControl, 0, row);
-        panel.Controls.Add(control, 1, row);
+        public BadgeState State { get; private set; }
+
+        public void Set(BadgeState state, string text)
+        {
+            State = state;
+            _text = text;
+            AccessibleName = "Connection state";
+            AccessibleDescription = text;
+            Invalidate();
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            var color = State switch
+            {
+                BadgeState.Connected => Color.FromArgb(15, 122, 85),
+                BadgeState.Connecting => AccentColor,
+                BadgeState.Faulted => Color.FromArgb(196, 36, 59),
+                _ => Color.FromArgb(138, 150, 166)
+            };
+            using var brush = new SolidBrush(color);
+            var dot = new Rectangle(2, (Height - 10) / 2, 10, 10);
+            e.Graphics.FillEllipse(brush, dot);
+            var textColor = State == BadgeState.Idle || State == BadgeState.Connecting ? MutedColor : color;
+            TextRenderer.DrawText(e.Graphics, _text, Font, new Rectangle(20, 0, Width - 20, Height), textColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+        }
+    }
+
+    private static void ConfigureButton(Button button, string text, bool primary = false)
+    {
+        button.Text = text;
+        button.Height = 32;
+        button.Dock = DockStyle.Fill;
+        button.FlatStyle = FlatStyle.Flat;
+        button.UseVisualStyleBackColor = false;
+        button.FlatAppearance.BorderSize = 1;
+        button.FlatAppearance.BorderColor = primary ? AccentColor : LineColor;
+        button.FlatAppearance.MouseOverBackColor = primary ? Color.FromArgb(8, 78, 160) : Color.FromArgb(230, 235, 241);
+        button.FlatAppearance.MouseDownBackColor = primary ? Color.FromArgb(6, 62, 130) : Color.FromArgb(214, 221, 230);
+        button.BackColor = primary ? AccentColor : SunkenColor;
+        button.ForeColor = primary ? Color.White : InkColor;
+        button.Cursor = Cursors.Hand;
     }
 
     private void AppendLog(string message)
