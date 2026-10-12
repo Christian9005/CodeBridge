@@ -240,6 +240,9 @@ public sealed class BoardService : IAsyncDisposable
 
     private async Task<IBoard> ConnectBoardAsync(ITransport transport, CancellationToken ct)
     {
+        if (_options.CommandObserver is { } observer)
+            transport = new CommandTapTransport(transport, observer);
+
         IBoard board = _options.Board.IsArduino()
             ? new CodeBridgeProtocolBoard(transport, _options.Board.ToString(), BoardFamily.Arduino, _options.Board.MaxPin())
             : new ESP32Board(transport, _options.Board.MaxPin());

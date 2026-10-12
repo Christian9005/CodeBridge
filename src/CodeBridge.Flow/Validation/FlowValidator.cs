@@ -141,6 +141,25 @@ public sealed class FlowValidator
             return;
         }
 
+        if (string.Equals(definition.Type, BuiltInBlockCatalog.PwmWrite, StringComparison.OrdinalIgnoreCase))
+        {
+            ValidatePinCapability(node, definition, board, "pin", PinCapability.Pwm, "PWM output", issues);
+            return;
+        }
+
+        if (string.Equals(definition.Type, BuiltInBlockCatalog.MathMap, StringComparison.OrdinalIgnoreCase))
+        {
+            if (GetValue<double>(node, definition, "inMin") == GetValue<double>(node, definition, "inMax"))
+            {
+                issues.Add(new FlowValidationIssue(
+                    FlowValidationSeverity.Error,
+                    "Map: Input min and Input max are equal, so the input range is empty.",
+                    node.Id));
+            }
+
+            return;
+        }
+
         if (string.Equals(definition.Type, BuiltInBlockCatalog.ServoWrite, StringComparison.OrdinalIgnoreCase))
             ValidateServoWrite(node, definition, board, issues);
     }

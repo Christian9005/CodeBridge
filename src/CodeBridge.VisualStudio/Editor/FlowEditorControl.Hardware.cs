@@ -25,7 +25,8 @@ namespace CodeBridge.VisualStudio.Editor
             Testing,
             Uploading,
             Connecting,
-            Running
+            Running,
+            Publishing
         }
 
         private sealed class BoardItem
@@ -86,6 +87,7 @@ namespace CodeBridge.VisualStudio.Editor
             SetButton(ConnectButton, IconKind.Connect, "Connect");
             SetButton(UploadButton, IconKind.Upload, "Upload Firmware");
             SetButton(WifiButton, IconKind.Wifi, "Wi-Fi");
+            SetButton(HomeAssistantButton, IconKind.Home, "Home Assistant");
             SetButton(RunButton, IconKind.Run, "Run");
             SetButton(StopButton, IconKind.Stop, "Stop");
             SetButton(UndoButton, IconKind.Undo, null);
@@ -97,6 +99,7 @@ namespace CodeBridge.VisualStudio.Editor
             SetButton(FitButton, IconKind.Fit, null);
             SetButton(OutputButton, IconKind.Output, null);
             SetButton(BoardViewButton, IconKind.Board, "Pins");
+            SetButton(MonitorButton, IconKind.Monitor, "Monitor");
             SetButton(ClearOutputButton, IconKind.Clear, null);
 
             BoardCombo.ItemsSource = _boards;
@@ -108,6 +111,7 @@ namespace CodeBridge.VisualStudio.Editor
             ConnectButton.Click += (_, __) => TestConnection();
             UploadButton.Click += (_, __) => UploadFirmware();
             WifiButton.Click += (_, __) => ShowWifiSetup();
+            HomeAssistantButton.Click += (_, __) => ShowHomeAssistant();
             RunButton.Click += (_, __) => RunFlow();
             StopButton.Click += (_, __) => StopHost();
             UndoButton.Click += (_, __) => Undo();
@@ -118,6 +122,7 @@ namespace CodeBridge.VisualStudio.Editor
             ZoomInButton.Click += (_, __) => CanvasBorder.ZoomBy(1.2);
             FitButton.Click += (_, __) => FitView();
             OutputButton.Click += (_, __) => ShowOutput(OutputPanel.Visibility != Visibility.Visible);
+            MonitorButton.Click += (_, __) => Monitor.SerialMonitorLauncher.TryOpen(GetPort());
             BoardViewButton.Click += (_, __) => ShowBoardView(BoardPanel.Visibility != Visibility.Visible);
             ClearOutputButton.Click += (_, __) => OutputText.Clear();
 
@@ -463,6 +468,51 @@ namespace CodeBridge.VisualStudio.Editor
             window.ShowDialog();
         }
 
+        private void ShowHomeAssistant()
+        {
+            if (!RequireHost())
+                return;
+
+            var publishing = _state == RunState.Publishing;
+            if (!publishing && _state != RunState.Idle)
+                return;
+
+            var inputs = _document.Nodes.Count(n => n.Type.StartsWith("gpio.", StringComparison.OrdinalIgnoreCase));
+            var summary = _document.Nodes.Count == 0
+                ? "The flow is empty: add Digital Output, PWM Output, Analog Read or Digital Read blocks first."
+                : $"This flow has {inputs} GPIO block(s) to share.";
+            var window = new HomeAssistantWindow(publishing, summary) { Owner = Window.GetWindow(this) };
+            window.StopRequested += StopHost;
+            window.PublishRequested += StartHomeAssistant;
+            window.ShowDialog();
+        }
+
+        private void StartHomeAssistant(HomeAssistantSettings settings)
+        {
+            if (_state != RunState.Idle || !RequirePort(out var port))
+                return;
+
+            if (_document.Nodes.Count == 0)
+            {
+                ShowOutput(true);
+                AppendOutput("The flow is empty. Add Digital Output, PWM Output, Analog Read or Digital Read blocks first.");
+                return;
+            }
+
+            var path = WriteTempFlow();
+            if (path == null)
+                return;
+
+            RememberPort();
+            var board = CurrentBoardItem?.Id ?? _document.BoardId;
+            StartHost(
+                $"ha-bridge --flow {HostClient.Quote(path)} --board {board} --port {HostClient.Quote(port)}",
+                RunState.Publishing,
+                $"Publishing to Home Assistant ({settings.Broker})...",
+                TokenFor(port),
+                settings.ToHostJson());
+        }
+
         private void UploadFirmware()
         {
             if (_state != RunState.Idle || !RequireHost() || !RequirePort(out var port))
@@ -561,8 +611,16 @@ namespace CodeBridge.VisualStudio.Editor
 
         private bool _stopRequested;
 
-        private void StartHost(string arguments, RunState state, string message, string? accessToken = null)
+        private void StartHost(string arguments, RunState state, string message, string? accessToken = null, string? stdinLine = null)
         {
+            // The serial monitor keeps its port open; a flow, a connection test or a firmware upload needs the port to itself.
+            var port = GetPort();
+            if (port.Length > 0 && Monitor.SerialPortLease.Release(port))
+            {
+                AppendOutput($"The serial monitor was closed so {port} can be used here.");
+                System.Threading.Thread.Sleep(400); // let the operating system release the port
+            }
+
             _stopRequested = false;
             _sawResult = false;
             _lastResultSuccess = false;
@@ -576,7 +634,8 @@ namespace CodeBridge.VisualStudio.Editor
                     arguments,
                     m => Dispatcher.BeginInvoke(new Action(() => HandleHostMessage(m))),
                     (code, error) => Dispatcher.BeginInvoke(new Action(() => OnHostExit(code, error))),
-                    accessToken);
+                    accessToken,
+                    stdinLine);
             }
             catch (Exception ex)
             {
@@ -596,6 +655,12 @@ namespace CodeBridge.VisualStudio.Editor
 
                 case "log":
                     AppendOutput(message.Str("text") ?? string.Empty);
+                    break;
+
+                case "ha-entities":
+                    AppendOutput("Shown in Home Assistant as device '" + message.Str("device") + "':");
+                    foreach (var entity in message.List("entities"))
+                        AppendOutput($"  {entity.Str("kind")}: {entity.Str("name")}");
                     break;
 
                 case "connected":
@@ -709,6 +774,9 @@ namespace CodeBridge.VisualStudio.Editor
                 case RunState.Uploading:
                     SetBaseStatus(ok ? "Firmware uploaded. Press Connect or Run." : "Firmware upload failed", ok ? DotOk : DotError);
                     break;
+                case RunState.Publishing:
+                    SetBaseStatus(ok ? "Stopped publishing to Home Assistant" : "Publishing to Home Assistant stopped with errors", ok ? DotIdle : DotError);
+                    break;
                 default:
                     SetBaseStatus(ok ? "Flow finished" : "Flow stopped with errors", ok ? DotOk : DotError);
                     break;
@@ -775,6 +843,7 @@ namespace CodeBridge.VisualStudio.Editor
             ConnectButton.IsEnabled = idle && host;
             UploadButton.IsEnabled = idle && host && (CurrentBoardItem?.CanFlash ?? true);
             WifiButton.IsEnabled = idle && host && CurrentBoardItem?.SupportsWifi == true;
+            HomeAssistantButton.IsEnabled = host && (idle || _state == RunState.Publishing);
             RunButton.IsEnabled = idle && host;
             ArrangeButton.IsEnabled = idle;
             ExportButton.IsEnabled = idle && host;

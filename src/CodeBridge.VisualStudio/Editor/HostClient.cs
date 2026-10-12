@@ -109,6 +109,20 @@ namespace CodeBridge.VisualStudio.Editor
                 _stderr.AppendLine(line);
         }
 
+        /// <summary>Sends one line to the host's standard input (commands of a running host, such as the serial monitor).</summary>
+        public void SendLine(string line)
+        {
+            try
+            {
+                _process.StandardInput.WriteLine(line);
+                _process.StandardInput.Flush();
+            }
+            catch (Exception)
+            {
+                // the host already ended
+            }
+        }
+
         /// <summary>Asks the host to stop gracefully; kills the whole process tree if it does not exit quickly.</summary>
         public void Stop()
         {

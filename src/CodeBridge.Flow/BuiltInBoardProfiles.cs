@@ -41,6 +41,7 @@ public static partial class BuiltInBoardProfiles
         ])
     {
         FirmwareProject = "esp32-bridge",
+        BuiltInLedPin = 2,
         FlashChip = "esp32",
         PrebuiltFolder = "esp32",
         BootloaderOffset = 0x1000,
@@ -91,6 +92,7 @@ public static partial class BuiltInBoardProfiles
         AnalogMaxValue = 1023,
         Family = CodeBridge.Core.Enums.BoardFamily.Arduino,
         FirmwareProject = "arduino-uno-bridge",
+        BuiltInLedPin = 13,
         Fqbn = "arduino:avr:uno"
     };
 

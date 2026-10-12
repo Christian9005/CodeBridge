@@ -18,6 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\CodeBridge.VisualStudio\CodeBridge.VisualStudio.csproj" />
   </ItemGroup>
 

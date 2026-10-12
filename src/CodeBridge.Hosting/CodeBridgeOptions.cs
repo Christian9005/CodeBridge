@@ -73,6 +73,9 @@ public sealed class CodeBridgeOptions
     /// <summary>When <c>"auto"</c> finds no board, run on the virtual board instead of failing. Handy for demos and first runs.</summary>
     public bool FallbackToSimulator { get; set; } = true;
 
+    /// <summary>Called with every command sent to the board and its answer (to draw or log what the board is doing).</summary>
+    public Action<string, string>? CommandObserver { get; set; }
+
     /// <summary>Connect when the application starts (as a hosted service).</summary>
     public bool AutoConnect { get; set; } = true;
 

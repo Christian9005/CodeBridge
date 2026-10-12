@@ -48,6 +48,8 @@
     <Project Path="src/CodeBridge.Hosting/CodeBridge.Hosting.csproj" />
     <Project Path="src/CodeBridge.Blazor/CodeBridge.Blazor.csproj" />
     <Project Path="src/CodeBridge.HomeAssistant/CodeBridge.HomeAssistant.csproj" />
+    <Project Path="src/CodeBridge.Mcp/CodeBridge.Mcp.csproj" />
+    <Project Path="src/CodeBridge.PlatformIO/CodeBridge.PlatformIO.csproj" />
     <Project Path="src/CodeBridge.Transport/CodeBridge.Transport.csproj" />
     <Project Path="src/CodeBridge.VisualStudio/CodeBridge.VisualStudio.csproj" />
   </Folder>
@@ -55,6 +57,7 @@
     <Project Path="tests/CodeBridge.Core.Tests/CodeBridge.Core.Tests.csproj" />
     <Project Path="tests/CodeBridge.Blazor.Tests/CodeBridge.Blazor.Tests.csproj" />
     <Project Path="tests/CodeBridge.HomeAssistant.Tests/CodeBridge.HomeAssistant.Tests.csproj" />
+    <Project Path="tests/CodeBridge.Mcp.Tests/CodeBridge.Mcp.Tests.csproj" />
     <Project Path="tests/CodeBridge.VisualStudio.Tests/CodeBridge.VisualStudio.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>CodeBridge.PlatformIO</PackageId>
+    <Description>Code mode for CodeBridge boards: creates, builds and uploads PlatformIO firmware projects (ESP32, Arduino) and turns compiler output into diagnostics.</Description>
+    <PackageTags>$(PackageTags);platformio;firmware;arduino-cli;embedded</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CodeBridge.Core.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CodeBridge.Flow\CodeBridge.Flow.csproj" />
+  </ItemGroup>
+
+</Project>

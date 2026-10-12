@@ -70,6 +70,7 @@ See the [API reference](docs/api-reference.md).
   detect the board and flash the firmware.
 - **One-click firmware flashing for ESP32**: uses `esptool`, downloaded on first use over HTTPS and verified by SHA-256.
   No Python, PlatformIO or Arduino IDE needed. The firmware binaries ship inside `CodeBridge.Designer.WinForms`.
+- **Serial monitor and plotter** inside Visual Studio, and **code mode**: create, build and upload C++ firmware with PlatformIO, with errors in the Error List.
 - **Export C#**: turn any flow into readable SDK code (a class for your project, or a console `Program.cs`) from the editor toolbar.
 - **Project and item templates**, a setup window (*Tools > CodeBridge Setup...*) and a starter form command.
 - **Automatic USB board detection** for CP210x, CH340/CH9102, FTDI and official Arduino adapters.
@@ -94,6 +95,7 @@ relays, buzzers, servos, DC/stepper motors, RGB LED, WS2812B NeoPixel, SSD1306 O
 |---|---|
 | `CodeBridge.Hosting` | `services.AddCodeBridge()`: one shared, thread-safe board connection with reconnection and the simulator, for ASP.NET Core, workers and MAUI |
 | `CodeBridge.Blazor` | `<BoardStatus/>`, `<PinToggle/>`, `<PwmSlider/>`, `<AnalogGauge/>`, `<SensorChart/>` components for a live dashboard |
+| `CodeBridge.Mcp` | An [MCP server](docs/mcp.md) so an AI assistant can read the board manifest, design and test flows on the simulator and export C# (hardware is opt-in and confirmed per action) |
 | `CodeBridge.HomeAssistant` | Shows the board in Home Assistant through MQTT discovery (switches, lights, sensors) and finds Home Assistant on your network |
 
 Samples: [`Integration.Blazor`](samples/Integration.Blazor), [`Integration.HomeAssistant`](samples/Integration.HomeAssistant),

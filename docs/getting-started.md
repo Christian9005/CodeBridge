@@ -26,6 +26,19 @@ Before the board can talk to your app it needs the CodeBridge bridge firmware. T
 
 The firmware reports version `0.9.x`; the SDK refuses to connect to an incompatible major/minor version and tells you to update.
 
+## See what the board prints: the serial monitor
+
+*Tools > CodeBridge Serial Monitor* (or the **Monitor** button of the flow editor) reads the board's USB port. Pick the port and baud rate (the one in the board's
+`Serial.begin()`), press **Connect**, and type in the box at the bottom to send text. Switch to **Plotter** to see numbers drawn as a chart: print
+`temp:23.5,light:1800` (or just `23.5,1800`) from the board and each value gets its own line. **Reset board** restarts the board so you can read its start-up messages.
+Choose *Simulator* as the port to try it without a board.
+
+## Write firmware in C++ (code mode)
+
+For people who want the full Arduino-style experience inside Visual Studio: *Tools > CodeBridge Firmware: New Project...* creates a PlatformIO project for your board
+(Blink, Serial plot, the customizable CodeBridge firmware, or empty). Then *Build*, *Upload* and *Clean* from the same menu; compiler errors show in the Error List with a link to the line.
+PlatformIO must be installed once (`pip install platformio`); Visual Studio tells you if it is missing.
+
 ## Use the board over Wi-Fi
 
 The ESP32 can be controlled without the USB cable once it has joined your network. Pairing needs the cable one time:

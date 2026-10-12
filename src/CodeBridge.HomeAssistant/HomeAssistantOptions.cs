@@ -35,7 +35,7 @@ public sealed class HomeAssistantOptions
 
     public TimeSpan MaxReconnectDelay { get; set; } = TimeSpan.FromSeconds(60);
 
-    internal static string SanitizeId(string value)
+    public static string SanitizeId(string value)
     {
         var chars = value.ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '-').ToArray();
         var id = new string(chars);

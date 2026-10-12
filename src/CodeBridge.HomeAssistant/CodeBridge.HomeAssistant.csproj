@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CodeBridge.Hosting\CodeBridge.Hosting.csproj" />
+    <ProjectReference Include="..\CodeBridge.Flow\CodeBridge.Flow.csproj" />
   </ItemGroup>
 
 </Project>

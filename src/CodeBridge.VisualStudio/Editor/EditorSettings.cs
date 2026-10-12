@@ -17,6 +17,15 @@ namespace CodeBridge.VisualStudio.Editor
 
         public string? LastPort { get; set; }
 
+        /// <summary>Home Assistant MQTT broker (address, port, user, device name). The password is stored encrypted in <see cref="BoardTokens"/>.</summary>
+        public string? HaBroker { get; set; }
+
+        public int HaPort { get; set; } = 1883;
+
+        public string? HaUser { get; set; }
+
+        public string? HaDeviceName { get; set; }
+
         /// <summary>True once the CodeBridge Tour was opened automatically (it is only offered once).</summary>
         public bool TourOffered { get; set; }
 
@@ -34,6 +43,10 @@ namespace CodeBridge.VisualStudio.Editor
                     new JavaScriptSerializer().DeserializeObject(File.ReadAllText(FilePath)) is Dictionary<string, object> map)
                 {
                     settings.LastPort = map.TryGetValue("lastPort", out var port) ? port as string : null;
+                    settings.HaBroker = map.TryGetValue("haBroker", out var haBroker) ? haBroker as string : null;
+                    settings.HaPort = map.TryGetValue("haPort", out var haPort) && haPort is int hp && hp > 0 && hp <= 65535 ? hp : 1883;
+                    settings.HaUser = map.TryGetValue("haUser", out var haUser) ? haUser as string : null;
+                    settings.HaDeviceName = map.TryGetValue("haDeviceName", out var haName) ? haName as string : null;
                     settings.TourOffered = map.TryGetValue("tourOffered", out var offered) && offered is bool b && b;
                     settings.TourLastChapter = map.TryGetValue("tourLastChapter", out var last) && last is int i ? i : 0;
                     if (map.TryGetValue("tourVisited", out var visited) && visited is string text)
@@ -62,6 +75,10 @@ namespace CodeBridge.VisualStudio.Editor
                 var map = new Dictionary<string, object?>
                 {
                     ["lastPort"] = LastPort,
+                    ["haBroker"] = HaBroker,
+                    ["haPort"] = HaPort,
+                    ["haUser"] = HaUser,
+                    ["haDeviceName"] = HaDeviceName,
                     ["tourOffered"] = TourOffered,
                     ["tourLastChapter"] = TourLastChapter,
                     ["tourVisited"] = string.Join(",", TourVisited.OrderBy(v => v))

@@ -532,4 +532,29 @@ public class FlowValidatorTests
 
         Assert.True(result.IsValid);
     }
+
+    [Fact]
+    public void Validate_PwmOutputOnMissingOrNonPwmPin_Fails()
+    {
+        foreach (var pin in new[] { 99, 34 }) // does not exist / input-only ESP32 pin
+        {
+            var document = new FlowDocument { BoardId = "esp32-devkit" };
+            document.Nodes.Add(new FlowNode { Id = "pwm", Type = BuiltInBlockCatalog.PwmWrite, Parameters = { ["pin"] = pin } });
+
+            var result = new FlowValidator().Validate(document, BuiltInBlockCatalog.Create(BuiltInBoardProfiles.Esp32DevKit));
+
+            Assert.False(result.IsValid, $"pin {pin} should be rejected");
+        }
+    }
+
+    [Fact]
+    public void Validate_MapWithAnEmptyInputRange_Fails()
+    {
+        var document = new FlowDocument { BoardId = "esp32-devkit" };
+        document.Nodes.Add(new FlowNode { Id = "map", Type = BuiltInBlockCatalog.MathMap, Parameters = { ["inMin"] = 5, ["inMax"] = 5 } });
+
+        var result = new FlowValidator().Validate(document, BuiltInBlockCatalog.Create(BuiltInBoardProfiles.Esp32DevKit));
+
+        Assert.Contains(result.Errors, e => e.Message.Contains("input range is empty"));
+    }
 }

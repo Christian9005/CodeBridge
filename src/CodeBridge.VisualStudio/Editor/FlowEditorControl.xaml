@@ -83,6 +83,7 @@
                     <Button x:Name="ConnectButton" Style="{StaticResource ToolbarButton}" ToolTip="Test the connection with the board and read its firmware version"/>
                     <Button x:Name="UploadButton" Style="{StaticResource ToolbarButton}" ToolTip="Install the CodeBridge firmware on the board (bootloader + firmware)"/>
                     <Button x:Name="WifiButton" Style="{StaticResource ToolbarButton}" ToolTip="Wi-Fi setup: connect an ESP32 to your network and pair it (needs the USB cable once)"/>
+                    <Button x:Name="HomeAssistantButton" Style="{StaticResource ToolbarButton}" ToolTip="Home Assistant: show this flow's inputs and outputs in Home Assistant"/>
 
                     <Rectangle Width="1" Margin="8,2" Fill="{DynamicResource VsToolWindowBorder}"/>
 
@@ -105,6 +106,7 @@
                     <Button x:Name="FitButton" Style="{StaticResource ToolbarButton}" ToolTip="Fit all blocks in view"/>
                     <Rectangle Width="1" Margin="8,2" Fill="{DynamicResource VsToolWindowBorder}"/>
                     <Button x:Name="OutputButton" Style="{StaticResource ToolbarButton}" ToolTip="Show or hide the CodeBridge output panel"/>
+                    <Button x:Name="MonitorButton" Style="{StaticResource ToolbarButton}" ToolTip="Open the serial monitor and plotter for the selected port"/>
                     <Button x:Name="BoardViewButton" Style="{StaticResource ToolbarButton}" ToolTip="Show or hide the board view: a live picture of the pins while the flow runs"/>
                 </StackPanel>
             </DockPanel>
