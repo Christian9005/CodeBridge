@@ -21,6 +21,9 @@ internal static class BoardConnectionService
         ITransport Observe(ITransport transport) =>
             request.CommandObserver is null ? transport : new CommandTapTransport(transport, request.CommandObserver);
 
+        if (request.Transport is not null)
+            return await ConnectAsync(request.BoardProfile, Observe(request.Transport), string.Empty, cancellationToken);
+
         if (request.TransportMode == CodeBridgeTransportMode.Simulator)
             return await ConnectAsync(request.BoardProfile, Observe(new SimulatedTransport(SimulatorOptions(request.BoardProfile))), " (simulator)", cancellationToken);
 

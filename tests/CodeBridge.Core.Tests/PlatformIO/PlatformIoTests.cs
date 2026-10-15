@@ -20,6 +20,8 @@ public class PlatformIoTests : IDisposable
     [InlineData("esp32-devkit", "esp32dev", "espressif32")]
     [InlineData("esp32-s3-devkit", "esp32-s3-devkitc-1", "espressif32")]
     [InlineData("esp32-c3-devkit", "esp32-c3-devkitm-1", "espressif32")]
+    [InlineData("xiao-esp32-s3", "seeed_xiao_esp32s3", "espressif32")]
+    [InlineData("esp32-s2-mini", "lolin_s2_mini", "espressif32")]
     [InlineData("arduino-uno", "uno", "atmelavr")]
     [InlineData("arduino-nano", "nanoatmega328new", "atmelavr")]
     [InlineData("arduino-nano-old", "nanoatmega328", "atmelavr")]

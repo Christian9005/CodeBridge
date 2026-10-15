@@ -31,6 +31,8 @@ public static class PioProject
         "esp32-devkit" => new("esp32-devkit", "esp32dev", "espressif32", "34", "ESP32 DevKit"),
         "esp32-s3-devkit" => new("esp32-s3-devkit", "esp32-s3-devkitc-1", "espressif32", "4", "ESP32-S3 DevKit"),
         "esp32-c3-devkit" => new("esp32-c3-devkit", "esp32-c3-devkitm-1", "espressif32", "0", "ESP32-C3 DevKit"),
+        "xiao-esp32-s3" => new("xiao-esp32-s3", "seeed_xiao_esp32s3", "espressif32", "1", "XIAO ESP32-S3"),
+        "esp32-s2-mini" => new("esp32-s2-mini", "lolin_s2_mini", "espressif32", "1", "ESP32-S2 Mini"),
         "arduino-uno" => new("arduino-uno", "uno", "atmelavr", "A0", "Arduino Uno"),
         "arduino-nano" => new("arduino-nano", "nanoatmega328new", "atmelavr", "A0", "Arduino Nano"),
         "arduino-nano-old" => new("arduino-nano-old", "nanoatmega328", "atmelavr", "A0", "Arduino Nano (old bootloader)"),

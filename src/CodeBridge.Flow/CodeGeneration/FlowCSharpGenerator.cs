@@ -99,7 +99,8 @@ public static class FlowCSharpGenerator
             AssignNames(ordered);
 
             var className = Identifier(_options.ClassName ?? (_document.Name + "Flow"), "Flow");
-            var usesServo = ordered.Any(node => node.Type == BuiltInBlockCatalog.ServoWrite);
+            var usesServo = ordered.Any(node => node.Type == BuiltInBlockCatalog.ServoWrite ||
+                (ModuleBlocks.TryGet(node.Type, out var module) && module.Esp32Only));
             var isArduino = _profile.Family == CodeBridge.Core.Enums.BoardFamily.Arduino;
 
             var body = new Writer(_document, _catalog, _profile, _options) { _indent = 0 };
@@ -214,7 +215,7 @@ public static class FlowCSharpGenerator
         {
             if (usesServo)
             {
-                Line("var esp32 = board as ESP32Board ?? throw new NotSupportedException(\"Servo blocks need an ESP32 board.\");");
+                Line("var esp32 = board as ESP32Board ?? throw new NotSupportedException(\"These blocks need an ESP32 board.\");");
                 Line();
             }
 
@@ -454,6 +455,20 @@ public static class FlowCSharpGenerator
                     Assign(node, "done", "true");
                     break;
                 }
+
+                case var type when ModuleBlocks.TryGet(type, out var module):
+                    module.Emit(new ModuleCode(
+                        _names[node.Id],
+                        _document.BoardId,
+                        Line,
+                        (port, expression) => Assign(node, port, expression),
+                        (port, fallback) => InputExpression(node, port, fallback),
+                        port => HasConnection(node, port),
+                        name => ParamInt(node, definition, name),
+                        name => ParamDouble(node, definition, name),
+                        name => ParamBool(node, definition, name),
+                        name => ParamString(node, definition, name)));
+                    break;
 
                 default:
                     Line($"// TODO: the \"{definition.DisplayName}\" block has no C# export yet. Use the SDK directly");

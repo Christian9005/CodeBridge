@@ -94,6 +94,7 @@
                     <Button x:Name="UploadButton" Style="{StaticResource ToolbarButton}" ToolTip="Install the CodeBridge firmware on the board (bootloader + firmware)"/>
                     <Button x:Name="WifiButton" Style="{StaticResource ToolbarButton}" ToolTip="Wi-Fi setup: connect an ESP32 to your network and pair it (needs the USB cable once)"/>
                     <Button x:Name="HomeAssistantButton" Style="{StaticResource ToolbarButton}" ToolTip="Home Assistant: show this flow's inputs and outputs in Home Assistant"/>
+                    <Button x:Name="MeshButton" Style="{StaticResource ToolbarButton}" ToolTip="Mesh: reach boards without a cable or Wi-Fi through a gateway board (ESP-NOW)"/>
 
                     <Rectangle Width="1" Margin="8,2" Fill="{DynamicResource VsToolWindowBorder}"/>
 

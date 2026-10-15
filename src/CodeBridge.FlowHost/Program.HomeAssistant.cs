@@ -155,6 +155,8 @@ internal static partial class Program
         "arduino-nano" or "arduino-nano-old" => BoardKind.ArduinoNano,
         "arduino-mega" => BoardKind.ArduinoMega,
         "esp32-s3-devkit" => BoardKind.Esp32S3,
+        "xiao-esp32-s3" => BoardKind.XiaoEsp32S3,
+        "esp32-s2-mini" => BoardKind.Esp32S2,
         "esp32-c3-devkit" => BoardKind.Esp32C3,
         _ => BoardKind.Esp32
     };

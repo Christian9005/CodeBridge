@@ -76,7 +76,7 @@ public sealed class FirmwareModeTests : IDisposable
         }
 
         Assert.Contains(NewFirmwareProjectWindow.Templates, t => t.Id == "bridge");
-        Assert.Equal(7, NewFirmwareProjectWindow.Boards.Length);
+        Assert.Equal(9, NewFirmwareProjectWindow.Boards.Length);
     }
 
     [Fact]

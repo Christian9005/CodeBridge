@@ -15,6 +15,12 @@ public enum BoardKind
     /// <summary>ESP32-C3 DevKit.</summary>
     Esp32C3,
 
+    /// <summary>Seeed XIAO ESP32-S3 (USB serial only, no UART bridge).</summary>
+    XiaoEsp32S3,
+
+    /// <summary>ESP32-S2 Mini.</summary>
+    Esp32S2,
+
     /// <summary>Arduino Nano (USB only).</summary>
     ArduinoNano,
 
@@ -35,6 +41,8 @@ internal static class BoardKinds
         BoardKind.ArduinoNano => 21,
         BoardKind.ArduinoMega => 69,
         BoardKind.Esp32S3 => 48,
+        BoardKind.XiaoEsp32S3 => 48,
+        BoardKind.Esp32S2 => 46,
         BoardKind.Esp32C3 => 21,
         _ => 39
     };
@@ -43,7 +51,8 @@ internal static class BoardKinds
     {
         BoardKind.ArduinoUno or BoardKind.ArduinoNano => "ATmega328P-SIM",
         BoardKind.ArduinoMega => "ATmega2560-SIM",
-        BoardKind.Esp32S3 => "ESP32S3-SIM",
+        BoardKind.Esp32S3 or BoardKind.XiaoEsp32S3 => "ESP32S3-SIM",
+        BoardKind.Esp32S2 => "ESP32S2-SIM",
         BoardKind.Esp32C3 => "ESP32C3-SIM",
         _ => "ESP32-SIM"
     };
@@ -72,6 +81,15 @@ public sealed class CodeBridgeOptions
 
     /// <summary>When <c>"auto"</c> finds no board, run on the virtual board instead of failing. Handy for demos and first runs.</summary>
     public bool FallbackToSimulator { get; set; } = true;
+
+    /// <summary>
+    /// Builds the transport to use instead of the USB/Wi-Fi/simulator choice made from <see cref="Port"/>. Used by <c>DeviceFleet</c> to reach a board over the
+    /// ESP-NOW mesh; the returned transport is connected by the service. Set <see cref="TargetLabel"/> to name it in logs and in <c>BoardService.Target</c>.
+    /// </summary>
+    public Func<CancellationToken, Task<CodeBridge.Core.Abstractions.ITransport>>? TransportFactory { get; set; }
+
+    /// <summary>What <c>BoardService.Target</c> shows when <see cref="TransportFactory"/> is used.</summary>
+    public string? TargetLabel { get; set; }
 
     /// <summary>Called with every command sent to the board and its answer (to draw or log what the board is doing).</summary>
     public Action<string, string>? CommandObserver { get; set; }

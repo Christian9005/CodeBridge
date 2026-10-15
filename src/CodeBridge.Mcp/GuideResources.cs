@@ -49,6 +49,13 @@ public sealed class GuideResources
         - **Sensor to brightness**: `gpio.analog-read` -> `math.map` (0..analogMax to 0..255) -> `gpio.pwm-write` (duty).
         - **Threshold**: `gpio.analog-read` + `logic.constant-number` -> `logic.compare` -> `gpio.digital-write` (value).
         - **Servo**: `math.map` (to 0..180) -> `servo.write` (angle).
+        - **Sensors and modules** (ESP32 family; always read `list_block_types` for the exact ports and pins): `sensor.dht` (temperature, humidity), `sensor.ultrasonic` (distance),
+          `sensor.ds18b20`, `sensor.bme280`, `sensor.bh1750` (lux), `sensor.mpu6050`, `sensor.ina219`, `sensor.color`, `sensor.pir`, `sensor.button`, `sensor.analog-percent`;
+          `module.relay`, `module.buzzer`, `module.rgb-led`, `module.neopixel`, `module.lcd` / `module.oled` (use `{value}` in the text), `module.dc-motor`, `module.stepper`.
+          Helpers: `logic.threshold`, `logic.gate`, `math.calc`.
+        - **Thermostat**: `sensor.dht` (temperature) -> `logic.threshold` (limit 28) -> `module.relay` (state) for a fan.
+        - **Night light**: `sensor.bh1750` (lux) -> `logic.threshold` (mode below, limit 50) -> `gpio.digital-write` (value).
+        - **Show a reading**: `sensor.dht` (temperature) -> `module.lcd` (value, text `Temp: {value} C`).
         - **Debug**: wire any value into `debug.log` to see it in the run result.
 
         ## Working loop

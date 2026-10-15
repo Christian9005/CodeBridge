@@ -22,6 +22,8 @@ Include the affected version, reproduction steps and impact. You will get an ans
 
 - USB is trusted (physical access). The TCP/Wi-Fi port is **closed by default**: every client must send `AUTH:<token>` first, and the
   token can only be set over USB (`WTOK`). Without a token the board answers every network command with `ERR:NO_TOKEN`.
+- The ESP-NOW mesh authenticates every frame with an HMAC-SHA256 tag made with a shared 128-bit key (written over USB only), requires a single-use challenge in every command
+  (no replay) and never relays Wi-Fi, token, OTA or MQTT commands. Frames are authenticated, not encrypted. Details in [docs/mesh.md](docs/mesh.md).
 - Unauthenticated connections are dropped after 5 seconds, three wrong tokens drop the connection, and the token is compared in constant time.
 - Tokens are random 128-bit values. CodeBridge stores them encrypted with the Windows user's DPAPI key (`%LOCALAPPDATA%\CodeBridgeoard-tokens.json`)
   and passes them to the helper process through its environment, never on a command line. The Wi-Fi password is sent over USB only, through standard input.

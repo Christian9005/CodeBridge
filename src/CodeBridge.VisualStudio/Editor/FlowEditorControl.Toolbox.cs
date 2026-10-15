@@ -145,6 +145,8 @@ namespace CodeBridge.VisualStudio.Editor
                 case "Acquisition": return new SolidColorBrush(Color.FromRgb(58, 130, 246));
                 case "Dashboard": return new SolidColorBrush(Color.FromRgb(129, 140, 248));
                 case "Actuators": return new SolidColorBrush(Color.FromRgb(203, 166, 247));
+                case "Modules": return new SolidColorBrush(Color.FromRgb(203, 166, 247));
+                case "Sensors": return new SolidColorBrush(Color.FromRgb(232, 121, 249));
                 case "Debug": return new SolidColorBrush(Color.FromRgb(148, 163, 184));
                 default: return new SolidColorBrush(Color.FromRgb(155, 164, 176));
             }

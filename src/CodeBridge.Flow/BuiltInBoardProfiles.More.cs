@@ -110,6 +110,91 @@ public static partial class BuiltInBoardProfiles
         return pins;
     }
 
+    // ---------------------------------------------------------------- Seeed XIAO ESP32-S3
+
+    /// <summary>
+    /// Seeed Studio XIAO ESP32-S3 (also the Sense variant). It has no UART bridge chip: the USB-C port is the chip's own USB serial,
+    /// so it needs its own firmware build (the generic ESP32-S3 image talks on the UART pins instead).
+    /// </summary>
+    public static BoardProfile XiaoEsp32S3 { get; } = new("xiao-esp32-s3", "XIAO ESP32-S3", BuildXiaoEsp32S3Pins())
+    {
+        Family = BoardFamily.ESP32,
+        FirmwareProject = "esp32-bridge",
+        FlashChip = "esp32s3",
+        PrebuiltFolder = "xiaoesp32s3",
+        BootloaderOffset = 0,
+        BuiltInLedPin = 21,
+        Runtime = Esp32Runtime
+    };
+
+    private static IReadOnlyList<BoardPinDefinition> BuildXiaoEsp32S3Pins()
+    {
+        const PinCapability io = PinCapability.DigitalRead | PinCapability.DigitalWrite | PinCapability.Pwm | PinCapability.Interrupt;
+        const PinCapability adc = io | PinCapability.AnalogRead | PinCapability.Adc1;
+        BoardPinDefinition Adc(int gpio, string label, string note, PinCapability extra = PinCapability.None) =>
+            new(gpio, "ADC1", $"{label}: general purpose GPIO with ADC1 (reliable analog input, also with Wi-Fi on). {note}".Trim(), adc | extra | PinCapability.ServoRecommended, label, 10000, 5000);
+
+        return
+        [
+            new(0, "BOOT", "Boot button / strapping pin (not on the header). Use only when you know the boot circuit state.", io | PinCapability.BootStrap, "BOOT", 10000),
+            Adc(1, "D0", string.Empty),
+            Adc(2, "D1", string.Empty),
+            Adc(3, "D2", string.Empty),
+            Adc(4, "D3", string.Empty),
+            Adc(5, "D4", "I2C SDA by default.", PinCapability.I2cSda),
+            Adc(6, "D5", "I2C SCL by default.", PinCapability.I2cScl),
+            Adc(7, "D8", "SPI SCK.", PinCapability.SpiSck),
+            Adc(8, "D9", "SPI MISO.", PinCapability.SpiMiso),
+            Adc(9, "D10", "SPI MOSI.", PinCapability.SpiMosi),
+            new(21, "USER LED", "On-board user LED. It lights when the pin is LOW (use active low).", io, "LED", 10000),
+            new(43, "D6 TX", "UART TX. Free for your own use: the USB serial does not use it.", io | PinCapability.UartTx | PinCapability.ServoRecommended, "D6", 10000),
+            new(44, "D7 RX", "UART RX. Free for your own use: the USB serial does not use it.", io | PinCapability.UartRx | PinCapability.ServoRecommended, "D7", 10000)
+        ];
+    }
+
+    // ---------------------------------------------------------------- ESP32-S2 Mini
+
+    /// <summary>
+    /// ESP32-S2 Mini (LOLIN / Wemos S2 mini and clones). Native USB only. To flash it the first time, hold the 0 button while pressing RST:
+    /// the board then shows up as a serial port even before it has any firmware.
+    /// </summary>
+    public static BoardProfile Esp32S2Mini { get; } = new("esp32-s2-mini", "ESP32-S2 Mini", BuildEsp32S2MiniPins())
+    {
+        Family = BoardFamily.ESP32,
+        FirmwareProject = "esp32-bridge",
+        FlashChip = "esp32s2",
+        PrebuiltFolder = "esp32s2",
+        BootloaderOffset = 0x1000,
+        BuiltInLedPin = 15,
+        Runtime = Esp32Runtime with { MaxStreamChannels = 4, SupportsHardwareTimers = true }
+    };
+
+    private static IReadOnlyList<BoardPinDefinition> BuildEsp32S2MiniPins()
+    {
+        const PinCapability io = PinCapability.DigitalRead | PinCapability.DigitalWrite | PinCapability.Pwm | PinCapability.Interrupt;
+        var pins = new List<BoardPinDefinition>
+        {
+            new(0, "BOOT", "Boot button / strapping pin. Use only when you know the boot circuit state.", io | PinCapability.BootStrap)
+        };
+
+        for (var n = 1; n <= 10; n++)
+            pins.Add(new(n, "ADC1", "General purpose GPIO with ADC1 (reliable analog input, also with Wi-Fi on).", io | PinCapability.AnalogRead | PinCapability.Adc1 | PinCapability.ServoRecommended, MaxDigitalSampleRateHz: 10000, MaxAnalogSampleRateHz: 5000));
+
+        for (var n = 11; n <= 14; n++)
+            pins.Add(new(n, "ADC2", "General purpose GPIO with ADC2 (analog reads are unreliable while Wi-Fi is on).", io | PinCapability.AnalogRead | PinCapability.Adc2 | PinCapability.ServoRecommended, MaxDigitalSampleRateHz: 10000, MaxAnalogSampleRateHz: 2000));
+
+        pins.Add(new(15, "USER LED", "On-board LED (lit when HIGH). ADC2.", io | PinCapability.AnalogRead | PinCapability.Adc2, MaxDigitalSampleRateHz: 10000, MaxAnalogSampleRateHz: 2000));
+        pins.Add(new(16, "ADC2", "General purpose GPIO with ADC2.", io | PinCapability.AnalogRead | PinCapability.Adc2 | PinCapability.ServoRecommended, MaxDigitalSampleRateHz: 10000, MaxAnalogSampleRateHz: 2000));
+        pins.Add(new(17, "DAC1", "DAC output 1 and ADC2.", io | PinCapability.AnalogRead | PinCapability.Adc2, MaxDigitalSampleRateHz: 10000, MaxAnalogSampleRateHz: 2000));
+        pins.Add(new(18, "DAC2", "DAC output 2 and ADC2.", io | PinCapability.AnalogRead | PinCapability.Adc2, MaxDigitalSampleRateHz: 10000, MaxAnalogSampleRateHz: 2000));
+        pins.Add(new(21, "GPIO", "General purpose GPIO.", io | PinCapability.ServoRecommended, MaxDigitalSampleRateHz: 10000));
+
+        foreach (var n in new[] { 33, 34, 35, 36, 37, 38, 39, 40 })
+            pins.Add(new(n, "GPIO", "General purpose GPIO.", io | PinCapability.ServoRecommended, MaxDigitalSampleRateHz: 10000));
+
+        return pins;
+    }
+
     // ---------------------------------------------------------------- Arduino Nano / Mega
 
     /// <summary>Arduino Nano (ATmega328P, new bootloader): an Uno in a small body, plus the analog-only pins A6 and A7.</summary>

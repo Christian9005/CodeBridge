@@ -3130,6 +3130,73 @@
       ]
     },
     {
+      "type": "logic.gate",
+      "displayName": "Logic Gate",
+      "category": "Logic",
+      "description": "Combines two true/false values: AND, OR, XOR, NAND, NOR, or NOT of the first one.",
+      "ports": [
+        {
+          "name": "a",
+          "direction": "input",
+          "valueKind": "boolean",
+          "required": true
+        },
+        {
+          "name": "b",
+          "direction": "input",
+          "valueKind": "boolean",
+          "required": false
+        },
+        {
+          "name": "result",
+          "direction": "output",
+          "valueKind": "boolean",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "operation",
+          "valueKind": "string",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": "and",
+          "options": [
+            {
+              "label": "AND",
+              "value": "and",
+              "description": "True when both are true."
+            },
+            {
+              "label": "OR",
+              "value": "or",
+              "description": "True when at least one is true."
+            },
+            {
+              "label": "XOR",
+              "value": "xor",
+              "description": "True when exactly one is true."
+            },
+            {
+              "label": "NAND",
+              "value": "nand",
+              "description": "False only when both are true."
+            },
+            {
+              "label": "NOR",
+              "value": "nor",
+              "description": "True only when both are false."
+            },
+            {
+              "label": "NOT a",
+              "value": "not",
+              "description": "The opposite of the first one."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "type": "logic.constant-number",
       "displayName": "Number",
       "category": "Logic",
@@ -3149,6 +3216,133 @@
           "required": false,
           "isAdvanced": false,
           "defaultValue": 0
+        }
+      ]
+    },
+    {
+      "type": "logic.threshold",
+      "displayName": "Threshold",
+      "category": "Logic",
+      "description": "True when a number is above (or below) a limit: the quickest way to turn a sensor reading into an on/off decision.",
+      "ports": [
+        {
+          "name": "value",
+          "direction": "input",
+          "valueKind": "number",
+          "required": true
+        },
+        {
+          "name": "result",
+          "direction": "output",
+          "valueKind": "boolean",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "limit",
+          "valueKind": "number",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 25
+        },
+        {
+          "name": "mode",
+          "valueKind": "string",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": "above",
+          "options": [
+            {
+              "label": "Above the limit",
+              "value": "above",
+              "description": "True when the value is greater than the limit."
+            },
+            {
+              "label": "Below the limit",
+              "value": "below",
+              "description": "True when the value is lower than the limit."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "math.calc",
+      "displayName": "Calculate",
+      "category": "Math",
+      "description": "Adds, subtracts, multiplies or divides two numbers (also minimum, maximum and remainder). Handy for unit changes such as \u00B0C to \u00B0F.",
+      "ports": [
+        {
+          "name": "a",
+          "direction": "input",
+          "valueKind": "number",
+          "required": true
+        },
+        {
+          "name": "b",
+          "direction": "input",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "result",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "operation",
+          "valueKind": "string",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": "multiply",
+          "options": [
+            {
+              "label": "Add \u002B",
+              "value": "add",
+              "description": "a \u002B b"
+            },
+            {
+              "label": "Subtract -",
+              "value": "subtract",
+              "description": "a - b"
+            },
+            {
+              "label": "Multiply \u00D7",
+              "value": "multiply",
+              "description": "a \u00D7 b"
+            },
+            {
+              "label": "Divide \u00F7",
+              "value": "divide",
+              "description": "a \u00F7 b"
+            },
+            {
+              "label": "Remainder %",
+              "value": "modulo",
+              "description": "The remainder of a \u00F7 b."
+            },
+            {
+              "label": "Smaller of the two",
+              "value": "min",
+              "description": "The lower one."
+            },
+            {
+              "label": "Larger of the two",
+              "value": "max",
+              "description": "The higher one."
+            }
+          ]
+        },
+        {
+          "name": "b",
+          "valueKind": "number",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 1
         }
       ]
     },
@@ -3235,6 +3429,953 @@
               "label": "False / LOW",
               "value": false,
               "description": "Use LOW for digital outputs."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "module.relay",
+      "displayName": "Relay",
+      "category": "Modules",
+      "description": "Switches a relay module on or off. Most relay boards switch ON when the pin is LOW (active low).",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "state",
+          "direction": "input",
+          "valueKind": "boolean",
+          "required": false
+        },
+        {
+          "name": "done",
+          "direction": "output",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "state",
+          "direction": "output",
+          "valueKind": "boolean",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "pin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 26,
+          "options": [
+            {
+              "label": "D2 - PWM",
+              "value": 2,
+              "description": "General purpose digital I/O pin with PWM output and external interrupt."
+            },
+            {
+              "label": "D3 - PWM",
+              "value": 3,
+              "description": "General purpose digital I/O pin with PWM output and external interrupt."
+            },
+            {
+              "label": "D4 - PWM",
+              "value": 4,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D5 - PWM",
+              "value": 5,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D6 - PWM",
+              "value": 6,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D7 - PWM",
+              "value": 7,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D8 - PWM",
+              "value": 8,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D9 - PWM",
+              "value": 9,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D10 - PWM",
+              "value": 10,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D11 - PWM",
+              "value": 11,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D12 - PWM",
+              "value": 12,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D13 - LED / PWM",
+              "value": 13,
+              "description": "Built-in LED pin with PWM output. Useful for blink tests."
+            },
+            {
+              "label": "D14 - Digital",
+              "value": 14,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D15 - Digital",
+              "value": 15,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D16 - Digital",
+              "value": 16,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D17 - Digital",
+              "value": 17,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D18 - Digital",
+              "value": 18,
+              "description": "General purpose digital I/O pin and external interrupt."
+            },
+            {
+              "label": "D19 - Digital",
+              "value": 19,
+              "description": "General purpose digital I/O pin and external interrupt."
+            },
+            {
+              "label": "D20 - I2C SDA / Interrupt",
+              "value": 20,
+              "description": "I2C SDA and external interrupt."
+            },
+            {
+              "label": "D21 - I2C SCL / Interrupt",
+              "value": 21,
+              "description": "I2C SCL and external interrupt."
+            },
+            {
+              "label": "D22 - Digital",
+              "value": 22,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D23 - Digital",
+              "value": 23,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D24 - Digital",
+              "value": 24,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D25 - Digital",
+              "value": 25,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D26 - Digital",
+              "value": 26,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D27 - Digital",
+              "value": 27,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D28 - Digital",
+              "value": 28,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D29 - Digital",
+              "value": 29,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D30 - Digital",
+              "value": 30,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D31 - Digital",
+              "value": 31,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D32 - Digital",
+              "value": 32,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D33 - Digital",
+              "value": 33,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D34 - Digital",
+              "value": 34,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D35 - Digital",
+              "value": 35,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D36 - Digital",
+              "value": 36,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D37 - Digital",
+              "value": 37,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D38 - Digital",
+              "value": 38,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D39 - Digital",
+              "value": 39,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D40 - Digital",
+              "value": 40,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D41 - Digital",
+              "value": 41,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D42 - Digital",
+              "value": 42,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D43 - Digital",
+              "value": 43,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D44 - PWM",
+              "value": 44,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D45 - PWM",
+              "value": 45,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D46 - PWM",
+              "value": 46,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D47 - Digital",
+              "value": 47,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D48 - Digital",
+              "value": 48,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D49 - Digital",
+              "value": 49,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D50 - SPI MISO",
+              "value": 50,
+              "description": "SPI MISO."
+            },
+            {
+              "label": "D51 - SPI MOSI",
+              "value": 51,
+              "description": "SPI MOSI."
+            },
+            {
+              "label": "D52 - SPI SCK",
+              "value": 52,
+              "description": "SPI SCK."
+            },
+            {
+              "label": "D53 - SPI CS",
+              "value": 53,
+              "description": "SPI chip select (SS). Keep it an output for SPI to work."
+            },
+            {
+              "label": "A0 - Analog 0",
+              "value": 54,
+              "description": "Analog input A0. Can also be used as digital pin 54."
+            },
+            {
+              "label": "A1 - Analog 1",
+              "value": 55,
+              "description": "Analog input A1. Can also be used as digital pin 55."
+            },
+            {
+              "label": "A2 - Analog 2",
+              "value": 56,
+              "description": "Analog input A2. Can also be used as digital pin 56."
+            },
+            {
+              "label": "A3 - Analog 3",
+              "value": 57,
+              "description": "Analog input A3. Can also be used as digital pin 57."
+            },
+            {
+              "label": "A4 - Analog 4",
+              "value": 58,
+              "description": "Analog input A4. Can also be used as digital pin 58."
+            },
+            {
+              "label": "A5 - Analog 5",
+              "value": 59,
+              "description": "Analog input A5. Can also be used as digital pin 59."
+            },
+            {
+              "label": "A6 - Analog 6",
+              "value": 60,
+              "description": "Analog input A6. Can also be used as digital pin 60."
+            },
+            {
+              "label": "A7 - Analog 7",
+              "value": 61,
+              "description": "Analog input A7. Can also be used as digital pin 61."
+            },
+            {
+              "label": "A8 - Analog 8",
+              "value": 62,
+              "description": "Analog input A8. Can also be used as digital pin 62."
+            },
+            {
+              "label": "A9 - Analog 9",
+              "value": 63,
+              "description": "Analog input A9. Can also be used as digital pin 63."
+            },
+            {
+              "label": "A10 - Analog 10",
+              "value": 64,
+              "description": "Analog input A10. Can also be used as digital pin 64."
+            },
+            {
+              "label": "A11 - Analog 11",
+              "value": 65,
+              "description": "Analog input A11. Can also be used as digital pin 65."
+            },
+            {
+              "label": "A12 - Analog 12",
+              "value": 66,
+              "description": "Analog input A12. Can also be used as digital pin 66."
+            },
+            {
+              "label": "A13 - Analog 13",
+              "value": 67,
+              "description": "Analog input A13. Can also be used as digital pin 67."
+            },
+            {
+              "label": "A14 - Analog 14",
+              "value": 68,
+              "description": "Analog input A14. Can also be used as digital pin 68."
+            },
+            {
+              "label": "A15 - Analog 15",
+              "value": 69,
+              "description": "Analog input A15. Can also be used as digital pin 69."
+            }
+          ]
+        },
+        {
+          "name": "state",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": true,
+          "options": [
+            {
+              "label": "On",
+              "value": true,
+              "description": "Switch the load on."
+            },
+            {
+              "label": "Off",
+              "value": false,
+              "description": "Switch the load off."
+            }
+          ]
+        },
+        {
+          "name": "activeLow",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": true,
+          "defaultValue": true,
+          "options": [
+            {
+              "label": "Yes",
+              "value": true,
+              "description": "On."
+            },
+            {
+              "label": "No",
+              "value": false,
+              "description": "Off."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sensor.analog-percent",
+      "displayName": "Analog Sensor (%)",
+      "category": "Sensors",
+      "description": "Reads a light sensor, soil probe, potentiometer or any analog sensor as a percentage from 0 to 100.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "percent",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "raw",
+          "direction": "output",
+          "valueKind": "integer",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "pin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 54,
+          "options": [
+            {
+              "label": "A0 - Analog 0",
+              "value": 54,
+              "description": "Analog input A0. Can also be used as digital pin 54."
+            },
+            {
+              "label": "A1 - Analog 1",
+              "value": 55,
+              "description": "Analog input A1. Can also be used as digital pin 55."
+            },
+            {
+              "label": "A2 - Analog 2",
+              "value": 56,
+              "description": "Analog input A2. Can also be used as digital pin 56."
+            },
+            {
+              "label": "A3 - Analog 3",
+              "value": 57,
+              "description": "Analog input A3. Can also be used as digital pin 57."
+            },
+            {
+              "label": "A4 - Analog 4",
+              "value": 58,
+              "description": "Analog input A4. Can also be used as digital pin 58."
+            },
+            {
+              "label": "A5 - Analog 5",
+              "value": 59,
+              "description": "Analog input A5. Can also be used as digital pin 59."
+            },
+            {
+              "label": "A6 - Analog 6",
+              "value": 60,
+              "description": "Analog input A6. Can also be used as digital pin 60."
+            },
+            {
+              "label": "A7 - Analog 7",
+              "value": 61,
+              "description": "Analog input A7. Can also be used as digital pin 61."
+            },
+            {
+              "label": "A8 - Analog 8",
+              "value": 62,
+              "description": "Analog input A8. Can also be used as digital pin 62."
+            },
+            {
+              "label": "A9 - Analog 9",
+              "value": 63,
+              "description": "Analog input A9. Can also be used as digital pin 63."
+            },
+            {
+              "label": "A10 - Analog 10",
+              "value": 64,
+              "description": "Analog input A10. Can also be used as digital pin 64."
+            },
+            {
+              "label": "A11 - Analog 11",
+              "value": 65,
+              "description": "Analog input A11. Can also be used as digital pin 65."
+            },
+            {
+              "label": "A12 - Analog 12",
+              "value": 66,
+              "description": "Analog input A12. Can also be used as digital pin 66."
+            },
+            {
+              "label": "A13 - Analog 13",
+              "value": 67,
+              "description": "Analog input A13. Can also be used as digital pin 67."
+            },
+            {
+              "label": "A14 - Analog 14",
+              "value": 68,
+              "description": "Analog input A14. Can also be used as digital pin 68."
+            },
+            {
+              "label": "A15 - Analog 15",
+              "value": 69,
+              "description": "Analog input A15. Can also be used as digital pin 69."
+            }
+          ]
+        },
+        {
+          "name": "invert",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": false,
+          "options": [
+            {
+              "label": "Normal",
+              "value": false,
+              "description": "More voltage = higher percentage."
+            },
+            {
+              "label": "Inverted",
+              "value": true,
+              "description": "More voltage = lower percentage (typical for soil moisture probes)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sensor.button",
+      "displayName": "Button",
+      "category": "Sensors",
+      "description": "True while a push button is pressed. Wired between the pin and GND it uses the board\u0027s internal pull-up, so no resistor is needed.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "pressed",
+          "direction": "output",
+          "valueKind": "boolean",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "pin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 4,
+          "options": [
+            {
+              "label": "D2 - PWM",
+              "value": 2,
+              "description": "General purpose digital I/O pin with PWM output and external interrupt."
+            },
+            {
+              "label": "D3 - PWM",
+              "value": 3,
+              "description": "General purpose digital I/O pin with PWM output and external interrupt."
+            },
+            {
+              "label": "D4 - PWM",
+              "value": 4,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D5 - PWM",
+              "value": 5,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D6 - PWM",
+              "value": 6,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D7 - PWM",
+              "value": 7,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D8 - PWM",
+              "value": 8,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D9 - PWM",
+              "value": 9,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D10 - PWM",
+              "value": 10,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D11 - PWM",
+              "value": 11,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D12 - PWM",
+              "value": 12,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D13 - LED / PWM",
+              "value": 13,
+              "description": "Built-in LED pin with PWM output. Useful for blink tests."
+            },
+            {
+              "label": "D14 - Digital",
+              "value": 14,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D15 - Digital",
+              "value": 15,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D16 - Digital",
+              "value": 16,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D17 - Digital",
+              "value": 17,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D18 - Digital",
+              "value": 18,
+              "description": "General purpose digital I/O pin and external interrupt."
+            },
+            {
+              "label": "D19 - Digital",
+              "value": 19,
+              "description": "General purpose digital I/O pin and external interrupt."
+            },
+            {
+              "label": "D20 - I2C SDA / Interrupt",
+              "value": 20,
+              "description": "I2C SDA and external interrupt."
+            },
+            {
+              "label": "D21 - I2C SCL / Interrupt",
+              "value": 21,
+              "description": "I2C SCL and external interrupt."
+            },
+            {
+              "label": "D22 - Digital",
+              "value": 22,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D23 - Digital",
+              "value": 23,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D24 - Digital",
+              "value": 24,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D25 - Digital",
+              "value": 25,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D26 - Digital",
+              "value": 26,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D27 - Digital",
+              "value": 27,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D28 - Digital",
+              "value": 28,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D29 - Digital",
+              "value": 29,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D30 - Digital",
+              "value": 30,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D31 - Digital",
+              "value": 31,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D32 - Digital",
+              "value": 32,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D33 - Digital",
+              "value": 33,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D34 - Digital",
+              "value": 34,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D35 - Digital",
+              "value": 35,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D36 - Digital",
+              "value": 36,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D37 - Digital",
+              "value": 37,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D38 - Digital",
+              "value": 38,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D39 - Digital",
+              "value": 39,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D40 - Digital",
+              "value": 40,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D41 - Digital",
+              "value": 41,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D42 - Digital",
+              "value": 42,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D43 - Digital",
+              "value": 43,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D44 - PWM",
+              "value": 44,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D45 - PWM",
+              "value": 45,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D46 - PWM",
+              "value": 46,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D47 - Digital",
+              "value": 47,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D48 - Digital",
+              "value": 48,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D49 - Digital",
+              "value": 49,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D50 - SPI MISO",
+              "value": 50,
+              "description": "SPI MISO."
+            },
+            {
+              "label": "D51 - SPI MOSI",
+              "value": 51,
+              "description": "SPI MOSI."
+            },
+            {
+              "label": "D52 - SPI SCK",
+              "value": 52,
+              "description": "SPI SCK."
+            },
+            {
+              "label": "D53 - SPI CS",
+              "value": 53,
+              "description": "SPI chip select (SS). Keep it an output for SPI to work."
+            },
+            {
+              "label": "A0 - Analog 0",
+              "value": 54,
+              "description": "Analog input A0. Can also be used as digital pin 54."
+            },
+            {
+              "label": "A1 - Analog 1",
+              "value": 55,
+              "description": "Analog input A1. Can also be used as digital pin 55."
+            },
+            {
+              "label": "A2 - Analog 2",
+              "value": 56,
+              "description": "Analog input A2. Can also be used as digital pin 56."
+            },
+            {
+              "label": "A3 - Analog 3",
+              "value": 57,
+              "description": "Analog input A3. Can also be used as digital pin 57."
+            },
+            {
+              "label": "A4 - Analog 4",
+              "value": 58,
+              "description": "Analog input A4. Can also be used as digital pin 58."
+            },
+            {
+              "label": "A5 - Analog 5",
+              "value": 59,
+              "description": "Analog input A5. Can also be used as digital pin 59."
+            },
+            {
+              "label": "A6 - Analog 6",
+              "value": 60,
+              "description": "Analog input A6. Can also be used as digital pin 60."
+            },
+            {
+              "label": "A7 - Analog 7",
+              "value": 61,
+              "description": "Analog input A7. Can also be used as digital pin 61."
+            },
+            {
+              "label": "A8 - Analog 8",
+              "value": 62,
+              "description": "Analog input A8. Can also be used as digital pin 62."
+            },
+            {
+              "label": "A9 - Analog 9",
+              "value": 63,
+              "description": "Analog input A9. Can also be used as digital pin 63."
+            },
+            {
+              "label": "A10 - Analog 10",
+              "value": 64,
+              "description": "Analog input A10. Can also be used as digital pin 64."
+            },
+            {
+              "label": "A11 - Analog 11",
+              "value": 65,
+              "description": "Analog input A11. Can also be used as digital pin 65."
+            },
+            {
+              "label": "A12 - Analog 12",
+              "value": 66,
+              "description": "Analog input A12. Can also be used as digital pin 66."
+            },
+            {
+              "label": "A13 - Analog 13",
+              "value": 67,
+              "description": "Analog input A13. Can also be used as digital pin 67."
+            },
+            {
+              "label": "A14 - Analog 14",
+              "value": 68,
+              "description": "Analog input A14. Can also be used as digital pin 68."
+            },
+            {
+              "label": "A15 - Analog 15",
+              "value": 69,
+              "description": "Analog input A15. Can also be used as digital pin 69."
+            }
+          ]
+        },
+        {
+          "name": "pullUp",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": true,
+          "options": [
+            {
+              "label": "Button to GND (pull-up)",
+              "value": true,
+              "description": "Pressed = LOW. The usual wiring."
+            },
+            {
+              "label": "Button to 3.3 V",
+              "value": false,
+              "description": "Pressed = HIGH. Needs an external pull-down resistor."
             }
           ]
         }

@@ -1495,6 +1495,73 @@
       ]
     },
     {
+      "type": "logic.gate",
+      "displayName": "Logic Gate",
+      "category": "Logic",
+      "description": "Combines two true/false values: AND, OR, XOR, NAND, NOR, or NOT of the first one.",
+      "ports": [
+        {
+          "name": "a",
+          "direction": "input",
+          "valueKind": "boolean",
+          "required": true
+        },
+        {
+          "name": "b",
+          "direction": "input",
+          "valueKind": "boolean",
+          "required": false
+        },
+        {
+          "name": "result",
+          "direction": "output",
+          "valueKind": "boolean",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "operation",
+          "valueKind": "string",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": "and",
+          "options": [
+            {
+              "label": "AND",
+              "value": "and",
+              "description": "True when both are true."
+            },
+            {
+              "label": "OR",
+              "value": "or",
+              "description": "True when at least one is true."
+            },
+            {
+              "label": "XOR",
+              "value": "xor",
+              "description": "True when exactly one is true."
+            },
+            {
+              "label": "NAND",
+              "value": "nand",
+              "description": "False only when both are true."
+            },
+            {
+              "label": "NOR",
+              "value": "nor",
+              "description": "True only when both are false."
+            },
+            {
+              "label": "NOT a",
+              "value": "not",
+              "description": "The opposite of the first one."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "type": "logic.constant-number",
       "displayName": "Number",
       "category": "Logic",
@@ -1514,6 +1581,133 @@
           "required": false,
           "isAdvanced": false,
           "defaultValue": 0
+        }
+      ]
+    },
+    {
+      "type": "logic.threshold",
+      "displayName": "Threshold",
+      "category": "Logic",
+      "description": "True when a number is above (or below) a limit: the quickest way to turn a sensor reading into an on/off decision.",
+      "ports": [
+        {
+          "name": "value",
+          "direction": "input",
+          "valueKind": "number",
+          "required": true
+        },
+        {
+          "name": "result",
+          "direction": "output",
+          "valueKind": "boolean",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "limit",
+          "valueKind": "number",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 25
+        },
+        {
+          "name": "mode",
+          "valueKind": "string",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": "above",
+          "options": [
+            {
+              "label": "Above the limit",
+              "value": "above",
+              "description": "True when the value is greater than the limit."
+            },
+            {
+              "label": "Below the limit",
+              "value": "below",
+              "description": "True when the value is lower than the limit."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "math.calc",
+      "displayName": "Calculate",
+      "category": "Math",
+      "description": "Adds, subtracts, multiplies or divides two numbers (also minimum, maximum and remainder). Handy for unit changes such as \u00B0C to \u00B0F.",
+      "ports": [
+        {
+          "name": "a",
+          "direction": "input",
+          "valueKind": "number",
+          "required": true
+        },
+        {
+          "name": "b",
+          "direction": "input",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "result",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "operation",
+          "valueKind": "string",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": "multiply",
+          "options": [
+            {
+              "label": "Add \u002B",
+              "value": "add",
+              "description": "a \u002B b"
+            },
+            {
+              "label": "Subtract -",
+              "value": "subtract",
+              "description": "a - b"
+            },
+            {
+              "label": "Multiply \u00D7",
+              "value": "multiply",
+              "description": "a \u00D7 b"
+            },
+            {
+              "label": "Divide \u00F7",
+              "value": "divide",
+              "description": "a \u00F7 b"
+            },
+            {
+              "label": "Remainder %",
+              "value": "modulo",
+              "description": "The remainder of a \u00F7 b."
+            },
+            {
+              "label": "Smaller of the two",
+              "value": "min",
+              "description": "The lower one."
+            },
+            {
+              "label": "Larger of the two",
+              "value": "max",
+              "description": "The higher one."
+            }
+          ]
+        },
+        {
+          "name": "b",
+          "valueKind": "number",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 1
         }
       ]
     },
@@ -1600,6 +1794,403 @@
               "label": "False / LOW",
               "value": false,
               "description": "Use LOW for digital outputs."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "module.relay",
+      "displayName": "Relay",
+      "category": "Modules",
+      "description": "Switches a relay module on or off. Most relay boards switch ON when the pin is LOW (active low).",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "state",
+          "direction": "input",
+          "valueKind": "boolean",
+          "required": false
+        },
+        {
+          "name": "done",
+          "direction": "output",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "state",
+          "direction": "output",
+          "valueKind": "boolean",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "pin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 2,
+          "options": [
+            {
+              "label": "D2 - Interrupt",
+              "value": 2,
+              "description": "Digital I/O pin with external interrupt support."
+            },
+            {
+              "label": "D3 - PWM / Interrupt",
+              "value": 3,
+              "description": "Digital I/O pin with PWM and external interrupt support."
+            },
+            {
+              "label": "D4 - Digital",
+              "value": 4,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D5 - PWM",
+              "value": 5,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D6 - PWM",
+              "value": 6,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D7 - Digital",
+              "value": 7,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D8 - Digital",
+              "value": 8,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D9 - Servo / PWM",
+              "value": 9,
+              "description": "Recommended servo/PWM output pin."
+            },
+            {
+              "label": "D10 - Servo / PWM / SPI CS",
+              "value": 10,
+              "description": "Recommended servo/PWM output pin. Also commonly used as SPI chip select."
+            },
+            {
+              "label": "D11 - PWM / SPI MOSI",
+              "value": 11,
+              "description": "PWM output pin and SPI MOSI."
+            },
+            {
+              "label": "D12 - SPI MISO",
+              "value": 12,
+              "description": "Digital I/O pin and SPI MISO."
+            },
+            {
+              "label": "D13 - LED / SPI SCK",
+              "value": 13,
+              "description": "Built-in LED pin and SPI SCK. Useful for blink tests."
+            },
+            {
+              "label": "A0 - Analog 0",
+              "value": 14,
+              "description": "Analog input A0. Can also be used as digital pin 14."
+            },
+            {
+              "label": "A1 - Analog 1",
+              "value": 15,
+              "description": "Analog input A1. Can also be used as digital pin 15."
+            },
+            {
+              "label": "A2 - Analog 2",
+              "value": 16,
+              "description": "Analog input A2. Can also be used as digital pin 16."
+            },
+            {
+              "label": "A3 - Analog 3",
+              "value": 17,
+              "description": "Analog input A3. Can also be used as digital pin 17."
+            },
+            {
+              "label": "A4 - SDA / Analog 4",
+              "value": 18,
+              "description": "Analog input A4 and I2C SDA. Can also be used as digital pin 18."
+            },
+            {
+              "label": "A5 - SCL / Analog 5",
+              "value": 19,
+              "description": "Analog input A5 and I2C SCL. Can also be used as digital pin 19."
+            }
+          ]
+        },
+        {
+          "name": "state",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": true,
+          "options": [
+            {
+              "label": "On",
+              "value": true,
+              "description": "Switch the load on."
+            },
+            {
+              "label": "Off",
+              "value": false,
+              "description": "Switch the load off."
+            }
+          ]
+        },
+        {
+          "name": "activeLow",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": true,
+          "defaultValue": true,
+          "options": [
+            {
+              "label": "Yes",
+              "value": true,
+              "description": "On."
+            },
+            {
+              "label": "No",
+              "value": false,
+              "description": "Off."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sensor.analog-percent",
+      "displayName": "Analog Sensor (%)",
+      "category": "Sensors",
+      "description": "Reads a light sensor, soil probe, potentiometer or any analog sensor as a percentage from 0 to 100.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "percent",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "raw",
+          "direction": "output",
+          "valueKind": "integer",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "pin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 14,
+          "options": [
+            {
+              "label": "A0 - Analog 0",
+              "value": 14,
+              "description": "Analog input A0. Can also be used as digital pin 14."
+            },
+            {
+              "label": "A1 - Analog 1",
+              "value": 15,
+              "description": "Analog input A1. Can also be used as digital pin 15."
+            },
+            {
+              "label": "A2 - Analog 2",
+              "value": 16,
+              "description": "Analog input A2. Can also be used as digital pin 16."
+            },
+            {
+              "label": "A3 - Analog 3",
+              "value": 17,
+              "description": "Analog input A3. Can also be used as digital pin 17."
+            },
+            {
+              "label": "A4 - SDA / Analog 4",
+              "value": 18,
+              "description": "Analog input A4 and I2C SDA. Can also be used as digital pin 18."
+            },
+            {
+              "label": "A5 - SCL / Analog 5",
+              "value": 19,
+              "description": "Analog input A5 and I2C SCL. Can also be used as digital pin 19."
+            }
+          ]
+        },
+        {
+          "name": "invert",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": false,
+          "options": [
+            {
+              "label": "Normal",
+              "value": false,
+              "description": "More voltage = higher percentage."
+            },
+            {
+              "label": "Inverted",
+              "value": true,
+              "description": "More voltage = lower percentage (typical for soil moisture probes)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sensor.button",
+      "displayName": "Button",
+      "category": "Sensors",
+      "description": "True while a push button is pressed. Wired between the pin and GND it uses the board\u0027s internal pull-up, so no resistor is needed.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "pressed",
+          "direction": "output",
+          "valueKind": "boolean",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "pin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 4,
+          "options": [
+            {
+              "label": "D2 - Interrupt",
+              "value": 2,
+              "description": "Digital I/O pin with external interrupt support."
+            },
+            {
+              "label": "D3 - PWM / Interrupt",
+              "value": 3,
+              "description": "Digital I/O pin with PWM and external interrupt support."
+            },
+            {
+              "label": "D4 - Digital",
+              "value": 4,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D5 - PWM",
+              "value": 5,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D6 - PWM",
+              "value": 6,
+              "description": "General purpose digital I/O pin with PWM output."
+            },
+            {
+              "label": "D7 - Digital",
+              "value": 7,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D8 - Digital",
+              "value": 8,
+              "description": "General purpose digital I/O pin."
+            },
+            {
+              "label": "D9 - Servo / PWM",
+              "value": 9,
+              "description": "Recommended servo/PWM output pin."
+            },
+            {
+              "label": "D10 - Servo / PWM / SPI CS",
+              "value": 10,
+              "description": "Recommended servo/PWM output pin. Also commonly used as SPI chip select."
+            },
+            {
+              "label": "D11 - PWM / SPI MOSI",
+              "value": 11,
+              "description": "PWM output pin and SPI MOSI."
+            },
+            {
+              "label": "D12 - SPI MISO",
+              "value": 12,
+              "description": "Digital I/O pin and SPI MISO."
+            },
+            {
+              "label": "D13 - LED / SPI SCK",
+              "value": 13,
+              "description": "Built-in LED pin and SPI SCK. Useful for blink tests."
+            },
+            {
+              "label": "A0 - Analog 0",
+              "value": 14,
+              "description": "Analog input A0. Can also be used as digital pin 14."
+            },
+            {
+              "label": "A1 - Analog 1",
+              "value": 15,
+              "description": "Analog input A1. Can also be used as digital pin 15."
+            },
+            {
+              "label": "A2 - Analog 2",
+              "value": 16,
+              "description": "Analog input A2. Can also be used as digital pin 16."
+            },
+            {
+              "label": "A3 - Analog 3",
+              "value": 17,
+              "description": "Analog input A3. Can also be used as digital pin 17."
+            },
+            {
+              "label": "A4 - SDA / Analog 4",
+              "value": 18,
+              "description": "Analog input A4 and I2C SDA. Can also be used as digital pin 18."
+            },
+            {
+              "label": "A5 - SCL / Analog 5",
+              "value": 19,
+              "description": "Analog input A5 and I2C SCL. Can also be used as digital pin 19."
+            }
+          ]
+        },
+        {
+          "name": "pullUp",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": true,
+          "options": [
+            {
+              "label": "Button to GND (pull-up)",
+              "value": true,
+              "description": "Pressed = LOW. The usual wiring."
+            },
+            {
+              "label": "Button to 3.3 V",
+              "value": false,
+              "description": "Pressed = HIGH. Needs an external pull-down resistor."
             }
           ]
         }

@@ -206,6 +206,12 @@ public sealed class FlowRuntime
         RegisterHandler(BuiltInBlockCatalog.DebugLog, HandleDebugLogAsync);
         RegisterHandler(BuiltInBlockCatalog.MathMap, HandleMapAsync);
         RegisterHandler(BuiltInBlockCatalog.PwmWrite, HandlePwmWriteAsync);
+
+        foreach (var module in ModuleBlocks.All)
+        {
+            var run = module.Run;
+            RegisterHandler(module.Type, context => run(new ModuleRun(context)));
+        }
     }
 
     private static async ValueTask ReportAsync(

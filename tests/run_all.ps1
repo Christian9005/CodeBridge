@@ -74,7 +74,7 @@ Step 'Tests' 'CodeBridge.Core.Tests' {
 }
 
 # ------------------------------------------------------------------ 3. firmware
-foreach ($env in @(@('esp32-bridge', 'esp32'), @('esp32-bridge', 'esp32s3'), @('esp32-bridge', 'esp32c3'), @('arduino-uno-bridge', 'uno'), @('arduino-uno-bridge', 'nano'), @('arduino-uno-bridge', 'mega'))) {
+foreach ($env in @(@('esp32-bridge', 'esp32'), @('esp32-bridge', 'esp32s3'), @('esp32-bridge', 'esp32c3'), @('esp32-bridge', 'xiao_esp32s3'), @('esp32-bridge', 'esp32s2'), @('arduino-uno-bridge', 'uno'), @('arduino-uno-bridge', 'nano'), @('arduino-uno-bridge', 'mega'))) {
     $project, $name = $env
     $body = {
         if ($Fast) { return Skip 'fast mode' }
@@ -103,7 +103,7 @@ Step 'Host (simulator)' 'boards, ports and catalog' {
     $ports = Host-Json @('ports')
     if (-not ($ports.ports.name -contains 'Simulator')) { return 'FAIL: the simulator is not listed' }
 }
-foreach ($board in 'esp32-devkit', 'esp32-s3-devkit', 'esp32-c3-devkit', 'arduino-uno', 'arduino-nano', 'arduino-mega') {
+foreach ($board in 'esp32-devkit', 'esp32-s3-devkit', 'esp32-c3-devkit', 'xiao-esp32-s3', 'esp32-s2-mini', 'arduino-uno', 'arduino-nano', 'arduino-mega') {
     $body = {
         $r = Host-Json @('test', '--board', $board, '--port', 'simulator')
         if (-not ($r | Where-Object { $_.type -eq 'connected' })) { 'FAIL: did not connect' }

@@ -967,6 +967,8 @@ public sealed class FlowCanvasControl : Control
             "Logic" => Color.FromArgb(56, 189, 248),
             "Math" => Color.FromArgb(236, 98, 170),
             "Actuators" => Color.FromArgb(203, 166, 247),
+            "Modules" => Color.FromArgb(203, 166, 247),
+            "Sensors" => Color.FromArgb(232, 121, 249),
             "Acquisition" => DesignerTheme.Copper,
             "Dashboard" => Color.FromArgb(129, 140, 248),
             "Debug" => DesignerTheme.MutedText,

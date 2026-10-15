@@ -16,7 +16,7 @@ public static partial class BuiltInBoardProfiles
             new(1, "UART TX0", "Programming/debug serial TX pin. Avoid for normal GPIO while using USB serial.", PinCapability.DigitalWrite | PinCapability.UartTx | PinCapability.Reserved),
             new(2, "LED", "On-board LED on many ESP32 dev kits. Also a boot strap pin.", Digital | PinCapability.Pwm | PinCapability.BootStrap),
             new(3, "UART RX0", "Programming/debug serial RX pin. Avoid for normal GPIO while using USB serial.", PinCapability.DigitalRead | PinCapability.UartRx | PinCapability.Reserved),
-            new(4, "GPIO", "General purpose GPIO. Also a boot strap pin on many boards; avoid for servos.", Digital | PinCapability.AnalogRead | PinCapability.Pwm | PinCapability.BootStrap | PinCapability.Interrupt | PinCapability.Adc2, MaxDigitalSampleRateHz: 10000, MaxAnalogSampleRateHz: 2000),
+            new(4, "GPIO", "General purpose GPIO. Shares ADC2 with Wi-Fi, so prefer another pin for analog readings.", Digital | PinCapability.AnalogRead | PinCapability.Pwm | PinCapability.Interrupt | PinCapability.Adc2, MaxDigitalSampleRateHz: 10000, MaxAnalogSampleRateHz: 2000),
             new(5, "GPIO", "General purpose GPIO. Also a boot strap pin on many boards.", Digital | PinCapability.Pwm | PinCapability.BootStrap | PinCapability.Interrupt, MaxDigitalSampleRateHz: 10000),
             new(12, "GPIO", "ADC2 pin and boot strap pin. Avoid if boot behavior becomes unstable.", Digital | PinCapability.AnalogRead | PinCapability.Pwm | PinCapability.BootStrap | PinCapability.Adc2),
             new(13, "GPIO", "General purpose GPIO with ADC2/PWM support. Recommended for servo/PWM output.", Digital | PinCapability.AnalogRead | PinCapability.Pwm | PinCapability.ServoRecommended | PinCapability.Interrupt | PinCapability.Adc2, MaxDigitalSampleRateHz: 10000, MaxAnalogSampleRateHz: 2000),
@@ -105,6 +105,8 @@ public static partial class BuiltInBoardProfiles
     [
         Esp32DevKit,
         Esp32S3DevKit,
+        XiaoEsp32S3,
+        Esp32S2Mini,
         Esp32C3DevKit,
         ArduinoUno,
         ArduinoNano,
