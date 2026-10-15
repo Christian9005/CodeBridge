@@ -1,17 +1,21 @@
 @inherits CodeBridgeComponentBase
 
 <div class="cb-card">
-    <div class="cb-row" style="justify-content:space-between">
-        <div>
-            <div class="cb-title">@(Label ?? $"GPIO {Pin}")</div>
-            <div class="cb-muted">pin @Pin · @(_on ? "ON" : "OFF")</div>
+    <div class="cb-head">
+        <div class="cb-title">@(Label ?? $"GPIO {Pin}")</div>
+        <span class="cb-pin">GPIO @Pin</span>
+    </div>
+    <div class="cb-switch-row">
+        <span class="cb-muted">@(ActiveLow ? "Digital output, active low" : "Digital output")</span>
+        <div class="cb-row">
+            <span class="cb-switch-state @(_on ? "on" : "")" aria-hidden="true">@(_on ? "ON" : "OFF")</span>
+            <button class="cb-switch @(_on ? "on" : "")" role="switch" aria-checked="@(_on ? "true" : "false")" aria-label="@(Label ?? $"GPIO {Pin}")"
+                    disabled="@_busy" @onclick="ToggleAsync"></button>
         </div>
-        <button class="cb-switch @(_on ? "on" : "")" role="switch" aria-checked="@(_on ? "true" : "false")" aria-label="@(Label ?? $"GPIO {Pin}")"
-                disabled="@_busy" @onclick="ToggleAsync"></button>
     </div>
     @if (Error is not null)
     {
-        <div class="cb-error">@Error</div>
+        <div class="cb-error" role="alert">@Error</div>
     }
 </div>
 

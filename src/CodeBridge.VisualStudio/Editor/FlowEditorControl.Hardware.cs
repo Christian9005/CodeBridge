@@ -88,6 +88,7 @@ namespace CodeBridge.VisualStudio.Editor
             SetButton(UploadButton, IconKind.Upload, "Upload Firmware");
             SetButton(WifiButton, IconKind.Wifi, "Wi-Fi");
             SetButton(HomeAssistantButton, IconKind.Home, "Home Assistant");
+            SetButton(MeshButton, IconKind.Mesh, "Mesh");
             SetButton(RunButton, IconKind.Run, "Run");
             SetButton(StopButton, IconKind.Stop, "Stop");
             SetButton(UndoButton, IconKind.Undo, null);
@@ -112,6 +113,7 @@ namespace CodeBridge.VisualStudio.Editor
             UploadButton.Click += (_, __) => UploadFirmware();
             WifiButton.Click += (_, __) => ShowWifiSetup();
             HomeAssistantButton.Click += (_, __) => ShowHomeAssistant();
+            MeshButton.Click += (_, __) => ShowMesh();
             RunButton.Click += (_, __) => RunFlow();
             StopButton.Click += (_, __) => StopHost();
             UndoButton.Click += (_, __) => Undo();
@@ -122,7 +124,7 @@ namespace CodeBridge.VisualStudio.Editor
             ZoomInButton.Click += (_, __) => CanvasBorder.ZoomBy(1.2);
             FitButton.Click += (_, __) => FitView();
             OutputButton.Click += (_, __) => ShowOutput(OutputPanel.Visibility != Visibility.Visible);
-            MonitorButton.Click += (_, __) => Monitor.SerialMonitorLauncher.TryOpen(GetPort());
+            MonitorButton.Click += (_, __) => OpenMonitor();
             BoardViewButton.Click += (_, __) => ShowBoardView(BoardPanel.Visibility != Visibility.Visible);
             ClearOutputButton.Click += (_, __) => OutputText.Clear();
 
@@ -143,6 +145,11 @@ namespace CodeBridge.VisualStudio.Editor
                 panel.Children.Add(new TextBlock { Text = text, Margin = new Thickness(5, 0, 2, 0), VerticalAlignment = VerticalAlignment.Center });
 
             button.Content = panel;
+
+            // Icon-only buttons are named for screen readers from their tooltip.
+            var name = !string.IsNullOrEmpty(text) ? text : button.ToolTip as string;
+            if (!string.IsNullOrEmpty(name))
+                System.Windows.Automation.AutomationProperties.SetName(button, name);
         }
 
         private void OnEditorLoaded()
@@ -513,12 +520,61 @@ namespace CodeBridge.VisualStudio.Editor
                 settings.ToHostJson());
         }
 
+        private void OpenMonitor()
+        {
+            var port = GetPort();
+            if (port.StartsWith("mesh://", StringComparison.OrdinalIgnoreCase))
+            {
+                ShowOutput(true);
+                AppendOutput("The serial monitor needs a USB port. A board reached over the mesh has no serial line here: use a Debug block, or plug the board in.");
+                return;
+            }
+
+            Monitor.SerialMonitorLauncher.TryOpen(port);
+        }
+
+        /// <summary>The gateway of a <c>mesh://gateway/MAC</c> address, or the port itself when it is not one.</summary>
+        internal static string GatewayOf(string port)
+        {
+            if (!port.StartsWith("mesh://", StringComparison.OrdinalIgnoreCase))
+                return port;
+
+            var rest = port.Substring("mesh://".Length);
+            var slash = rest.LastIndexOf('/');
+            return slash > 0 ? rest.Substring(0, slash) : rest;
+        }
+
+        private void ShowMesh()
+        {
+            if (_state != RunState.Idle || !RequireHost() || !RequirePort(out var port))
+                return;
+
+            var gateway = GatewayOf(port);
+            var window = new MeshWindow(gateway, TokenFor(gateway)) { Owner = Window.GetWindow(this) };
+            window.NodeChosen += (address, suggestedBoard) =>
+            {
+                PortCombo.Text = address;
+                RememberPort();
+                ShowOutput(true);
+                AppendOutput($"Using the board {address} through the mesh. Run, Connect and the board view work on it like on a cable" +
+                             (string.IsNullOrEmpty(suggestedBoard) ? "." : $"; its chip looks like {suggestedBoard}: pick the matching board in the toolbar."));
+            };
+            window.ShowDialog();
+        }
+
         private void UploadFirmware()
         {
             if (_state != RunState.Idle || !RequireHost() || !RequirePort(out var port))
                 return;
 
             var board = CurrentBoardItem ?? _boards[0];
+
+            if (port.StartsWith("mesh://", StringComparison.OrdinalIgnoreCase))
+            {
+                ShowOutput(true);
+                AppendOutput("Firmware can only be installed over USB (or over Wi-Fi). Plug that board in with its cable, or select its Wi-Fi address.");
+                return;
+            }
 
             // A Wi-Fi address instead of a COM port: update over the air.
             if (!BoardTokens.IsSerialPort(port) && !port.Equals("simulator", StringComparison.OrdinalIgnoreCase))
@@ -844,6 +900,7 @@ namespace CodeBridge.VisualStudio.Editor
             UploadButton.IsEnabled = idle && host && (CurrentBoardItem?.CanFlash ?? true);
             WifiButton.IsEnabled = idle && host && CurrentBoardItem?.SupportsWifi == true;
             HomeAssistantButton.IsEnabled = host && (idle || _state == RunState.Publishing);
+            MeshButton.IsEnabled = idle && host;
             RunButton.IsEnabled = idle && host;
             ArrangeButton.IsEnabled = idle;
             ExportButton.IsEnabled = idle && host;

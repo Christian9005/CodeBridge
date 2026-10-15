@@ -24,3 +24,8 @@ artifacts/
 # OS
 Thumbs.db
 .DS_Store
+
+# Impeccable design review captures and scratch (local only)
+.impeccable/review/
+.impeccable/mocks/
+.impeccable/build/

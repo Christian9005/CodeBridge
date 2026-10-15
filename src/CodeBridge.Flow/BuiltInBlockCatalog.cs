@@ -61,6 +61,15 @@ public static class BuiltInBlockCatalog
     {
         var board = boardProfile ?? BuiltInBoardProfiles.Default;
 
+        var catalog = CreateCore(board);
+        foreach (var module in ModuleBlocks.For(board))
+            catalog.Register(module.ToDefinition(board));
+
+        return catalog;
+    }
+
+    private static FlowBlockCatalog CreateCore(BoardProfile board)
+    {
         return new FlowBlockCatalog()
             .Register(new FlowBlockDefinition
             {

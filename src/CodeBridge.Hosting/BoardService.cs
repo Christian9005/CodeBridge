@@ -173,6 +173,22 @@ public sealed class BoardService : IAsyncDisposable
     public Task UseAsync(Func<IBoard, CancellationToken, Task> action, CancellationToken ct = default) =>
         UseAsync<object?>(async (board, token) => { await action(board, token); return null; }, ct);
 
+    /// <summary>
+    /// Sends one protocol command (<c>PING</c>, <c>MESH</c>, <c>DW:2:1</c>...) to the board and returns its one-line answer. For tools and for the mesh;
+    /// everyday code uses the typed methods or <see cref="UseAsync{T}"/>.
+    /// </summary>
+    public Task<string> SendRawAsync(string command, CancellationToken ct = default)
+    {
+        var terminator = CodeBridge.Core.Protocol.BridgeProtocol.TERMINATOR;
+        var line = command.EndsWith(terminator, StringComparison.Ordinal) ? command : command + terminator;
+        return UseAsync((board, token) => board switch
+        {
+            CodeBridge.ESP32.ESP32Board esp => esp.Transport.SendCommandAsync(line, token),
+            CodeBridge.ESP32.CodeBridgeProtocolBoard protocol => protocol.Transport.SendCommandAsync(line, token),
+            _ => throw new NotSupportedException("This board does not expose raw commands.")
+        }, ct);
+    }
+
     public Task<int> ReadAnalogAsync(int pin, CancellationToken ct = default) =>
         UseAsync((board, token) => board.Gpio.AnalogReadAsync(pin, token), ct);
 
@@ -198,6 +214,9 @@ public sealed class BoardService : IAsyncDisposable
 
     private async Task<(IBoard Board, string Target, SimulatedTransport? Simulator)> CreateBoardAsync(CancellationToken ct)
     {
+        if (_options.TransportFactory is { } factory)
+            return (await ConnectBoardAsync(await factory(ct), ct), _options.TargetLabel ?? "custom", null);
+
         var port = string.IsNullOrWhiteSpace(_options.Port) ? "auto" : _options.Port.Trim();
 
         if (port.Equals("auto", StringComparison.OrdinalIgnoreCase))

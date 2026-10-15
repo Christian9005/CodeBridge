@@ -24,7 +24,25 @@ namespace CodeBridge.VisualStudio.Editor
         Servo,
         Debug,
         Map,
-        Pwm
+        Pwm,
+        Temperature,
+        Light,
+        Distance,
+        Motion,
+        Press,
+        Tilt,
+        Power,
+        ColorSense,
+        Level,
+        Relay,
+        Sound,
+        RgbLed,
+        Pixels,
+        Screen,
+        Motor,
+        Stepper,
+        Gate,
+        Calc
     }
 
     /// <summary>Plain-language help shown in tooltips and in the properties panel for one block.</summary>
@@ -185,12 +203,14 @@ namespace CodeBridge.VisualStudio.Editor
         };
 
         public static BlockHelpEntry? Get(string blockType) =>
-            Entries.TryGetValue(blockType, out var entry) ? entry : null;
+            Entries.TryGetValue(blockType, out var entry) ? entry
+            : ModuleBlocksHelp.Entries.TryGetValue(blockType, out var module) ? module
+            : null;
 
         /// <summary>The summary to show for a block: the friendly one when we have it, the catalog text otherwise.</summary>
         public static string SummaryFor(FlowBlockDefinition definition) =>
             Get(definition.Type)?.Summary ?? definition.Description;
 
-        public static IEnumerable<string> KnownTypes => Entries.Keys;
+        public static IEnumerable<string> KnownTypes => System.Linq.Enumerable.Concat(Entries.Keys, ModuleBlocksHelp.Entries.Keys);
     }
 }

@@ -1,12 +1,16 @@
 @inherits PollingComponentBase<int>
 
 <div class="cb-card">
-    <div class="cb-title">@(Label ?? $"Analog {Pin}")</div>
-    <div class="cb-value">@(HasValue ? Display : "—")<span class="cb-muted"> @Unit</span></div>
-    <div class="cb-bar"><div style="width:@(Percent.ToString("0.#", Invariant))%"></div></div>
+    <div class="cb-head">
+        <div class="cb-title">@(Label ?? $"Analog {Pin}")</div>
+        <span class="cb-pin">GPIO @Pin</span>
+    </div>
+    <div class="cb-value cb-readout">@(HasValue ? Display : "—")<span class="cb-unit">@Unit</span></div>
+    <div class="cb-meter" role="meter" aria-label="@(Label ?? $"Analog {Pin}")" aria-valuemin="0" aria-valuemax="@FullScale" aria-valuenow="@(HasValue ? Display : "0")"><div style="width:@(Percent.ToString("0.#", Invariant))%"></div></div>
+    <div class="cb-scale cb-readout"><span>0</span><span>@FullScale</span></div>
     @if (Error is not null)
     {
-        <div class="cb-error">@Error</div>
+        <div class="cb-error" role="alert">@Error</div>
     }
 </div>
 
@@ -28,6 +32,8 @@
     [Parameter] public double? ScaledMax { get; set; }
 
     private int RawMax => Max ?? Board.AnalogMax;
+
+    private string FullScale => (ScaledMax ?? RawMax).ToString("0.#", Invariant);
 
     private double Percent => HasValue ? Math.Clamp(Value * 100.0 / Math.Max(1, RawMax), 0, 100) : 0;
 

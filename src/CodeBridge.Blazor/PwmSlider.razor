@@ -1,16 +1,17 @@
 @inherits CodeBridgeComponentBase
 
 <div class="cb-card">
-    <div class="cb-row" style="justify-content:space-between">
-        <span class="cb-title">@(Label ?? $"PWM {Pin}")</span>
-        <span class="cb-value" style="font-size:18px">@_duty</span>
+    <div class="cb-head">
+        <div class="cb-title">@(Label ?? $"PWM {Pin}")</div>
+        <span class="cb-pin">GPIO @Pin</span>
     </div>
-    <input class="cb-range" type="range" min="0" max="255" value="@_duty" aria-label="@(Label ?? $"PWM {Pin}")"
-           @onchange="OnChangeAsync" />
-    <div class="cb-muted">pin @Pin · @(_duty * 100 / 255)% duty</div>
+    <div class="cb-value cb-readout">@Percent<span class="cb-unit">% duty</span></div>
+    <input class="cb-range" type="range" min="0" max="255" value="@_duty" style="--fill:@(Percent)%" aria-label="@(Label ?? $"PWM {Pin}")" aria-valuetext="@Percent percent"
+           @oninput="OnInput" @onchange="OnChangeAsync" />
+    <div class="cb-scale cb-readout"><span>0</span><span>@_duty / 255</span><span>255</span></div>
     @if (Error is not null)
     {
-        <div class="cb-error">@Error</div>
+        <div class="cb-error" role="alert">@Error</div>
     }
 </div>
 
@@ -26,7 +27,15 @@
 
     private int _duty;
 
-    // "change" fires when the user releases the slider, so dragging does not flood the board with commands.
+    private int Percent => (int)Math.Round(_duty * 100.0 / 255);
+
+    // While dragging only the picture follows; the board is written when the user lets go, so a drag never floods it with commands.
+    private void OnInput(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), out var duty))
+            _duty = Math.Clamp(duty, 0, 255);
+    }
+
     private async Task OnChangeAsync(ChangeEventArgs args)
     {
         if (!int.TryParse(args.Value?.ToString(), out var duty))

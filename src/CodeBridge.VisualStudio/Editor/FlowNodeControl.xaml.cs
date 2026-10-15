@@ -116,14 +116,16 @@ namespace CodeBridge.VisualStudio.Editor
         {
             switch (category)
             {
-                case "Logic": return new SolidColorBrush(Color.FromRgb(245, 170, 48));
-                case "Math": return new SolidColorBrush(Color.FromRgb(236, 120, 70));
+                case "Logic": return new SolidColorBrush(Color.FromRgb(56, 189, 248));
+                case "Math": return new SolidColorBrush(Color.FromRgb(236, 98, 170));
                 case "Flow": return new SolidColorBrush(Color.FromRgb(194, 86, 255));
-                case "GPIO": return new SolidColorBrush(Color.FromRgb(0, 216, 143));
+                case "GPIO": return new SolidColorBrush(Color.FromRgb(34, 184, 207));
                 case "Acquisition": return new SolidColorBrush(Color.FromRgb(58, 130, 246));
-                case "Dashboard": return new SolidColorBrush(Color.FromRgb(56, 189, 248));
-                case "Actuators": return new SolidColorBrush(Color.FromRgb(248, 81, 99));
-                case "Debug": return new SolidColorBrush(Color.FromRgb(250, 204, 21));
+                case "Dashboard": return new SolidColorBrush(Color.FromRgb(129, 140, 248));
+                case "Actuators": return new SolidColorBrush(Color.FromRgb(203, 166, 247));
+                case "Modules": return new SolidColorBrush(Color.FromRgb(203, 166, 247));
+                case "Sensors": return new SolidColorBrush(Color.FromRgb(232, 121, 249));
+                case "Debug": return new SolidColorBrush(Color.FromRgb(148, 163, 184));
                 default: return new SolidColorBrush(Color.FromRgb(155, 164, 176));
             }
         }

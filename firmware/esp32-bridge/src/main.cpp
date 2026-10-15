@@ -40,7 +40,7 @@
 #include <Update.h>
 #include <PubSubClient.h>
 
-#define FIRMWARE_VERSION "0.9.0"
+#define FIRMWARE_VERSION "0.9.1"
 #define MAX_CMD_LENGTH 512
 #define SERIAL_BAUD 115200
 #define TCP_PORT 8080
@@ -73,7 +73,7 @@ bool serialOverflow = false;
 #define TCP_MAX_AUTH_FAILS 3
 char apiToken[65] = "";
 
-// -1 = Serial, 0..MAX_TCP_CLIENTS-1 = TCP client
+// -1 = Serial, 0..MAX_TCP_CLIENTS-1 = TCP client, -2 = a command relayed over ESP-NOW (the answer is collected and sent back over the air)
 int activeResponseTarget = -1;
 
 // ── PWM Configuration ───────────────────────────────────────
@@ -256,6 +256,9 @@ int otaProgress = 0;
 
 // ── Function Declarations ───────────────────────────────────
 void processCommand(const char* cmd);
+void meshBegin();
+void meshService();
+void meshOnWifiUp();
 void handlePinMode(const char* params);
 void handleDigitalWrite(const char* params);
 void handleDigitalRead(const char* params);
@@ -439,6 +442,7 @@ static void startMdns() {
 }
 
 static void startNetworkServices() {
+  meshOnWifiUp();
   wifiConnected = true;
   wifiEnabled = true;
   wifiBootPending = false;
@@ -524,6 +528,8 @@ void setup() {
     wifiBootPending = true;
     wifiBootStartedAt = millis();
   }
+
+  meshBegin();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -531,6 +537,7 @@ void setup() {
 // ══════════════════════════════════════════════════════════════
 void loop() {
   serviceWifi();
+  meshService();
 
   // Handle Serial
   while (Serial.available()) {
@@ -757,6 +764,562 @@ static void handleSetToken(const char* params) {
 }
 
 // ══════════════════════════════════════════════════════════════
+//  MESH (ESP-NOW relay)
+//
+//  Lets a board be reached through another one over ESP-NOW while that other board keeps its Wi-Fi link:
+//    PC ──USB or Wi-Fi──> gateway ══ESP-NOW══> node
+//  The gateway is any board with the mesh on that the PC can talk to; a node is any board with the mesh on. The same firmware plays
+//  both roles. A node without Wi-Fi hops channels until a gateway answers, then stays on the gateway's channel.
+//
+//  Every frame carries an 8-byte HMAC-SHA256 tag made with the shared 16-byte mesh key (set over USB with MESHKEY, like WTOK), so a
+//  stranger's frame is dropped. A command also has to echo a single-use challenge that the node handed out in its last reply, so a
+//  captured command cannot be replayed. Wi-Fi, token, OTA and MQTT commands are never relayed.
+//
+//  Frame: 'C' 'B' | type | flags | seq(4) | field(4) | payload | tag(8)
+//    HELLO_REQ field 0 | HELLO field = challenge for the receiver (0 in a beacon) | CMD field = challenge echoed
+//    RESP payload = reqSeq(4) + text, field = the next challenge
+// ══════════════════════════════════════════════════════════════
+#include <esp_now.h>
+#include <esp_wifi.h>
+#include <esp_idf_version.h>
+#include <mbedtls/md.h>
+
+#define MESH_MAX_FRAME 250
+#define MESH_HDR_LEN 12
+#define MESH_TAG_LEN 8
+#define MESH_MAX_NODES 8
+#define MESH_RX_QUEUE 10
+#define MESH_BEACON_MS 12000
+#define MESH_HOP_MS 350
+#define MESH_LOCK_TIMEOUT_MS 40000
+#define MESH_NODE_TTL_MS 90000
+#define MESH_RELAY_TIMEOUT_MS 1500
+
+enum MeshType : uint8_t { MESH_HELLO_REQ = 1, MESH_HELLO = 2, MESH_CMD = 3, MESH_RESP = 4 };
+
+struct MeshRx {
+  uint8_t mac[6];
+  uint8_t len;
+  uint8_t data[MESH_MAX_FRAME];
+};
+
+struct MeshNode {
+  bool used;
+  uint8_t mac[6];
+  char board[20];
+  char fw[12];
+  char name[26];
+  uint32_t theirChal;   // challenge this node gave us: needed to send it a command
+  uint32_t ourChal;     // challenge we gave this node: it must echo it in a command to us
+  unsigned long seen;
+  unsigned long lastAck;
+};
+
+static const uint8_t MESH_BROADCAST[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+static bool meshEnabled = false;
+static bool meshRadioUp = false;
+static bool meshHasKey = false;
+static bool meshLocked = false;         // a gateway answered on this channel (only meaningful without Wi-Fi)
+static bool meshWaiting = false;        // inside MSCAN/MRLY: commands from the air wait until we are back in loop()
+static uint8_t meshKey[16];
+static uint8_t meshSelfMac[6];
+static uint8_t meshHopChannel = 1;
+static char meshName[26] = "";
+static uint32_t meshTxSeq = 0;
+static unsigned long meshLastHeard = 0, meshLastBeacon = 0, meshLastHop = 0;
+static uint8_t meshFixedChannel = 0;   // 0 = search; 1-13 = stay on this channel (a board without Wi-Fi)
+static uint8_t meshHopBeacons = 0;   // extra beacons still to send on this channel visit
+static QueueHandle_t meshQueue = nullptr;
+static MeshNode meshNodes[MESH_MAX_NODES];
+static String meshReply;                // collects what a relayed command answers (response target -2)
+static volatile uint32_t meshRawRx = 0;
+static uint32_t meshRxFrames = 0, meshBadTags = 0, meshTxQueued = 0, meshTxDelivered = 0, meshTxLost = 0;   // diagnostics shown by MESH
+
+// What a relay request is waiting for.
+static bool meshPendingActive = false;
+static uint8_t meshPendingMac[6];
+static uint32_t meshPendingSeq = 0;
+static bool meshPendingDone = false;
+static String meshPendingText;
+static bool meshPendingTruncated = false;
+
+static String meshMacString(const uint8_t* mac) { return bytesToHexString(mac, 6); }
+
+static bool meshParseMac(const char* text, uint8_t* mac) {
+  if (strlen(text) < 12) return false;
+  for (int i = 0; i < 12; i++) {
+    char c = text[i];
+    if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) return false;
+  }
+  hexStringToBytes(text, mac, 6);
+  return true;
+}
+
+static uint32_t meshRandomChallenge() {
+  uint32_t v;
+  do { v = esp_random(); } while (v == 0);
+  return v;
+}
+
+static MeshNode* meshFindNode(const uint8_t* mac, bool create) {
+  MeshNode* free_slot = nullptr;
+  MeshNode* oldest = &meshNodes[0];
+  for (int i = 0; i < MESH_MAX_NODES; i++) {
+    MeshNode& n = meshNodes[i];
+    if (n.used && memcmp(n.mac, mac, 6) == 0) return &n;
+    if (!n.used && !free_slot) free_slot = &n;
+    if (n.used && n.seen < oldest->seen) oldest = &n;
+  }
+  if (!create) return nullptr;
+  MeshNode* slot = free_slot ? free_slot : oldest;
+  memset(slot, 0, sizeof(MeshNode));
+  slot->used = true;
+  memcpy(slot->mac, mac, 6);
+  return slot;
+}
+
+static void meshLoadConfig() {
+  preferences.begin("codebridge", true);
+  meshEnabled = preferences.isKey("mesh") && preferences.getBool("mesh", false);
+  meshFixedChannel = preferences.isKey("meshch") ? preferences.getUChar("meshch", 0) : 0;
+  if (meshFixedChannel > 13) meshFixedChannel = 0;
+  // isKey() first: reading a missing entry makes the core print an error line on the protocol port.
+  meshHasKey = preferences.isKey("meshkey") && preferences.getBytesLength("meshkey") == sizeof(meshKey) &&
+               preferences.getBytes("meshkey", meshKey, sizeof(meshKey)) == sizeof(meshKey);
+  String name = preferences.isKey("meshname") ? preferences.getString("meshname", "") : String("");
+  preferences.end();
+  name.toCharArray(meshName, sizeof(meshName));
+}
+
+// HMAC-SHA256 over the frame body and both addresses (so a frame cannot be moved to another path), truncated to 8 bytes.
+static void meshTag(const uint8_t* body, size_t len, const uint8_t* src, const uint8_t* dst, uint8_t* out) {
+  uint8_t full[32];
+  mbedtls_md_context_t ctx;
+  mbedtls_md_init(&ctx);
+  mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
+  mbedtls_md_hmac_starts(&ctx, meshKey, sizeof(meshKey));
+  mbedtls_md_hmac_update(&ctx, body, len);
+  mbedtls_md_hmac_update(&ctx, src, 6);
+  mbedtls_md_hmac_update(&ctx, dst, 6);
+  mbedtls_md_hmac_finish(&ctx, full);
+  mbedtls_md_free(&ctx);
+  memcpy(out, full, MESH_TAG_LEN);
+}
+
+static bool meshEnsurePeer(const uint8_t* mac) {
+  if (esp_now_is_peer_exist(mac)) return true;
+  esp_now_peer_info_t peer = {};
+  memcpy(peer.peer_addr, mac, 6);
+  peer.channel = 0;          // follow the radio's current channel
+  peer.encrypt = false;      // authenticity comes from the HMAC tag
+  peer.ifidx = WIFI_IF_STA;
+  return esp_now_add_peer(&peer) == ESP_OK;
+}
+
+static bool meshSend(const uint8_t* dst, uint8_t type, uint32_t field, const uint8_t* payload, size_t plen) {
+  if (!meshRadioUp || !meshHasKey || plen + MESH_HDR_LEN + MESH_TAG_LEN > MESH_MAX_FRAME) return false;
+  if (!meshEnsurePeer(dst)) return false;
+
+  uint8_t frame[MESH_MAX_FRAME];
+  frame[0] = 'C'; frame[1] = 'B'; frame[2] = type; frame[3] = 0;
+  uint32_t seq = ++meshTxSeq;
+  for (int i = 0; i < 4; i++) { frame[4 + i] = (seq >> (24 - 8 * i)) & 0xFF; frame[8 + i] = (field >> (24 - 8 * i)) & 0xFF; }
+  if (plen) memcpy(frame + MESH_HDR_LEN, payload, plen);
+  size_t body = MESH_HDR_LEN + plen;
+  meshTag(frame, body, meshSelfMac, dst, frame + body);
+  bool queued = esp_now_send(dst, frame, body + MESH_TAG_LEN) == ESP_OK;
+  if (queued) meshTxQueued++; else meshTxLost++;
+  return queued;
+}
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+static void meshOnSent(const wifi_tx_info_t*, esp_now_send_status_t status) {
+#else
+static void meshOnSent(const uint8_t*, esp_now_send_status_t status) {
+#endif
+  if (status == ESP_NOW_SEND_SUCCESS) meshTxDelivered++; else meshTxLost++;
+}
+
+static uint32_t meshReadU32(const uint8_t* p) { return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) | ((uint32_t)p[2] << 8) | p[3]; }
+
+static void meshSendHello(const uint8_t* dst, uint32_t challenge) {
+  char payload[80];
+  int n = snprintf(payload, sizeof(payload), "%s|%s|%s", ESP.getChipModel(), FIRMWARE_VERSION, meshName[0] ? meshName : "");
+  meshSend(dst, MESH_HELLO, challenge, (const uint8_t*)payload, n);
+}
+
+static bool meshIsDenied(const char* cmd) {
+  static const char* denied[] = {"AUTH", "WTOK", "WCFG", "WCFGX", "WSCAN", "OTAB", "OTAS", "MQC", "MQP", "MQS", "MQU", "MQR", "MQD",
+                                 "MESH", "MESHON", "MESHOFF", "MESHKEY", "MESHNAME", "MESHCH", "MSCAN", "MRLY"};
+  const char* sep = strchr(cmd, ':');
+  size_t len = sep ? (size_t)(sep - cmd) : strlen(cmd);
+  for (size_t i = 0; i < sizeof(denied) / sizeof(denied[0]); i++) {
+    if (strlen(denied[i]) == len && strncasecmp(cmd, denied[i], len) == 0) return true;
+  }
+  return false;
+}
+
+// Runs a command that arrived over the air and sends the answer back.
+static void meshExecute(MeshNode* node, uint32_t reqSeq, const char* cmd) {
+  meshReply = "";
+  if (meshIsDenied(cmd)) {
+    meshReply = "ERR:MESH_DENIED";
+  } else {
+    int saved = activeResponseTarget;
+    activeResponseTarget = -2;
+    processCommand(cmd);
+    activeResponseTarget = saved;
+  }
+
+  uint8_t payload[MESH_MAX_FRAME];
+  for (int i = 0; i < 4; i++) payload[i] = (reqSeq >> (24 - 8 * i)) & 0xFF;
+  size_t room = MESH_MAX_FRAME - MESH_HDR_LEN - MESH_TAG_LEN - 4;
+  size_t n = meshReply.length() > room ? room : meshReply.length();
+  if (n) memcpy(payload + 4, meshReply.c_str(), n);
+  node->ourChal = meshRandomChallenge();
+  meshSend(node->mac, MESH_RESP, node->ourChal, payload, 4 + n);
+}
+
+static void meshHandleFrame(const MeshRx& rx) {
+  if (rx.len < MESH_HDR_LEN + MESH_TAG_LEN || rx.data[0] != 'C' || rx.data[1] != 'B' || !meshHasKey) return;
+  meshRxFrames++;
+
+  size_t body = rx.len - MESH_TAG_LEN;
+  uint8_t expected[MESH_TAG_LEN];
+  bool broadcast = false;
+  meshTag(rx.data, body, rx.mac, meshSelfMac, expected);
+  if (memcmp(expected, rx.data + body, MESH_TAG_LEN) != 0) {
+    meshTag(rx.data, body, rx.mac, MESH_BROADCAST, expected);
+    if (memcmp(expected, rx.data + body, MESH_TAG_LEN) != 0) { meshBadTags++; return; }   // not made with our key
+    broadcast = true;
+  }
+
+  uint8_t type = rx.data[2];
+  uint32_t field = meshReadU32(rx.data + 8);
+  const uint8_t* payload = rx.data + MESH_HDR_LEN;
+  size_t plen = body - MESH_HDR_LEN;
+  unsigned long now = millis();
+  meshLastHeard = now;
+
+  MeshNode* node = meshFindNode(rx.mac, true);
+  node->seen = now;
+
+  if (type == MESH_HELLO_REQ) {
+    node->ourChal = meshRandomChallenge();
+    meshSendHello(rx.mac, node->ourChal);
+  } else if (type == MESH_HELLO) {
+    char text[80];
+    size_t n = plen < sizeof(text) - 1 ? plen : sizeof(text) - 1;
+    memcpy(text, payload, n);
+    text[n] = '\0';
+    char* second = strchr(text, '|');
+    char* third = second ? strchr(second + 1, '|') : nullptr;
+    if (second) *second = '\0';
+    if (third) *third = '\0';
+    strncpy(node->board, text, sizeof(node->board) - 1);
+    if (second) strncpy(node->fw, second + 1, sizeof(node->fw) - 1);
+    if (third) strncpy(node->name, third + 1, sizeof(node->name) - 1);
+    if (!broadcast && field != 0) node->theirChal = field;
+    meshLocked = true;
+    // A beacon is answered once in a while with a unicast HELLO: that is how a node searching for the channel learns it found it.
+    if (broadcast && now - node->lastAck > 2000) {
+      node->lastAck = now;
+      node->ourChal = meshRandomChallenge();
+      meshSendHello(rx.mac, node->ourChal);
+    }
+  } else if (type == MESH_CMD && !meshWaiting) {
+    char cmd[MESH_MAX_FRAME];
+    size_t n = plen < sizeof(cmd) - 1 ? plen : sizeof(cmd) - 1;
+    memcpy(cmd, payload, n);
+    cmd[n] = '\0';
+    if (node->ourChal == 0 || field != node->ourChal) {
+      // wrong or already used challenge: hand out a fresh one and let the sender try again
+      meshReply = "ERR:CHALLENGE";
+      uint8_t body2[4 + 13];
+      uint32_t reqSeq = meshReadU32(rx.data + 4);
+      for (int i = 0; i < 4; i++) body2[i] = (reqSeq >> (24 - 8 * i)) & 0xFF;
+      memcpy(body2 + 4, "ERR:CHALLENGE", 13);
+      node->ourChal = meshRandomChallenge();
+      meshSend(rx.mac, MESH_RESP, node->ourChal, body2, sizeof(body2));
+    } else {
+      node->ourChal = 0;   // single use
+      meshExecute(node, meshReadU32(rx.data + 4), cmd);
+    }
+  } else if (type == MESH_RESP && meshPendingActive && memcmp(rx.mac, meshPendingMac, 6) == 0 && plen >= 4) {
+    if (meshReadU32(payload) == meshPendingSeq) {
+      node->theirChal = field;
+      size_t n = plen - 4;
+      meshPendingText = "";
+      for (size_t i = 0; i < n; i++) meshPendingText += (char)payload[4 + i];
+      meshPendingTruncated = (rx.data[3] & 1) != 0;
+      meshPendingDone = true;
+    }
+  }
+}
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+static void meshOnRecv(const esp_now_recv_info_t* info, const uint8_t* data, int len) {
+  const uint8_t* mac = info->src_addr;
+#else
+static void meshOnRecv(const uint8_t* mac, const uint8_t* data, int len) {
+#endif
+  meshRawRx++;
+  if (!meshQueue || len <= 0 || len > MESH_MAX_FRAME) return;
+  MeshRx rx;
+  memcpy(rx.mac, mac, 6);
+  rx.len = (uint8_t)len;
+  memcpy(rx.data, data, len);
+  xQueueSend(meshQueue, &rx, 0);   // a full queue drops the frame: ESP-NOW is best effort anyway
+}
+
+static void meshDrain() {
+  if (!meshQueue) return;
+  MeshRx rx;
+  while (xQueueReceive(meshQueue, &rx, 0) == pdTRUE) meshHandleFrame(rx);
+}
+
+static uint8_t meshCurrentChannel() {
+  uint8_t primary = 1;
+  wifi_second_chan_t second;
+  esp_wifi_get_channel(&primary, &second);
+  return primary;
+}
+
+static bool meshStartRadio() {
+  if (meshRadioUp) return true;
+  if (!meshHasKey) return false;
+
+  if (WiFi.getMode() == WIFI_OFF) WiFi.mode(WIFI_STA);   // ESP-NOW rides on the station interface; this does not join anything
+  WiFi.macAddress(meshSelfMac);
+  if (!meshQueue) meshQueue = xQueueCreate(MESH_RX_QUEUE, sizeof(MeshRx));
+  if (esp_now_init() != ESP_OK) return false;
+  esp_now_register_recv_cb(meshOnRecv);
+  esp_now_register_send_cb(meshOnSent);
+  esp_wifi_set_ps(WIFI_PS_NONE);   // modem sleep switches the radio off between router beacons and ESP-NOW frames would be missed
+  meshEnsurePeer(MESH_BROADCAST);
+  meshRadioUp = true;
+  meshLocked = false;
+  if (meshFixedChannel > 0 && !wifiConnected) {
+    esp_wifi_set_channel(meshFixedChannel, WIFI_SECOND_CHAN_NONE);
+    meshHopChannel = meshFixedChannel;
+    meshLocked = true;
+  }
+  meshLastHeard = millis();
+  meshLastBeacon = 0;
+  return true;
+}
+
+static void meshStopRadio() {
+  if (!meshRadioUp) return;
+  esp_now_unregister_recv_cb();
+  esp_now_deinit();
+  meshRadioUp = false;
+  meshLocked = false;
+  memset(meshNodes, 0, sizeof(meshNodes));
+}
+
+// Called when the station joins the router: the power-save mode is renegotiated then.
+void meshOnWifiUp() {
+  if (meshRadioUp) esp_wifi_set_ps(WIFI_PS_NONE);
+}
+
+void meshBegin() {
+  memset(meshNodes, 0, sizeof(meshNodes));
+  meshLoadConfig();
+  if (meshName[0] == '\0') {
+    uint8_t mac[6];
+    WiFi.macAddress(mac);
+    snprintf(meshName, sizeof(meshName), "node-%02x%02x", mac[4], mac[5]);
+  }
+  if (meshEnabled && meshHasKey) meshStartRadio();
+}
+
+// Called from loop().
+void meshService() {
+  if (!meshRadioUp) return;
+  meshDrain();
+
+  unsigned long now = millis();
+  if (meshLocked && meshFixedChannel == 0 && now - meshLastHeard > MESH_LOCK_TIMEOUT_MS && !wifiConnected) meshLocked = false;
+
+  // Without Wi-Fi the channel is ours to choose: hop until a gateway answers a beacon, then stay.
+  if (!wifiConnected && !meshLocked && now - meshLastHop > MESH_HOP_MS) {
+    meshLastHop = now;
+    meshHopChannel = meshHopChannel >= 13 ? 1 : meshHopChannel + 1;
+    esp_wifi_set_channel(meshHopChannel, WIFI_SECOND_CHAN_NONE);
+    meshSendHello(MESH_BROADCAST, 0);
+    meshHopBeacons = 2;
+  } else if (!wifiConnected && !meshLocked && meshHopBeacons > 0 && now - meshLastHop > (unsigned long)(MESH_HOP_MS / 3) * (3 - meshHopBeacons)) {
+    meshHopBeacons--;
+    meshSendHello(MESH_BROADCAST, 0);
+  } else if (now - meshLastBeacon > MESH_BEACON_MS) {
+    meshLastBeacon = now;
+    meshSendHello(MESH_BROADCAST, 0);
+  }
+}
+
+static void meshWait(unsigned long ms, bool (*done)()) {
+  unsigned long start = millis();
+  while (millis() - start < ms) {
+    meshDrain();
+    if (done && done()) return;
+    delay(2);
+  }
+}
+
+static bool meshPendingFinished() { return meshPendingDone; }
+
+// MSCAN: ask everything in range to introduce itself and list what answered recently.
+static void handleMeshScan() {
+  if (!meshHasKey) { sendError("MESH_NOKEY"); return; }
+  if (!meshRadioUp) { sendError("MESH_OFF"); return; }
+  meshWaiting = true;
+  meshSend(MESH_BROADCAST, MESH_HELLO_REQ, 0, nullptr, 0);
+  meshWait(900, nullptr);
+  meshWaiting = false;
+
+  String out;
+  unsigned long now = millis();
+  for (int i = 0; i < MESH_MAX_NODES; i++) {
+    MeshNode& n = meshNodes[i];
+    if (!n.used || n.board[0] == '\0' || now - n.seen > MESH_NODE_TTL_MS) continue;
+    if (out.length()) out += ";";
+    out += meshMacString(n.mac) + "," + n.board + "," + n.fw + "," + n.name + "," + String((now - n.seen) / 1000);
+  }
+  sendOK(out.c_str());
+}
+
+// MRLY:<mac>:<command>  runs <command> on that node and returns its answer as RLY:<answer>.
+static void handleMeshRelay(const char* params) {
+  if (!meshHasKey) { sendError("MESH_NOKEY"); return; }
+  if (!meshRadioUp) { sendError("MESH_OFF"); return; }
+
+  uint8_t mac[6];
+  if (!meshParseMac(params, mac) || params[12] != ':' || params[13] == '\0') { sendError("MESH_BAD_REQUEST"); return; }
+  const char* cmd = params + 13;
+  if (meshIsDenied(cmd)) { sendError("MESH_DENIED"); return; }
+
+  MeshNode* node = meshFindNode(mac, true);
+  meshWaiting = true;
+  bool answered = false;
+
+  for (int attempt = 0; attempt < 2 && !answered; attempt++) {
+    if (node->theirChal == 0) {
+      // no challenge yet: ask the node for one
+      meshSend(mac, MESH_HELLO_REQ, 0, nullptr, 0);
+      unsigned long t0 = millis();
+      while (millis() - t0 < 500 && node->theirChal == 0) { meshDrain(); delay(2); }
+      if (node->theirChal == 0) continue;
+    }
+
+    meshPendingActive = true;
+    meshPendingDone = false;
+    meshPendingTruncated = false;
+    memcpy(meshPendingMac, mac, 6);
+    meshPendingSeq = meshTxSeq + 1;   // the sequence number meshSend() is about to use
+    uint32_t chal = node->theirChal;
+    node->theirChal = 0;
+    if (!meshSend(mac, MESH_CMD, chal, (const uint8_t*)cmd, strlen(cmd))) { meshPendingActive = false; break; }
+    meshWait(MESH_RELAY_TIMEOUT_MS, meshPendingFinished);
+    meshPendingActive = false;
+    if (meshPendingDone && meshPendingText != "ERR:CHALLENGE") answered = true;
+  }
+  meshWaiting = false;
+
+  if (!answered) { sendError(meshPendingDone ? "MESH_CHALLENGE" : "MESH_TIMEOUT"); return; }
+  if (meshPendingTruncated) { sendError("MESH_RESPONSE_TOO_LONG"); return; }
+  sendResponse(("RLY:" + meshPendingText).c_str());
+}
+
+// MESH / MESHON / MESHOFF / MESHKEY:<32 hex> / MESHNAME:<name> / MSCAN / MRLY:<mac>:<command>
+static bool meshHandleCommand(const char* cmd, int cmdLen, const char* params) {
+  auto is = [&](const char* name) { return (int)strlen(name) == cmdLen && strncmp(cmd, name, cmdLen) == 0; };
+
+  if (is("MESH")) {
+    char line[140];
+    snprintf(line, sizeof(line), "%s,%s,%u,%d,%d,%s,%u,%u,%u,%u", meshEnabled ? "on" : "off", meshMacString(meshSelfMac).c_str(),
+             meshRadioUp ? meshCurrentChannel() : 0, meshLocked || wifiConnected ? 1 : 0, meshHasKey ? 1 : 0, meshName,
+             (unsigned)meshRawRx, (unsigned)meshBadTags, (unsigned)meshTxDelivered, (unsigned)meshTxLost);
+    sendOK(line);
+    return true;
+  }
+  if (is("MESHKEY")) {
+    if (activeResponseTarget != -1) { sendError("MESHKEY is only accepted over USB"); return true; }
+    if (strlen(params) == 0) {
+      preferences.begin("codebridge", false);
+      preferences.remove("meshkey");
+      preferences.putBool("mesh", false);
+      preferences.end();
+      meshStopRadio();
+      meshHasKey = false;
+      meshEnabled = false;
+      sendOK();
+      return true;
+    }
+    if (strlen(params) != 32) { sendError("Mesh key must be 32 hex characters"); return true; }
+    for (int i = 0; i < 32; i++) {
+      char c = params[i];
+      if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) { sendError("Mesh key must be hex"); return true; }
+    }
+    hexStringToBytes(params, meshKey, 16);
+    preferences.begin("codebridge", false);
+    preferences.putBytes("meshkey", meshKey, sizeof(meshKey));
+    preferences.end();
+    meshHasKey = true;
+    meshStopRadio();                       // a new key restarts the radio with it
+    if (meshEnabled) meshStartRadio();
+    sendOK();
+    return true;
+  }
+  if (is("MESHCH")) {
+    // MESHCH:<1-13> pins the radio channel of a board without Wi-Fi (it then never searches); MESHCH:0 goes back to searching.
+    if (activeResponseTarget != -1) { sendError("MESHCH is only accepted over USB"); return true; }
+    int ch = atoi(params);
+    if (ch < 0 || ch > 13) { sendError("Channel must be 0-13"); return true; }
+    meshFixedChannel = (uint8_t)ch;
+    preferences.begin("codebridge", false);
+    preferences.putUChar("meshch", meshFixedChannel);
+    preferences.end();
+    if (meshRadioUp && !wifiConnected) {
+      if (ch > 0) { esp_wifi_set_channel(ch, WIFI_SECOND_CHAN_NONE); meshHopChannel = ch; meshLocked = true; }
+      else meshLocked = false;
+    }
+    sendOK();
+    return true;
+  }
+  if (is("MESHNAME")) {
+    if (activeResponseTarget != -1) { sendError("MESHNAME is only accepted over USB"); return true; }
+    size_t n = strlen(params);
+    if (n == 0 || n > 24) { sendError("Name must be 1-24 characters"); return true; }
+    for (size_t i = 0; i < n; i++) {
+      if (params[i] < 33 || params[i] > 126 || params[i] == '|' || params[i] == ',' || params[i] == ';') { sendError("Name contains invalid characters"); return true; }
+    }
+    strncpy(meshName, params, sizeof(meshName) - 1);
+    preferences.begin("codebridge", false);
+    preferences.putString("meshname", meshName);
+    preferences.end();
+    sendOK();
+    return true;
+  }
+  if (is("MESHON") || is("MESHOFF")) {
+    if (activeResponseTarget != -1) { sendError("The mesh is switched over USB"); return true; }
+    bool on = is("MESHON");
+    if (on && !meshHasKey) { sendError("MESH_NOKEY"); return true; }
+    meshEnabled = on;
+    preferences.begin("codebridge", false);
+    preferences.putBool("mesh", on);
+    preferences.end();
+    if (on) { if (!meshStartRadio()) { sendError("ESP-NOW failed to start"); return true; } }
+    else meshStopRadio();
+    sendOK();
+    return true;
+  }
+  if (is("MSCAN")) { handleMeshScan(); return true; }
+  if (is("MRLY")) { handleMeshRelay(params); return true; }
+  return false;
+}
+
+// ══════════════════════════════════════════════════════════════
 //  COMMAND ROUTER
 // ══════════════════════════════════════════════════════════════
 void processCommand(const char* cmd) {
@@ -770,6 +1333,7 @@ void processCommand(const char* cmd) {
     sendError(strlen(apiToken) == 0 ? "NO_TOKEN: pair the board over USB first" : "AUTH_REQUIRED");
     return;
   }
+  if (meshHandleCommand(cmd, cmdLen, params)) return;
 
   if (strncmp(cmd, "PM", cmdLen) == 0 && cmdLen == 2) {
     handlePinMode(params);
@@ -2929,6 +3493,11 @@ void handleMqttDisconnect() {
 //  RESPONSE ROUTING (Serial or TCP)
 // ══════════════════════════════════════════════════════════════
 void sendResponse(const char* response) {
+  if (activeResponseTarget == -2) {            // relayed over ESP-NOW: keep the answer for the reply frame
+    if (meshReply.length()) meshReply += "\n";
+    meshReply += response;
+    return;
+  }
   if (activeResponseTarget < 0) {
     Serial.println(response);
   } else {

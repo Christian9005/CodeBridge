@@ -25,6 +25,8 @@ public class BoardProfilesTests
         Assert.Equal(boards.Count, boards.Select(b => b.DisplayName).Distinct(StringComparer.OrdinalIgnoreCase).Count());
         Assert.Contains(boards, b => b.Id == "esp32-s3-devkit");
         Assert.Contains(boards, b => b.Id == "esp32-c3-devkit");
+        Assert.Contains(boards, b => b.Id == "xiao-esp32-s3");
+        Assert.Contains(boards, b => b.Id == "esp32-s2-mini");
         Assert.Contains(boards, b => b.Id == "arduino-nano");
         Assert.Contains(boards, b => b.Id == "arduino-mega");
     }
@@ -98,6 +100,11 @@ public class BoardProfilesTests
         Assert.Equal("esp32s3", BuiltInBoardProfiles.Esp32S3DevKit.FlashChip);
         Assert.Equal(0, BuiltInBoardProfiles.Esp32C3DevKit.BootloaderOffset);
         Assert.Equal("esp32c3", BuiltInBoardProfiles.Esp32C3DevKit.FlashChip);
+        Assert.Equal(0, BuiltInBoardProfiles.XiaoEsp32S3.BootloaderOffset);
+        Assert.Equal("esp32s3", BuiltInBoardProfiles.XiaoEsp32S3.FlashChip);
+        Assert.Equal("xiaoesp32s3", BuiltInBoardProfiles.XiaoEsp32S3.PrebuiltFolder);
+        Assert.Equal(0x1000, BuiltInBoardProfiles.Esp32S2Mini.BootloaderOffset);
+        Assert.Equal("esp32s2", BuiltInBoardProfiles.Esp32S2Mini.FlashChip);
     }
 
     [Fact]

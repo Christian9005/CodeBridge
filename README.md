@@ -94,6 +94,7 @@ relays, buzzers, servos, DC/stepper motors, RGB LED, WS2812B NeoPixel, SSD1306 O
 | Package | What for |
 |---|---|
 | `CodeBridge.Hosting` | `services.AddCodeBridge()`: one shared, thread-safe board connection with reconnection and the simulator, for ASP.NET Core, workers and MAUI |
+| `DeviceFleet` (in `CodeBridge.Hosting`) | Any number of named boards (USB, Wi-Fi, or boards reached over an [ESP-NOW mesh](docs/mesh.md) through a gateway that keeps its Wi-Fi) behind one object, with discovery, persistence and per-device reconnection |
 | `CodeBridge.Blazor` | `<BoardStatus/>`, `<PinToggle/>`, `<PwmSlider/>`, `<AnalogGauge/>`, `<SensorChart/>` components for a live dashboard |
 | `CodeBridge.Mcp` | An [MCP server](docs/mcp.md) so an AI assistant can read the board manifest, design and test flows on the simulator and export C# (hardware is opt-in and confirmed per action) |
 | `CodeBridge.HomeAssistant` | Shows the board in Home Assistant through MQTT discovery (switches, lights, sensors) and finds Home Assistant on your network |

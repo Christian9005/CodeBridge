@@ -207,6 +207,8 @@ public sealed class CodeBridgeFlowDesignerControl : UserControl
             ColumnCount = 1,
             BackColor = DesignerTheme.Workbench
         };
+        // One fixed-width column: without it the column grows to the toolbar's full width and pushes the inspector off the window.
+        shell.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         shell.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));
         shell.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         shell.RowStyles.Add(new RowStyle(SizeType.Absolute, 26));
@@ -223,6 +225,8 @@ public sealed class CodeBridgeFlowDesignerControl : UserControl
     {
         var strip = new ToolStrip
         {
+            Dock = DockStyle.Fill,
+            CanOverflow = true,
             GripStyle = ToolStripGripStyle.Hidden,
             BackColor = DesignerTheme.Surface,
             ForeColor = DesignerTheme.Text,
@@ -518,7 +522,9 @@ public sealed class CodeBridgeFlowDesignerControl : UserControl
         _toolTip.SetToolTip(_transportSelector, "Arduino Uno uses Serial. ESP32 can use Serial or WiFi.");
 
         _connectionState.AutoSize = false;
-        _connectionState.Height = 20;
+        _connectionState.Dock = DockStyle.Fill;
+        _connectionState.AutoEllipsis = true;
+        _connectionState.Margin = new Padding(4, 0, 0, 0);
         _connectionState.TextAlign = ContentAlignment.MiddleLeft;
         _connectionState.ForeColor = DesignerTheme.MutedText;
         _connectionState.Text = "Disconnected";
@@ -574,9 +580,9 @@ public sealed class CodeBridgeFlowDesignerControl : UserControl
             BackColor = DesignerTheme.Surface,
             Margin = Padding.Empty
         };
-        row.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 76));
+        row.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 72));
         row.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 88));
-        row.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 86));
+        row.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 84));
         row.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         row.Controls.Add(_connectButton, 0, 0);
         row.Controls.Add(_disconnectButton, 1, 0);
@@ -919,6 +925,7 @@ public sealed class CodeBridgeFlowDesignerControl : UserControl
     private void ConfigureBoardSelector()
     {
         _boardSelector.DropDownStyle = ComboBoxStyle.DropDownList;
+        DesignerTheme.StyleCombo(_boardSelector.ComboBox);
         _boardSelector.AutoSize = false;
         _boardSelector.Width = 156;
         _boardSelector.ToolTipText = "Board profile used for pin options and validation.";
@@ -2255,9 +2262,7 @@ public sealed class CodeBridgeFlowDesignerControl : UserControl
     {
         comboBox.Dock = DockStyle.Fill;
         comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-        comboBox.FlatStyle = FlatStyle.Flat;
-        comboBox.BackColor = DesignerTheme.InputBackground;
-        comboBox.ForeColor = DesignerTheme.Text;
+        DesignerTheme.StyleCombo(comboBox);
         comboBox.Margin = new Padding(0, 2, 6, 2);
     }
 
@@ -2290,13 +2295,7 @@ public sealed class CodeBridgeFlowDesignerControl : UserControl
     private static void ConfigureButton(Button button, string text)
     {
         button.Dock = DockStyle.Fill;
-        button.FlatStyle = FlatStyle.Flat;
-        button.FlatAppearance.BorderColor = DesignerTheme.Border;
-        button.FlatAppearance.MouseOverBackColor = DesignerTheme.SurfaceHover;
-        button.FlatAppearance.MouseDownBackColor = DesignerTheme.SurfaceSelected;
-        button.FlatAppearance.BorderSize = 1;
-        button.BackColor = DesignerTheme.ButtonBackground;
-        button.ForeColor = DesignerTheme.Text;
+        DesignerTheme.StyleButton(button);
         button.Text = text;
         button.Margin = new Padding(0, 2, 6, 2);
     }

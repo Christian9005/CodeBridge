@@ -1380,6 +1380,73 @@
       ]
     },
     {
+      "type": "logic.gate",
+      "displayName": "Logic Gate",
+      "category": "Logic",
+      "description": "Combines two true/false values: AND, OR, XOR, NAND, NOR, or NOT of the first one.",
+      "ports": [
+        {
+          "name": "a",
+          "direction": "input",
+          "valueKind": "boolean",
+          "required": true
+        },
+        {
+          "name": "b",
+          "direction": "input",
+          "valueKind": "boolean",
+          "required": false
+        },
+        {
+          "name": "result",
+          "direction": "output",
+          "valueKind": "boolean",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "operation",
+          "valueKind": "string",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": "and",
+          "options": [
+            {
+              "label": "AND",
+              "value": "and",
+              "description": "True when both are true."
+            },
+            {
+              "label": "OR",
+              "value": "or",
+              "description": "True when at least one is true."
+            },
+            {
+              "label": "XOR",
+              "value": "xor",
+              "description": "True when exactly one is true."
+            },
+            {
+              "label": "NAND",
+              "value": "nand",
+              "description": "False only when both are true."
+            },
+            {
+              "label": "NOR",
+              "value": "nor",
+              "description": "True only when both are false."
+            },
+            {
+              "label": "NOT a",
+              "value": "not",
+              "description": "The opposite of the first one."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "type": "logic.constant-number",
       "displayName": "Number",
       "category": "Logic",
@@ -1399,6 +1466,133 @@
           "required": false,
           "isAdvanced": false,
           "defaultValue": 0
+        }
+      ]
+    },
+    {
+      "type": "logic.threshold",
+      "displayName": "Threshold",
+      "category": "Logic",
+      "description": "True when a number is above (or below) a limit: the quickest way to turn a sensor reading into an on/off decision.",
+      "ports": [
+        {
+          "name": "value",
+          "direction": "input",
+          "valueKind": "number",
+          "required": true
+        },
+        {
+          "name": "result",
+          "direction": "output",
+          "valueKind": "boolean",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "limit",
+          "valueKind": "number",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 25
+        },
+        {
+          "name": "mode",
+          "valueKind": "string",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": "above",
+          "options": [
+            {
+              "label": "Above the limit",
+              "value": "above",
+              "description": "True when the value is greater than the limit."
+            },
+            {
+              "label": "Below the limit",
+              "value": "below",
+              "description": "True when the value is lower than the limit."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "math.calc",
+      "displayName": "Calculate",
+      "category": "Math",
+      "description": "Adds, subtracts, multiplies or divides two numbers (also minimum, maximum and remainder). Handy for unit changes such as \u00B0C to \u00B0F.",
+      "ports": [
+        {
+          "name": "a",
+          "direction": "input",
+          "valueKind": "number",
+          "required": true
+        },
+        {
+          "name": "b",
+          "direction": "input",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "result",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "operation",
+          "valueKind": "string",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": "multiply",
+          "options": [
+            {
+              "label": "Add \u002B",
+              "value": "add",
+              "description": "a \u002B b"
+            },
+            {
+              "label": "Subtract -",
+              "value": "subtract",
+              "description": "a - b"
+            },
+            {
+              "label": "Multiply \u00D7",
+              "value": "multiply",
+              "description": "a \u00D7 b"
+            },
+            {
+              "label": "Divide \u00F7",
+              "value": "divide",
+              "description": "a \u00F7 b"
+            },
+            {
+              "label": "Remainder %",
+              "value": "modulo",
+              "description": "The remainder of a \u00F7 b."
+            },
+            {
+              "label": "Smaller of the two",
+              "value": "min",
+              "description": "The lower one."
+            },
+            {
+              "label": "Larger of the two",
+              "value": "max",
+              "description": "The higher one."
+            }
+          ]
+        },
+        {
+          "name": "b",
+          "valueKind": "number",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 1
         }
       ]
     },
@@ -1485,6 +1679,2325 @@
               "label": "False / LOW",
               "value": false,
               "description": "Use LOW for digital outputs."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "module.buzzer",
+      "displayName": "Buzzer",
+      "category": "Modules",
+      "description": "Plays a tone on a passive buzzer or speaker.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "frequency",
+          "direction": "input",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "done",
+          "direction": "output",
+          "valueKind": "trigger",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "pin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 4,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        },
+        {
+          "name": "frequencyHz",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 1000
+        },
+        {
+          "name": "durationMs",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 300
+        }
+      ]
+    },
+    {
+      "type": "module.dc-motor",
+      "displayName": "DC Motor (H-bridge)",
+      "category": "Modules",
+      "description": "Runs a DC motor through an L298N / L9110 H-bridge. Speed goes from -100 (full reverse) to 100 (full forward); 0 stops.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "speed",
+          "direction": "input",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "done",
+          "direction": "output",
+          "valueKind": "trigger",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "in1Pin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 4,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        },
+        {
+          "name": "in2Pin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 5,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        },
+        {
+          "name": "enablePin",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": -1,
+          "options": [
+            {
+              "label": "No enable pin",
+              "value": -1,
+              "description": "The ENA jumper stays on the board."
+            },
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        },
+        {
+          "name": "speed",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 60
+        }
+      ]
+    },
+    {
+      "type": "module.lcd",
+      "displayName": "LCD Text (I2C)",
+      "category": "Modules",
+      "description": "Writes a line of text on a 16x2 or 20x4 character LCD with an I2C backpack. Use {value} in the text to show a number.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "value",
+          "direction": "input",
+          "valueKind": "any",
+          "required": false
+        },
+        {
+          "name": "done",
+          "direction": "output",
+          "valueKind": "trigger",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 39,
+          "options": [
+            {
+              "label": "PCF8574 (0x27)",
+              "value": 39,
+              "description": "I2C address 0x27."
+            },
+            {
+              "label": "PCF8574A (0x3F)",
+              "value": 63,
+              "description": "I2C address 0x3F."
+            }
+          ]
+        },
+        {
+          "name": "text",
+          "valueKind": "string",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": "Temp: {value} C"
+        },
+        {
+          "name": "row",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 0
+        },
+        {
+          "name": "columns",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": true,
+          "defaultValue": 16,
+          "options": [
+            {
+              "label": "16 columns",
+              "value": 16,
+              "description": "16x2 display."
+            },
+            {
+              "label": "20 columns",
+              "value": 20,
+              "description": "20x4 display."
+            }
+          ]
+        },
+        {
+          "name": "rows",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": true,
+          "defaultValue": 2,
+          "options": [
+            {
+              "label": "2 rows",
+              "value": 2,
+              "description": "16x2 display."
+            },
+            {
+              "label": "4 rows",
+              "value": 4,
+              "description": "20x4 display."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "module.neopixel",
+      "displayName": "LED Strip (NeoPixel)",
+      "category": "Modules",
+      "description": "Lights a WS2812 / NeoPixel strip or ring: every pixel, or one pixel, in the colour you choose.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "red",
+          "direction": "input",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "green",
+          "direction": "input",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "blue",
+          "direction": "input",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "done",
+          "direction": "output",
+          "valueKind": "trigger",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "pin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 5,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        },
+        {
+          "name": "count",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 8
+        },
+        {
+          "name": "red",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 0
+        },
+        {
+          "name": "green",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 120
+        },
+        {
+          "name": "blue",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 255
+        },
+        {
+          "name": "pixel",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": true,
+          "defaultValue": -1
+        },
+        {
+          "name": "brightness",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": true,
+          "defaultValue": 64
+        }
+      ]
+    },
+    {
+      "type": "module.oled",
+      "displayName": "OLED Text (SSD1306)",
+      "category": "Modules",
+      "description": "Draws text on a 128x64 or 128x32 OLED display (SSD1306, I2C). Use {value} in the text to show a number.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "value",
+          "direction": "input",
+          "valueKind": "any",
+          "required": false
+        },
+        {
+          "name": "done",
+          "direction": "output",
+          "valueKind": "trigger",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 60,
+          "options": [
+            {
+              "label": "Default (0x3C)",
+              "value": 60,
+              "description": "I2C address 0x3C."
+            },
+            {
+              "label": "Alternate (0x3D)",
+              "value": 61,
+              "description": "I2C address 0x3D."
+            }
+          ]
+        },
+        {
+          "name": "text",
+          "valueKind": "string",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": "Hello {value}"
+        },
+        {
+          "name": "x",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 0
+        },
+        {
+          "name": "y",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 0
+        },
+        {
+          "name": "size",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 2,
+          "options": [
+            {
+              "label": "Small",
+              "value": 1,
+              "description": "6x8 pixels per letter."
+            },
+            {
+              "label": "Medium",
+              "value": 2,
+              "description": "12x16 pixels per letter."
+            },
+            {
+              "label": "Large",
+              "value": 3,
+              "description": "18x24 pixels per letter."
+            }
+          ]
+        },
+        {
+          "name": "clear",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": true,
+          "options": [
+            {
+              "label": "Yes",
+              "value": true,
+              "description": "On."
+            },
+            {
+              "label": "No",
+              "value": false,
+              "description": "Off."
+            }
+          ]
+        },
+        {
+          "name": "height",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": true,
+          "defaultValue": 64,
+          "options": [
+            {
+              "label": "128 x 64",
+              "value": 64,
+              "description": "The bigger one."
+            },
+            {
+              "label": "128 x 32",
+              "value": 32,
+              "description": "The slim one."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "module.relay",
+      "displayName": "Relay",
+      "category": "Modules",
+      "description": "Switches a relay module on or off. Most relay boards switch ON when the pin is LOW (active low).",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "state",
+          "direction": "input",
+          "valueKind": "boolean",
+          "required": false
+        },
+        {
+          "name": "done",
+          "direction": "output",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "state",
+          "direction": "output",
+          "valueKind": "boolean",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "pin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 2,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        },
+        {
+          "name": "state",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": true,
+          "options": [
+            {
+              "label": "On",
+              "value": true,
+              "description": "Switch the load on."
+            },
+            {
+              "label": "Off",
+              "value": false,
+              "description": "Switch the load off."
+            }
+          ]
+        },
+        {
+          "name": "activeLow",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": true,
+          "defaultValue": true,
+          "options": [
+            {
+              "label": "Yes",
+              "value": true,
+              "description": "On."
+            },
+            {
+              "label": "No",
+              "value": false,
+              "description": "Off."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "module.rgb-led",
+      "displayName": "RGB LED",
+      "category": "Modules",
+      "description": "Sets the colour of an RGB LED wired to three PWM pins (red, green, blue from 0 to 255).",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "red",
+          "direction": "input",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "green",
+          "direction": "input",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "blue",
+          "direction": "input",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "done",
+          "direction": "output",
+          "valueKind": "trigger",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "redPin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 4,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        },
+        {
+          "name": "greenPin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 5,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        },
+        {
+          "name": "bluePin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 3,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        },
+        {
+          "name": "red",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 255
+        },
+        {
+          "name": "green",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 120
+        },
+        {
+          "name": "blue",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 0
+        },
+        {
+          "name": "commonAnode",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": true,
+          "defaultValue": false,
+          "options": [
+            {
+              "label": "Yes",
+              "value": true,
+              "description": "On."
+            },
+            {
+              "label": "No",
+              "value": false,
+              "description": "Off."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "module.stepper",
+      "displayName": "Stepper Motor",
+      "category": "Modules",
+      "description": "Turns a 28BYJ-48 (ULN2003) stepper motor a number of steps. Positive turns one way, negative the other.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "steps",
+          "direction": "input",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "done",
+          "direction": "output",
+          "valueKind": "trigger",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "pin1",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 4,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        },
+        {
+          "name": "pin2",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 5,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        },
+        {
+          "name": "pin3",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 6,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        },
+        {
+          "name": "pin4",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 7,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        },
+        {
+          "name": "steps",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 512
+        },
+        {
+          "name": "rpm",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 10
+        },
+        {
+          "name": "stepsPerRevolution",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": true,
+          "defaultValue": 2048
+        }
+      ]
+    },
+    {
+      "type": "sensor.analog-percent",
+      "displayName": "Analog Sensor (%)",
+      "category": "Sensors",
+      "description": "Reads a light sensor, soil probe, potentiometer or any analog sensor as a percentage from 0 to 100.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "percent",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "raw",
+          "direction": "output",
+          "valueKind": "integer",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "pin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 1,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            }
+          ]
+        },
+        {
+          "name": "invert",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": false,
+          "options": [
+            {
+              "label": "Normal",
+              "value": false,
+              "description": "More voltage = higher percentage."
+            },
+            {
+              "label": "Inverted",
+              "value": true,
+              "description": "More voltage = lower percentage (typical for soil moisture probes)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sensor.button",
+      "displayName": "Button",
+      "category": "Sensors",
+      "description": "True while a push button is pressed. Wired between the pin and GND it uses the board\u0027s internal pull-up, so no resistor is needed.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "pressed",
+          "direction": "output",
+          "valueKind": "boolean",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "pin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 4,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        },
+        {
+          "name": "pullUp",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": true,
+          "options": [
+            {
+              "label": "Button to GND (pull-up)",
+              "value": true,
+              "description": "Pressed = LOW. The usual wiring."
+            },
+            {
+              "label": "Button to 3.3 V",
+              "value": false,
+              "description": "Pressed = HIGH. Needs an external pull-down resistor."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sensor.color",
+      "displayName": "Colour (TCS34725)",
+      "category": "Sensors",
+      "description": "Reads the colour of what is in front of a TCS34725 over I2C: red, green and blue from 0 to 255.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "red",
+          "direction": "output",
+          "valueKind": "integer",
+          "required": false
+        },
+        {
+          "name": "green",
+          "direction": "output",
+          "valueKind": "integer",
+          "required": false
+        },
+        {
+          "name": "blue",
+          "direction": "output",
+          "valueKind": "integer",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "integrationMs",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": true,
+          "defaultValue": 50
+        }
+      ]
+    },
+    {
+      "type": "sensor.dht",
+      "displayName": "DHT Temp \u002B Humidity",
+      "category": "Sensors",
+      "description": "Reads a DHT11 or DHT22 sensor: temperature in \u00B0C and relative humidity in %.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "temperature",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "humidity",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "pin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 4,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        },
+        {
+          "name": "model",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 22,
+          "options": [
+            {
+              "label": "DHT22 (AM2302)",
+              "value": 22,
+              "description": "The white, bigger one."
+            },
+            {
+              "label": "DHT11",
+              "value": 11,
+              "description": "The blue, cheaper one."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sensor.ultrasonic",
+      "displayName": "Distance (HC-SR04)",
+      "category": "Sensors",
+      "description": "Measures the distance to an object with an HC-SR04 ultrasonic sensor, in centimetres.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "distance",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "trigPin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 5,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        },
+        {
+          "name": "echoPin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 3,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sensor.bh1750",
+      "displayName": "Light (BH1750)",
+      "category": "Sensors",
+      "description": "Reads the ambient light with a BH1750 over I2C, in lux.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "lux",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 35,
+          "options": [
+            {
+              "label": "Default (0x23)",
+              "value": 35,
+              "description": "I2C address 0x23."
+            },
+            {
+              "label": "ADDR to VCC (0x5C)",
+              "value": 92,
+              "description": "I2C address 0x5C."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sensor.pir",
+      "displayName": "Motion (PIR)",
+      "category": "Sensors",
+      "description": "True while a PIR sensor (HC-SR501) sees someone move.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "motion",
+          "direction": "output",
+          "valueKind": "boolean",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "pin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 4,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sensor.mpu6050",
+      "displayName": "Motion/Tilt (MPU6050)",
+      "category": "Sensors",
+      "description": "Reads a MPU6050 over I2C: acceleration in m/s\u00B2 and rotation speed in rad/s on three axes.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "ax",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "ay",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "az",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "gx",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "gy",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "gz",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 104,
+          "options": [
+            {
+              "label": "Default (0x68)",
+              "value": 104,
+              "description": "I2C address 0x68."
+            },
+            {
+              "label": "AD0 to VCC (0x69)",
+              "value": 105,
+              "description": "I2C address 0x69."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sensor.ina219",
+      "displayName": "Power (INA219)",
+      "category": "Sensors",
+      "description": "Measures voltage (V), current (mA) and power (mW) with an INA219 over I2C.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "voltage",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "current",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "power",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 64,
+          "options": [
+            {
+              "label": "Default (0x40)",
+              "value": 64,
+              "description": "I2C address 0x40."
+            },
+            {
+              "label": "A0 to VCC (0x41)",
+              "value": 65,
+              "description": "I2C address 0x41."
+            },
+            {
+              "label": "A1 to VCC (0x44)",
+              "value": 68,
+              "description": "I2C address 0x44."
+            },
+            {
+              "label": "A0 and A1 to VCC (0x45)",
+              "value": 69,
+              "description": "I2C address 0x45."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sensor.ds18b20",
+      "displayName": "Temperature (DS18B20)",
+      "category": "Sensors",
+      "description": "Reads a DS18B20 waterproof temperature probe, in \u00B0C.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "temperature",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "pin",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 4,
+          "options": [
+            {
+              "label": "GPIO 0 - ADC1",
+              "value": 0,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 1 - ADC1",
+              "value": 1,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 2 - ADC1 STRAP (boot strap)",
+              "value": 2,
+              "description": "ADC1 pin that is also a strapping pin. Avoid driving it at boot."
+            },
+            {
+              "label": "GPIO 3 - ADC1",
+              "value": 3,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 4 - ADC1",
+              "value": 4,
+              "description": "General purpose GPIO with ADC1."
+            },
+            {
+              "label": "GPIO 5 - ADC2",
+              "value": 5,
+              "description": "ADC2 pin (analog reads are unreliable while Wi-Fi is on)."
+            },
+            {
+              "label": "GPIO 6 - GPIO",
+              "value": 6,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 7 - GPIO",
+              "value": 7,
+              "description": "General purpose GPIO."
+            },
+            {
+              "label": "GPIO 8 - RGB LED STRAP (boot strap)",
+              "value": 8,
+              "description": "On-board RGB LED, I2C SDA by default and a strapping pin."
+            },
+            {
+              "label": "GPIO 9 - BOOT (boot strap)",
+              "value": 9,
+              "description": "Boot button / strapping pin, I2C SCL by default."
+            },
+            {
+              "label": "GPIO 10 - GPIO",
+              "value": 10,
+              "description": "General purpose GPIO."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sensor.bme280",
+      "displayName": "Weather (BME280)",
+      "category": "Sensors",
+      "description": "Reads a BME280 over I2C: temperature (\u00B0C), humidity (%) and pressure (hPa).",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "temperature",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "humidity",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "pressure",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 118,
+          "options": [
+            {
+              "label": "Default (0x76)",
+              "value": 118,
+              "description": "I2C address 0x76."
+            },
+            {
+              "label": "SDO to VCC (0x77)",
+              "value": 119,
+              "description": "I2C address 0x77."
             }
           ]
         }

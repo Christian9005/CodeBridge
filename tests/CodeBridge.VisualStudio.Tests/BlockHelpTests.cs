@@ -29,6 +29,8 @@ public sealed class BlockHelpTests
     [InlineData("arduino-uno")]
     [InlineData("esp32-s3-devkit")]
     [InlineData("esp32-c3-devkit")]
+    [InlineData("xiao-esp32-s3")]
+    [InlineData("esp32-s2-mini")]
     [InlineData("arduino-nano")]
     [InlineData("arduino-mega")]
     public void Every_block_in_the_catalog_has_beginner_help_and_a_demo(string boardId)

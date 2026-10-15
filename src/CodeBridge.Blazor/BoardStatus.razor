@@ -1,31 +1,34 @@
 @inherits CodeBridgeComponentBase
 
-<div class="cb-card">
-    <div class="cb-row">
-        <span class="cb-dot @StateClass"></span>
-        <span class="cb-title">@Headline</span>
+<div class="cb-card cb-status" data-state="@StateClass">
+    <div class="cb-head">
+        <div class="cb-row">
+            <span class="cb-dot @StateClass" aria-hidden="true"></span>
+            <div>
+                <div class="cb-title">@Headline</div>
+                <div class="cb-state" data-state="@StateClass" role="status">@StateText</div>
+            </div>
+        </div>
         @if (Board.IsSimulated)
         {
             <span class="cb-sim" title="No hardware: this is the built-in virtual board">simulator</span>
         }
     </div>
-    <div class="cb-muted">@Detail</div>
+    <div class="cb-muted cb-readout">@Detail</div>
     @if (!string.IsNullOrEmpty(Board.LastError) && Board.State == BoardConnectionState.Faulted)
     {
-        <div class="cb-error">@Board.LastError</div>
+        <div class="cb-error" role="alert">@Board.LastError</div>
     }
     @if (ShowButton)
     {
-        <div style="margin-top:8px">
-            @if (Board.IsConnected)
-            {
-                <button class="cb-btn" @onclick="DisconnectAsync">Disconnect</button>
-            }
-            else
-            {
-                <button class="cb-btn" disabled="@(Board.State == BoardConnectionState.Connecting)" @onclick="ConnectAsync">Connect</button>
-            }
-        </div>
+        @if (Board.IsConnected)
+        {
+            <button class="cb-btn" @onclick="DisconnectAsync">Disconnect</button>
+        }
+        else
+        {
+            <button class="cb-btn cb-btn--primary" disabled="@(Board.State == BoardConnectionState.Connecting)" @onclick="ConnectAsync">Connect</button>
+        }
     }
 </div>
 
@@ -35,13 +38,17 @@
 
     private string StateClass => Board.State.ToString().ToLowerInvariant();
 
-    private string Headline => Board.State switch
+    private string StateText => Board.State switch
     {
-        BoardConnectionState.Connected => Board.Info?.ChipModel ?? "Board connected",
-        BoardConnectionState.Connecting => "Connecting...",
+        BoardConnectionState.Connected => "Connected",
+        BoardConnectionState.Connecting => "Connecting",
         BoardConnectionState.Faulted => "Connection lost",
         _ => "Not connected"
     };
+
+    private string Headline => Board.State == BoardConnectionState.Connected
+        ? Board.Info?.ChipModel ?? "Board"
+        : "Board";
 
     private string Detail => Board.State == BoardConnectionState.Connected
         ? $"{Board.Target} · firmware {Board.FirmwareVersion}" + (Board.Info is { } info ? $" · {info.FreeHeapBytes / 1024} KB free" : string.Empty)

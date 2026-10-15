@@ -1,31 +1,60 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
-<ResourceDictionary 
+<ResourceDictionary
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
     <!-- Note: For Android please see also Platforms\Android\Resources\values\colors.xml -->
 
-    <Color x:Key="Primary">#512BD4</Color>
-    <Color x:Key="PrimaryDark">#ac99ea</Color>
-    <Color x:Key="PrimaryDarkText">#242424</Color>
-    <Color x:Key="Secondary">#DFD8F7</Color>
-    <Color x:Key="SecondaryDarkText">#9880e5</Color>
-    <Color x:Key="Tertiary">#2B0B98</Color>
+    <!--
+      CodeBridge palette, shared with the Blazor components, WinForms designer and Visual Studio editor.
+      Blue = selected / value, green = live / on / connected, amber = simulator or caution, red = fault.
+      A state is never shown by colour alone: every dot has its word beside it.
+    -->
+    <Color x:Key="Primary">#0A5FC2</Color>
+    <Color x:Key="PrimaryDark">#5AA9FF</Color>
+    <Color x:Key="PrimaryDarkText">#0E1217</Color>
+    <Color x:Key="Secondary">#DCE9F8</Color>
+    <Color x:Key="SecondaryDarkText">#8FC3FF</Color>
+    <Color x:Key="Tertiary">#064587</Color>
 
     <Color x:Key="White">White</Color>
     <Color x:Key="Black">Black</Color>
-    <Color x:Key="Magenta">#D600AA</Color>
-    <Color x:Key="MidnightBlue">#190649</Color>
-    <Color x:Key="OffBlack">#1f1f1f</Color>
+    <Color x:Key="MidnightBlue">#0E1A2B</Color>
+    <Color x:Key="OffBlack">#0E1217</Color>
 
-    <Color x:Key="Gray100">#E1E1E1</Color>
-    <Color x:Key="Gray200">#C8C8C8</Color>
-    <Color x:Key="Gray300">#ACACAC</Color>
-    <Color x:Key="Gray400">#919191</Color>
-    <Color x:Key="Gray500">#6E6E6E</Color>
-    <Color x:Key="Gray600">#404040</Color>
-    <Color x:Key="Gray900">#212121</Color>
-    <Color x:Key="Gray950">#141414</Color>
+    <Color x:Key="Gray100">#E4E8EE</Color>
+    <Color x:Key="Gray200">#CBD2DB</Color>
+    <Color x:Key="Gray300">#A9B2BF</Color>
+    <Color x:Key="Gray400">#8A96A6</Color>
+    <Color x:Key="Gray500">#6B7787</Color>
+    <Color x:Key="Gray600">#3F4856</Color>
+    <Color x:Key="Gray900">#1C2129</Color>
+    <Color x:Key="Gray950">#11161C</Color>
+
+    <!-- Surfaces and text -->
+    <Color x:Key="Page">#EEF1F5</Color>
+    <Color x:Key="PageDark">#0E1217</Color>
+    <Color x:Key="Card">#FFFFFF</Color>
+    <Color x:Key="CardDark">#171C23</Color>
+    <Color x:Key="Sunken">#F3F5F8</Color>
+    <Color x:Key="SunkenDark">#11161C</Color>
+    <Color x:Key="Line">#D6DCE4</Color>
+    <Color x:Key="LineDark">#2C3440</Color>
+    <Color x:Key="Ink">#151A21</Color>
+    <Color x:Key="InkDark">#E7EDF4</Color>
+    <Color x:Key="Muted">#566170</Color>
+    <Color x:Key="MutedDark">#9BA7B6</Color>
+    <Color x:Key="Track">#8A96A6</Color>
+    <Color x:Key="TrackDark">#6F7C8F</Color>
+
+    <!-- State colours -->
+    <Color x:Key="Ok">#0F7A55</Color>
+    <Color x:Key="OkDark">#35C98C</Color>
+    <Color x:Key="Warn">#8A5A00</Color>
+    <Color x:Key="WarnDark">#F2B13C</Color>
+    <Color x:Key="WarnFill">#F5AA30</Color>
+    <Color x:Key="Bad">#C4243B</Color>
+    <Color x:Key="BadDark">#FF7285</Color>
 
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
     <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>

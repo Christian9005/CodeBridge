@@ -32,6 +32,8 @@ namespace CodeBridge.VisualStudio.Firmware
             new Choice("esp32-devkit", "ESP32 DevKit", "The original ESP32 (esp32dev)."),
             new Choice("esp32-s3-devkit", "ESP32-S3 DevKit", "ESP32-S3-DevKitC-1."),
             new Choice("esp32-c3-devkit", "ESP32-C3 DevKit", "ESP32-C3-DevKitM-1."),
+            new Choice("xiao-esp32-s3", "XIAO ESP32-S3", "Seeed XIAO ESP32-S3 (USB-C only)."),
+            new Choice("esp32-s2-mini", "ESP32-S2 Mini", "LOLIN / Wemos S2 mini."),
             new Choice("arduino-uno", "Arduino Uno", "ATmega328P, 5 V."),
             new Choice("arduino-nano", "Arduino Nano", "New bootloader (most original boards)."),
             new Choice("arduino-nano-old", "Arduino Nano (old bootloader)", "Most clones and boards from before 2018."),

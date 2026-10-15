@@ -18,7 +18,7 @@ namespace CodeBridge.FlowHost;
 
 /// <summary>
 /// Usage: CodeBridge.FlowHost &lt;command&gt; [--option value]...
-/// Commands: boards | ports | wifi-boards | catalog | validate | export | test | upload | ota | run | wifi-scan | wifi-status | wifi-config | wifi-unpair | monitor | ha-find | ha-test | ha-bridge | pio-info | pio-new | pio-build | pio-upload | pio-clean
+/// Commands: boards | ports | wifi-boards | catalog | validate | export | test | upload | ota | run | wifi-scan | wifi-status | wifi-config | wifi-unpair | monitor | mesh-status | mesh-scan | mesh-provision | ha-find | ha-test | ha-bridge | pio-info | pio-new | pio-build | pio-upload | pio-clean
 /// </summary>
 internal static partial class Program
 {
@@ -55,6 +55,9 @@ internal static partial class Program
                 "boards" => Boards(),
                 "ports" => Ports(),
                 "wifi-boards" => await WifiBoardsAsync(cancellation.Token),
+                "mesh-status" => await MeshStatusAsync(options, cancellation.Token),
+                "mesh-scan" => await MeshScanAsync(options, cancellation.Token),
+                "mesh-provision" => await MeshProvisionAsync(options, cancellation.Token),
                 "ha-find" => await HomeAssistantFindAsync(cancellation.Token),
                 "ha-test" => await HomeAssistantTestAsync(cancellation.Token),
                 "ha-bridge" => await HomeAssistantBridgeAsync(options, cancellation),
@@ -265,7 +268,7 @@ internal static partial class Program
         var profile = ResolveBoard(options)!;
         Emit(new { type = "status", state = "connecting", message = $"Connecting to {profile.DisplayName}..." });
 
-        var board = await BoardConnectionService.ConnectAsync(CreateRequest(profile, options), ct);
+        var board = await BoardConnectionService.ConnectAsync(await CreateRequestAsync(profile, options, ct), ct);
         try
         {
             object? info = null;
@@ -595,6 +598,7 @@ internal static partial class Program
 
     private static string SuggestBoardForChip(string? chip) =>
         chip is not null && chip.Contains("S3", StringComparison.OrdinalIgnoreCase) ? BuiltInBoardProfiles.Esp32S3DevKit.Id
+        : chip is not null && chip.Contains("S2", StringComparison.OrdinalIgnoreCase) ? BuiltInBoardProfiles.Esp32S2Mini.Id
         : chip is not null && chip.Contains("C3", StringComparison.OrdinalIgnoreCase) ? BuiltInBoardProfiles.Esp32C3DevKit.Id
         : BuiltInBoardProfiles.Esp32DevKit.Id;
 
@@ -776,7 +780,7 @@ internal static partial class Program
         });
 
         Emit(new { type = "status", state = "connecting", message = $"Connecting to {profile.DisplayName}..." });
-        var board = await BoardConnectionService.ConnectAsync(CreateRequest(profile, options) with { CommandObserver = PinObserver() }, ct);
+        var board = await BoardConnectionService.ConnectAsync((await CreateRequestAsync(profile, options, ct)) with { CommandObserver = PinObserver() }, ct);
 
         try
         {

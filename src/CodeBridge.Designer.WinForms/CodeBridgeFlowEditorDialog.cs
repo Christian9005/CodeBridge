@@ -33,6 +33,8 @@ internal sealed class CodeBridgeFlowEditorDialog : Form
         _cancelButton.Text = "Cancel";
         _cancelButton.DialogResult = DialogResult.Cancel;
         _cancelButton.Width = 86;
+        DesignerTheme.StyleButton(_okButton, primary: true);
+        DesignerTheme.StyleButton(_cancelButton);
 
         var footer = new FlowLayoutPanel
         {
@@ -47,6 +49,7 @@ internal sealed class CodeBridgeFlowEditorDialog : Form
 
         Controls.Add(_designer);
         Controls.Add(footer);
+        DesignerTheme.ApplyDarkChrome(this);
 
         AcceptButton = _okButton;
         CancelButton = _cancelButton;

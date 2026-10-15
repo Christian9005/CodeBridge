@@ -71,6 +71,8 @@ jobs:
           - { project: esp32-bridge, env: esp32 }
           - { project: esp32-bridge, env: esp32s3 }
           - { project: esp32-bridge, env: esp32c3 }
+          - { project: esp32-bridge, env: xiao_esp32s3 }
+          - { project: esp32-bridge, env: esp32s2 }
           - { project: arduino-uno-bridge, env: uno }
           - { project: arduino-uno-bridge, env: nano }
           - { project: arduino-uno-bridge, env: mega }

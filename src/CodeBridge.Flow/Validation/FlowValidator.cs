@@ -162,6 +162,52 @@ public sealed class FlowValidator
 
         if (string.Equals(definition.Type, BuiltInBlockCatalog.ServoWrite, StringComparison.OrdinalIgnoreCase))
             ValidateServoWrite(node, definition, board, issues);
+
+        if (ModuleBlocks.TryGet(definition.Type, out var module))
+        {
+            foreach (var modulePin in module.Pins)
+                ValidatePinCapability(node, definition, board, modulePin.Property, modulePin.Needs, modulePin.What, issues);
+
+            ValidateModuleSpecifics(node, definition, board, module, issues);
+        }
+    }
+
+    private static void ValidateModuleSpecifics(
+        FlowNode node,
+        FlowBlockDefinition definition,
+        BoardProfile board,
+        ModuleBlock module,
+        List<FlowValidationIssue> issues)
+    {
+        // The same pin cannot be two things inside one block (for example the three coils of a stepper on one GPIO).
+        var own = module.Pins.Select(pin => (pin.Property, Number: GetValue<int>(node, definition, pin.Property))).ToList();
+        foreach (var duplicate in own.GroupBy(p => p.Number).Where(g => g.Count() > 1))
+        {
+            issues.Add(new FlowValidationIssue(
+                FlowValidationSeverity.Error,
+                $"{module.DisplayName}: GPIO {duplicate.Key} is used for {string.Join(" and ", duplicate.Select(d => d.Property))}. Each wire needs its own pin.",
+                node.Id));
+        }
+
+        if (module.Type is ModuleBlocks.Bme280 or ModuleBlocks.Bh1750 or ModuleBlocks.Mpu6050 or ModuleBlocks.Ina219 or ModuleBlocks.ColorSensor or ModuleBlocks.Lcd or ModuleBlocks.Oled &&
+            board.Family == CodeBridge.Core.Enums.BoardFamily.ESP32 && board.Id != "esp32-devkit")
+        {
+            issues.Add(new FlowValidationIssue(
+                FlowValidationSeverity.Warning,
+                $"{module.DisplayName} uses the I2C pins of {board.DisplayName}; check that SDA and SCL are wired to the pins this board's I2C bus uses.",
+                node.Id));
+        }
+
+        foreach (var analogPin in module.Pins.Where(pin => pin.Role == ModulePinRole.AnalogInput))
+        {
+            if (board.FindPin(GetValue<int>(node, definition, analogPin.Property))?.HasCapability(PinCapability.Adc2) == true)
+            {
+                issues.Add(new FlowValidationIssue(
+                    FlowValidationSeverity.Warning,
+                    $"{module.DisplayName}: GPIO {GetValue<int>(node, definition, analogPin.Property)} is an ADC2 pin; its analog reads are unreliable while Wi-Fi is on. Prefer an ADC1 pin.",
+                    node.Id));
+            }
+        }
     }
 
     private static BoardProfile ResolveBoard(
@@ -416,6 +462,25 @@ public sealed class FlowValidator
     {
         if (!catalog.TryGet(node.Type, out var definition))
             yield break;
+
+        if (ModuleBlocks.TryGet(definition.Type, out var module))
+        {
+            foreach (var modulePin in module.Pins)
+            {
+                var modulePinNumber = GetValue<int>(node, definition, modulePin.Property);
+                if (board.FindPin(modulePinNumber) is not null)
+                {
+                    yield return new PinUsage(modulePinNumber, node.Id, modulePin.Role switch
+                    {
+                        ModulePinRole.DigitalInput => PinUsageRole.DigitalInput,
+                        ModulePinRole.AnalogInput => PinUsageRole.AnalogInput,
+                        _ => PinUsageRole.DigitalOutput
+                    });
+                }
+            }
+
+            yield break;
+        }
 
         PinUsageRole? role = definition.Type switch
         {

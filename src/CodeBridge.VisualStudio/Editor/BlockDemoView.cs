@@ -14,7 +14,7 @@ namespace CodeBridge.VisualStudio.Editor
     /// sweeping...). Drawn with WPF shapes so it follows the Visual Studio theme, costs nothing in the VSIX and never
     /// needs to be re-recorded when a block changes. Start() when the tooltip opens, Stop() when it closes.
     /// </summary>
-    internal sealed class BlockDemoView : Canvas
+    internal sealed partial class BlockDemoView : Canvas
     {
         public const double DemoWidth = 280;
         public const double DemoHeight = 84;
@@ -89,6 +89,7 @@ namespace CodeBridge.VisualStudio.Editor
                 case DemoKind.Debug: BuildDebug(); break;
                 case DemoKind.Map: BuildMap(); break;
                 case DemoKind.Pwm: BuildPwm(); break;
+                default: BuildModuleDemo(kind); break;
             }
 
             if (HasAnimation)
