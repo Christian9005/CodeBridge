@@ -8,7 +8,7 @@ CodeBridge is now usable as a Visual Studio-first WinForms extension:
 - Open or create a WinForms project.
 - Run `Tools > Add CodeBridge Starter Form`.
 - Build and run the project.
-- Select the ESP32 COM port and click `Run Blink`.
+- Click `Run`: the starter form finds the board on USB (or uses the simulator) and offers to upload the firmware if the board needs it.
 
 The VSIX embeds the local CodeBridge NuGet packages, installs `CodeBridge.Designer.WinForms` into the active project, adds a starter form, and only exposes the public Toolbox components.
 

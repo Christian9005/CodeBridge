@@ -1,313 +1,500 @@
-using System.Text;
+using System;
 
 namespace CodeBridge.VisualStudio;
 
+/// <summary>
+/// The source of the starter form that "CodeBridge WinForms App" and "Add CodeBridge Starter Form" put in a project.
+/// It is meant to work the moment it runs: the board is found on USB (or the virtual board is used), Run connects by itself,
+/// and a board without the CodeBridge firmware is offered the upload instead of failing with a stack of text.
+/// </summary>
 internal static class CodeBridgeStarterFormTemplate
 {
-    public static string Create(string namespaceName, string className)
-    {
-        var builder = new StringBuilder();
-        builder.AppendLine("using System;");
-        builder.AppendLine("using System.Drawing;");
-        builder.AppendLine("using System.Globalization;");
-        builder.AppendLine("using System.Threading.Tasks;");
-        builder.AppendLine("using System.Windows.Forms;");
-        builder.AppendLine("using CodeBridge.Designer.WinForms;");
-        builder.AppendLine("using CodeBridge.Flow;");
-        builder.AppendLine("using CodeBridge.Flow.Execution;");
-        builder.AppendLine("using CodeBridge.Transport;");
-        builder.AppendLine();
-        builder.AppendLine($"namespace {namespaceName}");
-        builder.AppendLine("{");
-        builder.AppendLine($"    public sealed class {className} : Form");
-        builder.AppendLine("    {");
-        builder.AppendLine("        private readonly CodeBridgeBoardComponent _board = new();");
-        builder.AppendLine("        private readonly CodeBridgeFlowControl _flow = new();");
-        builder.AppendLine("        private readonly ComboBox _portInput = new();");
-        builder.AppendLine("        private readonly NumericUpDown _baudRateInput = new();");
-        builder.AppendLine("        private readonly ComboBox _pinInput = new();");
-        builder.AppendLine("        private readonly Button _refreshButton = new();");
-        builder.AppendLine("        private readonly Button _connectButton = new();");
-        builder.AppendLine("        private readonly Button _uploadButton = new();");
-        builder.AppendLine("        private readonly Button _editButton = new();");
-        builder.AppendLine("        private readonly Button _presetButton = new();");
-        builder.AppendLine("        private readonly Button _runButton = new();");
-        builder.AppendLine("        private readonly Button _stopButton = new();");
-        builder.AppendLine("        private readonly TextBox _log = new();");
-        builder.AppendLine("        private bool _closing;");
-        builder.AppendLine();
-        builder.AppendLine($"        public {className}()");
-        builder.AppendLine("        {");
-        builder.AppendLine("            Text = \"CodeBridge Board Starter\";");
-        builder.AppendLine("            StartPosition = FormStartPosition.CenterScreen;");
-        builder.AppendLine("            MinimumSize = new Size(860, 520);");
-        builder.AppendLine("            Size = new Size(980, 580);");
-        builder.AppendLine("            Font = new Font(\"Segoe UI\", 9F);");
-        builder.AppendLine("            BackColor = Color.FromArgb(246, 247, 248);");
-        builder.AppendLine();
-        builder.AppendLine("            BuildLayout();");
-        builder.AppendLine("            PopulatePins();");
-        builder.AppendLine("            WireEvents();");
-        builder.AppendLine("            LoadBlinkFlow();");
-        builder.AppendLine("            RefreshPorts();");
-        builder.AppendLine("            UpdateState();");
-        builder.AppendLine("        }");
-        builder.AppendLine();
-        builder.AppendLine("        private void BuildLayout()");
-        builder.AppendLine("        {");
-        builder.AppendLine("            var root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, Padding = new Padding(14) };");
-        builder.AppendLine("            root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 280));");
-        builder.AppendLine("            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));");
-        builder.AppendLine();
-        builder.AppendLine("            var left = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 10, Padding = new Padding(0, 0, 14, 0) };");
-        builder.AppendLine("            left.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 72));");
-        builder.AppendLine("            left.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));");
-        builder.AppendLine();
-        builder.AppendLine("            _portInput.DropDownStyle = ComboBoxStyle.DropDown;");
-        builder.AppendLine("            _baudRateInput.Minimum = 9600;");
-        builder.AppendLine("            _baudRateInput.Maximum = 921600;");
-        builder.AppendLine("            _baudRateInput.Increment = 9600;");
-        builder.AppendLine("            _baudRateInput.Value = 115200;");
-        builder.AppendLine("            _pinInput.DropDownStyle = ComboBoxStyle.DropDownList;");
-        builder.AppendLine();
-        builder.AppendLine("            ConfigureButton(_refreshButton, \"Refresh\");");
-        builder.AppendLine("            ConfigureButton(_connectButton, \"Connect\");");
-        builder.AppendLine("            ConfigureButton(_uploadButton, \"Upload FW\");");
-        builder.AppendLine("            ConfigureButton(_editButton, \"Edit Flow\");");
-        builder.AppendLine("            ConfigureButton(_presetButton, \"Preset\");");
-        builder.AppendLine("            ConfigureButton(_runButton, \"Run Blink\");");
-        builder.AppendLine("            ConfigureButton(_stopButton, \"Stop\");");
-        builder.AppendLine();
-        builder.AppendLine("            AddRow(left, 0, \"Port\", _portInput);");
-        builder.AppendLine("            AddRow(left, 1, \"Baud\", _baudRateInput);");
-        builder.AppendLine("            AddRow(left, 2, \"GPIO\", _pinInput);");
-        builder.AppendLine("            AddRow(left, 3, string.Empty, _refreshButton);");
-        builder.AppendLine("            AddRow(left, 4, string.Empty, _connectButton);");
-        builder.AppendLine("            AddRow(left, 5, string.Empty, _uploadButton);");
-        builder.AppendLine("            AddRow(left, 6, string.Empty, _editButton);");
-        builder.AppendLine("            AddRow(left, 7, string.Empty, _presetButton);");
-        builder.AppendLine("            AddRow(left, 8, string.Empty, _runButton);");
-        builder.AppendLine("            AddRow(left, 9, string.Empty, _stopButton);");
-        builder.AppendLine();
-        builder.AppendLine("            var right = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 3 };");
-        builder.AppendLine("            right.RowStyles.Add(new RowStyle(SizeType.Absolute, 86));");
-        builder.AppendLine("            right.RowStyles.Add(new RowStyle(SizeType.Absolute, 8));");
-        builder.AppendLine("            right.RowStyles.Add(new RowStyle(SizeType.Percent, 100));");
-        builder.AppendLine();
-        builder.AppendLine("            _flow.Dock = DockStyle.Fill;");
-        builder.AppendLine("            _flow.TraceDelayMs = 120;");
-        builder.AppendLine("            _log.Dock = DockStyle.Fill;");
-        builder.AppendLine("            _log.Multiline = true;");
-        builder.AppendLine("            _log.ReadOnly = true;");
-        builder.AppendLine("            _log.ScrollBars = ScrollBars.Vertical;");
-        builder.AppendLine("            _log.Font = new Font(\"Consolas\", 9F);");
-        builder.AppendLine("            _log.BackColor = Color.FromArgb(30, 34, 37);");
-        builder.AppendLine("            _log.ForeColor = Color.FromArgb(235, 238, 236);");
-        builder.AppendLine();
-        builder.AppendLine("            right.Controls.Add(_flow, 0, 0);");
-        builder.AppendLine("            right.Controls.Add(_log, 0, 2);");
-        builder.AppendLine("            root.Controls.Add(left, 0, 0);");
-        builder.AppendLine("            root.Controls.Add(right, 1, 0);");
-        builder.AppendLine("            Controls.Add(root);");
-        builder.AppendLine("        }");
-        builder.AppendLine();
-        builder.AppendLine("        private void WireEvents()");
-        builder.AppendLine("        {");
-        builder.AppendLine("            _refreshButton.Click += (_, _) => RefreshPorts();");
-        builder.AppendLine("            _connectButton.Click += async (_, _) => await ConnectAsync();");
-        builder.AppendLine("            _uploadButton.Click += async (_, _) => await UploadFirmwareAsync();");
-        builder.AppendLine("            _editButton.Click += (_, _) => _flow.ShowEditor(_board, this);");
-        builder.AppendLine("            _presetButton.Click += (_, _) => _flow.ShowPresetDialog(this);");
-        builder.AppendLine("            _runButton.Click += async (_, _) => await RunAsync();");
-        builder.AppendLine("            _stopButton.Click += (_, _) => _flow.Stop();");
-        builder.AppendLine("            _pinInput.SelectedIndexChanged += (_, _) => LoadBlinkFlow();");
-        builder.AppendLine("            _board.BoardId = BuiltInBoardProfiles.Esp32DevKit.Id;");
-        builder.AppendLine("            _board.Connected += (_, _) => AppendLog(_board.BoardName + \" connected.\");");
-        builder.AppendLine("            _board.Disconnected += (_, _) => AppendLog(_board.BoardName + \" disconnected.\");");
-        builder.AppendLine("            _board.ConnectionFailed += (_, ex) => AppendLog(\"Connection failed: \" + ex.Message);");
-        builder.AppendLine("            _flow.FlowStarted += (_, _) => AppendLog(\"Flow started.\");");
-        builder.AppendLine("            _flow.FlowCompleted += (_, result) => AppendLog($\"Flow completed. Nodes: {result.NodeOutputs.Count}\");");
-        builder.AppendLine("            _flow.FlowFailed += (_, ex) => AppendLog(\"Flow failed: \" + ex.Message);");
-        builder.AppendLine("            _flow.FlowTrace += (_, trace) => AppendLog($\"{FormatTrace(trace.Kind)} {trace.NodeId}\");");
-        builder.AppendLine("            _flow.FlowStopped += (_, _) => UpdateState();");
-        builder.AppendLine("        }");
-        builder.AppendLine();
-        builder.AppendLine("        private void PopulatePins()");
-        builder.AppendLine("        {");
-        builder.AppendLine("            _pinInput.Items.Clear();");
-        builder.AppendLine("            foreach (var option in BuiltInBoardProfiles.Esp32DevKit.DigitalWritePinOptions)");
-        builder.AppendLine("                _pinInput.Items.Add(new PinItem(option));");
-        builder.AppendLine("            if (_pinInput.Items.Count > 0)");
-        builder.AppendLine("                _pinInput.SelectedIndex = 0;");
-        builder.AppendLine("        }");
-        builder.AppendLine();
-        builder.AppendLine("        private void RefreshPorts()");
-        builder.AppendLine("        {");
-        builder.AppendLine("            var selected = _portInput.Text;");
-        builder.AppendLine("            _portInput.Items.Clear();");
-        builder.AppendLine("            foreach (var port in BoardDiscovery.DiscoverPorts())");
-        builder.AppendLine("                _portInput.Items.Add(port.Name);");
-        builder.AppendLine("            if (!string.IsNullOrWhiteSpace(selected))");
-        builder.AppendLine("                _portInput.Text = selected;");
-        builder.AppendLine("            else if (_portInput.Items.Count > 0)");
-        builder.AppendLine("                _portInput.SelectedIndex = 0;");
-        builder.AppendLine("            AppendLog(_portInput.Items.Count == 0 ? \"No serial ports detected.\" : $\"Detected {_portInput.Items.Count} serial port(s).\");");
-        builder.AppendLine("        }");
-        builder.AppendLine();
-        builder.AppendLine("        private async Task ConnectAsync()");
-        builder.AppendLine("        {");
-        builder.AppendLine("            SyncConnectionSettings();");
-        builder.AppendLine("            UpdateState(connecting: true);");
-        builder.AppendLine("            try");
-        builder.AppendLine("            {");
-        builder.AppendLine("                await _board.ConnectAsync();");
-        builder.AppendLine("            }");
-        builder.AppendLine("            catch (Exception ex)");
-        builder.AppendLine("            {");
-        builder.AppendLine("                MessageBox.Show(this, ex.Message, \"CodeBridge connection\", MessageBoxButtons.OK, MessageBoxIcon.Error);");
-        builder.AppendLine("            }");
-        builder.AppendLine("            finally");
-        builder.AppendLine("            {");
-        builder.AppendLine("                UpdateState();");
-        builder.AppendLine("            }");
-        builder.AppendLine("        }");
-        builder.AppendLine();
-        builder.AppendLine("        private async Task UploadFirmwareAsync()");
-        builder.AppendLine("        {");
-        builder.AppendLine("            SyncConnectionSettings();");
-        builder.AppendLine("            UpdateState(connecting: true);");
-        builder.AppendLine("            try");
-        builder.AppendLine("            {");
-        builder.AppendLine("                var result = await _board.UploadFirmwareAsync();");
-        builder.AppendLine("                AppendLog(result.Success ? \"Firmware uploaded. Reconnect after the board restarts.\" : \"Firmware upload failed.\");");
-        builder.AppendLine("                if (!result.Success)");
-        builder.AppendLine("                    MessageBox.Show(this, result.Log, \"CodeBridge firmware\", MessageBoxButtons.OK, MessageBoxIcon.Error);");
-        builder.AppendLine("            }");
-        builder.AppendLine("            catch (Exception ex)");
-        builder.AppendLine("            {");
-        builder.AppendLine("                MessageBox.Show(this, ex.Message, \"CodeBridge firmware\", MessageBoxButtons.OK, MessageBoxIcon.Error);");
-        builder.AppendLine("            }");
-        builder.AppendLine("            finally");
-        builder.AppendLine("            {");
-        builder.AppendLine("                UpdateState();");
-        builder.AppendLine("            }");
-        builder.AppendLine("        }");
-        builder.AppendLine();
-        builder.AppendLine("        private async Task RunAsync()");
-        builder.AppendLine("        {");
-        builder.AppendLine("            SyncConnectionSettings();");
-        builder.AppendLine("            UpdateState(running: true);");
-        builder.AppendLine("            try");
-        builder.AppendLine("            {");
-        builder.AppendLine("                await _board.RunAsync(_flow);");
-        builder.AppendLine("            }");
-        builder.AppendLine("            catch (Exception ex) when (!_closing)");
-        builder.AppendLine("            {");
-        builder.AppendLine("                MessageBox.Show(this, ex.Message, \"CodeBridge flow\", MessageBoxButtons.OK, MessageBoxIcon.Error);");
-        builder.AppendLine("            }");
-        builder.AppendLine("            finally");
-        builder.AppendLine("            {");
-        builder.AppendLine("                UpdateState();");
-        builder.AppendLine("            }");
-        builder.AppendLine("        }");
-        builder.AppendLine();
-        builder.AppendLine("        private void SyncConnectionSettings()");
-        builder.AppendLine("        {");
-        builder.AppendLine("            _board.TransportMode = CodeBridgeTransportMode.Serial;");
-        builder.AppendLine("            _board.PortName = _portInput.Text.Trim();");
-        builder.AppendLine("            _board.BaudRate = (int)_baudRateInput.Value;");
-        builder.AppendLine("        }");
-        builder.AppendLine();
-        builder.AppendLine("        private void LoadBlinkFlow()");
-        builder.AppendLine("        {");
-        builder.AppendLine("            _flow.FlowName = \"ESP32 Blink\";");
-        builder.AppendLine("            _flow.ExecutionMode = FlowExecutionMode.Trigger;");
-        builder.AppendLine("            _flow.LoadBlinkPreset(SelectedPin, delayMs: 500);");
-        builder.AppendLine("            AppendLog($\"Blink preset loaded for GPIO {SelectedPin}.\");");
-        builder.AppendLine("        }");
-        builder.AppendLine();
-        builder.AppendLine("        private void UpdateState(bool connecting = false, bool running = false)");
-        builder.AppendLine("        {");
-        builder.AppendLine("            var isRunning = running || _flow.IsRunning;");
-        builder.AppendLine("            _connectButton.Enabled = !connecting && !_board.IsConnected && !isRunning;");
-        builder.AppendLine("            _runButton.Enabled = !connecting && !isRunning;");
-        builder.AppendLine("            _stopButton.Enabled = isRunning;");
-        builder.AppendLine("            _refreshButton.Enabled = !connecting && !isRunning;");
-        builder.AppendLine("            _uploadButton.Enabled = !connecting && !_board.IsConnected && !isRunning;");
-        builder.AppendLine("            _portInput.Enabled = !_board.IsConnected && !isRunning;");
-        builder.AppendLine("            _baudRateInput.Enabled = !_board.IsConnected && !isRunning;");
-        builder.AppendLine("            _pinInput.Enabled = !isRunning;");
-        builder.AppendLine("            _editButton.Enabled = !isRunning;");
-        builder.AppendLine("            _presetButton.Enabled = !isRunning;");
-        builder.AppendLine("        }");
-        builder.AppendLine();
-        builder.AppendLine("        private int SelectedPin => _pinInput.SelectedItem is PinItem item ? item.Number : 2;");
-        builder.AppendLine();
-        builder.AppendLine("        private static string FormatTrace(FlowExecutionEventKind kind)");
-        builder.AppendLine("        {");
-        builder.AppendLine("            return kind switch");
-        builder.AppendLine("            {");
-        builder.AppendLine("                FlowExecutionEventKind.NodeStarted => \"started\",");
-        builder.AppendLine("                FlowExecutionEventKind.NodeCompleted => \"completed\",");
-        builder.AppendLine("                FlowExecutionEventKind.NodeSkipped => \"skipped\",");
-        builder.AppendLine("                FlowExecutionEventKind.NodeFailed => \"failed\",");
-        builder.AppendLine("                _ => kind.ToString()");
-        builder.AppendLine("            };");
-        builder.AppendLine("        }");
-        builder.AppendLine();
-        builder.AppendLine("        private static void AddRow(TableLayoutPanel panel, int row, string label, Control control)");
-        builder.AppendLine("        {");
-        builder.AppendLine("            panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 38));");
-        builder.AppendLine("            panel.Controls.Add(new Label { Text = label, Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft }, 0, row);");
-        builder.AppendLine("            control.Dock = DockStyle.Fill;");
-        builder.AppendLine("            control.Margin = new Padding(0, 3, 0, 3);");
-        builder.AppendLine("            panel.Controls.Add(control, 1, row);");
-        builder.AppendLine("        }");
-        builder.AppendLine();
-        builder.AppendLine("        private static void ConfigureButton(Button button, string text)");
-        builder.AppendLine("        {");
-        builder.AppendLine("            button.Text = text;");
-        builder.AppendLine("            button.Height = 30;");
-        builder.AppendLine("            button.Dock = DockStyle.Fill;");
-        builder.AppendLine("            button.Margin = new Padding(0, 3, 0, 3);");
-        builder.AppendLine("        }");
-        builder.AppendLine();
-        builder.AppendLine("        private void AppendLog(string message)");
-        builder.AppendLine("        {");
-        builder.AppendLine("            if (IsDisposed)");
-        builder.AppendLine("                return;");
-        builder.AppendLine("            if (InvokeRequired)");
-        builder.AppendLine("            {");
-        builder.AppendLine("                BeginInvoke((MethodInvoker)(() => AppendLog(message)));");
-        builder.AppendLine("                return;");
-        builder.AppendLine("            }");
-        builder.AppendLine("            _log.AppendText($\"[{DateTime.Now:HH:mm:ss}] {message}{Environment.NewLine}\");");
-        builder.AppendLine("        }");
-        builder.AppendLine();
-        builder.AppendLine("        protected override async void OnFormClosing(FormClosingEventArgs e)");
-        builder.AppendLine("        {");
-        builder.AppendLine("            _closing = true;");
-        builder.AppendLine("            _flow.Stop();");
-        builder.AppendLine("            await _board.DisposeAsync();");
-        builder.AppendLine("            base.OnFormClosing(e);");
-        builder.AppendLine("        }");
-        builder.AppendLine();
-        builder.AppendLine("        private sealed class PinItem");
-        builder.AppendLine("        {");
-        builder.AppendLine("            public PinItem(FlowPropertyOption option)");
-        builder.AppendLine("            {");
-        builder.AppendLine("                Label = option.Label;");
-        builder.AppendLine("                Number = Convert.ToInt32(option.Value, CultureInfo.InvariantCulture);");
-        builder.AppendLine("            }");
-        builder.AppendLine();
-        builder.AppendLine("            public string Label { get; }");
-        builder.AppendLine();
-        builder.AppendLine("            public int Number { get; }");
-        builder.AppendLine();
-        builder.AppendLine("            public override string ToString() => Label;");
-        builder.AppendLine("        }");
-        builder.AppendLine("    }");
-        builder.AppendLine("}");
-        return builder.ToString();
-    }
+    public static string Create(string namespaceName, string className) =>
+        Source
+            .Replace("__NAMESPACE__", namespaceName)
+            .Replace("__CLASS__", className)
+            .Replace("\r\n", "\n")
+            .Replace("\n", Environment.NewLine);
+
+    private const string Source = """
+        using System;
+        using System.Drawing;
+        using System.Globalization;
+        using System.Threading.Tasks;
+        using System.Windows.Forms;
+        using CodeBridge.Designer.WinForms;
+        using CodeBridge.Flow;
+        using CodeBridge.Flow.Execution;
+        using CodeBridge.Transport;
+
+        namespace __NAMESPACE__
+        {
+            public sealed class __CLASS__ : Form
+            {
+                private const string SimulatorPort = "simulator";
+
+                private readonly CodeBridgeBoardComponent _board = new();
+                private readonly CodeBridgeFlowControl _flow = new();
+                private readonly Label _status = new();
+                private readonly ComboBox _portInput = new();
+                private readonly ComboBox _pinInput = new();
+                private readonly Button _runButton = new();
+                private readonly Button _stopButton = new();
+                private readonly Button _refreshButton = new();
+                private readonly Button _uploadButton = new();
+                private readonly Button _editButton = new();
+                private readonly Button _presetButton = new();
+                private readonly TextBox _log = new();
+                private bool _closing;
+                private bool _populating;
+                private PortInfo[] _ports = Array.Empty<PortInfo>();
+
+                public __CLASS__()
+                {
+                    Text = "CodeBridge Board Starter";
+                    StartPosition = FormStartPosition.CenterScreen;
+                    MinimumSize = new Size(860, 560);
+                    Size = new Size(980, 620);
+                    Font = new Font("Segoe UI", 9F);
+                    BackColor = Color.FromArgb(246, 247, 248);
+
+                    // Port "auto" finds the board on USB. With no board plugged in, the flow runs on the virtual board.
+                    _board.BoardId = BuiltInBoardProfiles.Esp32DevKit.Id;
+                    _board.PortName = CodeBridgeBoardComponent.AutoPort;
+                    _board.FallbackToSimulator = true;
+
+                    BuildLayout();
+                    PopulatePins();
+                    WireEvents();
+                    LoadBlinkFlow();
+                    RefreshPorts();
+                    UpdateState();
+                }
+
+                private void BuildLayout()
+                {
+                    var root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, Padding = new Padding(14) };
+                    root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 280));
+                    root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+
+                    var left = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 10, Padding = new Padding(0, 0, 14, 0) };
+                    left.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 52));
+                    left.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+
+                    _status.Dock = DockStyle.Fill;
+                    _status.Padding = new Padding(0, 0, 0, 6);
+                    _status.TextAlign = ContentAlignment.MiddleLeft;
+                    _status.Font = new Font(Font, FontStyle.Bold);
+                    _portInput.DropDownStyle = ComboBoxStyle.DropDownList;
+                    _pinInput.DropDownStyle = ComboBoxStyle.DropDownList;
+
+                    ConfigureButton(_runButton, "Run");
+                    ConfigureButton(_stopButton, "Stop");
+                    ConfigureButton(_refreshButton, "Refresh");
+                    ConfigureButton(_uploadButton, "Upload FW");
+                    ConfigureButton(_editButton, "Edit Flow");
+                    ConfigureButton(_presetButton, "Preset");
+
+                    left.RowStyles.Add(new RowStyle(SizeType.Absolute, 64));
+                    left.Controls.Add(_status, 0, 0);
+                    left.SetColumnSpan(_status, 2);
+                    AddRow(left, 1, "Port", _portInput);
+                    AddRow(left, 2, "GPIO", _pinInput);
+                    AddRow(left, 3, string.Empty, _runButton);
+                    AddRow(left, 4, string.Empty, _stopButton);
+                    AddRow(left, 5, string.Empty, _refreshButton);
+                    AddRow(left, 6, string.Empty, _uploadButton);
+                    AddRow(left, 7, string.Empty, _editButton);
+                    AddRow(left, 8, string.Empty, _presetButton);
+                    left.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+                    var right = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 3 };
+                    right.RowStyles.Add(new RowStyle(SizeType.Absolute, 86));
+                    right.RowStyles.Add(new RowStyle(SizeType.Absolute, 8));
+                    right.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+                    _flow.Dock = DockStyle.Fill;
+                    _flow.TraceDelayMs = 120;
+                    _log.Dock = DockStyle.Fill;
+                    _log.Multiline = true;
+                    _log.ReadOnly = true;
+                    _log.ScrollBars = ScrollBars.Vertical;
+                    _log.Font = new Font("Consolas", 9F);
+                    _log.BackColor = Color.FromArgb(30, 34, 37);
+                    _log.ForeColor = Color.FromArgb(235, 238, 236);
+
+                    right.Controls.Add(_flow, 0, 0);
+                    right.Controls.Add(_log, 0, 2);
+                    root.Controls.Add(left, 0, 0);
+                    root.Controls.Add(right, 1, 0);
+                    Controls.Add(root);
+                }
+
+                private void WireEvents()
+                {
+                    _runButton.Click += async (_, _) => await RunAsync();
+                    _stopButton.Click += (_, _) => _flow.Stop();
+                    _refreshButton.Click += async (_, _) => await RefreshAsync();
+                    _uploadButton.Click += async (_, _) => await UploadFirmwareAsync();
+                    _editButton.Click += (_, _) => _flow.ShowEditor(_board, this);
+                    _presetButton.Click += (_, _) => _flow.ShowPresetDialog(this);
+                    _portInput.SelectedIndexChanged += async (_, _) => await PortChangedAsync();
+                    _pinInput.SelectedIndexChanged += (_, _) => LoadBlinkFlow();
+                    _board.Connected += (_, _) => AppendLog("Connected: " + _board.ConnectionDescription);
+                    _board.Disconnected += (_, _) => AppendLog("Disconnected.");
+                    _flow.FlowStarted += (_, _) => AppendLog("Flow started.");
+                    _flow.FlowCompleted += (_, result) => AppendLog($"Flow completed. Nodes: {result.NodeOutputs.Count}");
+                    _flow.FlowFailed += (_, ex) => AppendLog("Flow failed: " + ex.Message);
+                    _flow.FlowTrace += (_, trace) => AppendLog($"{FormatTrace(trace.Kind)} {trace.NodeId}");
+                    _flow.FlowStopped += (_, _) => UpdateState();
+                }
+
+                private void PopulatePins()
+                {
+                    _pinInput.Items.Clear();
+                    foreach (var option in BuiltInBoardProfiles.Esp32DevKit.DigitalWritePinOptions)
+                        _pinInput.Items.Add(new PinItem(option));
+
+                    // Start on the on-board LED. The first pin of the list, GPIO 0, is a boot pin.
+                    var led = BuiltInBoardProfiles.Esp32DevKit.BuiltInLedPin ?? 2;
+                    for (var i = 0; i < _pinInput.Items.Count; i++)
+                    {
+                        if (_pinInput.Items[i] is PinItem item && item.Number == led)
+                            _pinInput.SelectedIndex = i;
+                    }
+
+                    if (_pinInput.SelectedIndex < 0 && _pinInput.Items.Count > 0)
+                        _pinInput.SelectedIndex = 0;
+                }
+
+                private void RefreshPorts()
+                {
+                    var previous = SelectedPort;
+                    _populating = true;
+                    try
+                    {
+                        _portInput.Items.Clear();
+                        _portInput.Items.Add(new PortItem("Auto (recommended)", CodeBridgeBoardComponent.AutoPort));
+                        _ports = BoardDiscovery.DiscoverPorts();
+                        foreach (var port in _ports)
+                            _portInput.Items.Add(new PortItem(port.ToString(), port.Name));
+                        _portInput.Items.Add(new PortItem("Simulator (no board)", SimulatorPort));
+
+                        _portInput.SelectedIndex = 0;
+                        for (var i = 0; i < _portInput.Items.Count; i++)
+                        {
+                            if (_portInput.Items[i] is PortItem item && string.Equals(item.Value, previous, StringComparison.OrdinalIgnoreCase))
+                                _portInput.SelectedIndex = i;
+                        }
+                    }
+                    finally
+                    {
+                        _populating = false;
+                    }
+
+                    ShowDetection();
+                }
+
+                private async Task RefreshAsync()
+                {
+                    try
+                    {
+                        await _board.DisconnectAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        AppendLog("Could not release the board: " + ex.Message);
+                    }
+
+                    RefreshPorts();
+                    UpdateState();
+                }
+
+                private async Task PortChangedAsync()
+                {
+                    if (_populating)
+                        return;
+
+                    try
+                    {
+                        await _board.DisconnectAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        AppendLog("Could not release the board: " + ex.Message);
+                    }
+
+                    ShowDetection();
+                    UpdateState();
+                }
+
+                private async Task RunAsync(bool offerFirmware = true)
+                {
+                    SyncConnectionSettings();
+                    UpdateState(busy: true);
+                    SetStatus("Connecting...");
+                    try
+                    {
+                        await _board.RunAsync(_flow);
+                        ShowConnection();
+                    }
+                    catch (BoardConnectionException ex)
+                    {
+                        if (_closing)
+                            return;
+
+                        AppendLog(ex.Message);
+                        SetStatus(FirstLine(ex.Message), error: true);
+                        if (ex.FirmwareMissing && offerFirmware && AskToUploadFirmware(ex.PortName))
+                        {
+                            if (await UploadFirmwareAsync())
+                            {
+                                await Task.Delay(2500); // the board restarts after the upload
+                                await RunAsync(offerFirmware: false);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        if (_closing)
+                            return;
+
+                        // FlowFailed already wrote the details to the log.
+                        SetStatus("The flow failed: " + FirstLine(ex.Message), error: true);
+                    }
+                    finally
+                    {
+                        UpdateState();
+                    }
+                }
+
+                private async Task<bool> UploadFirmwareAsync()
+                {
+                    SyncConnectionSettings();
+                    UpdateState(busy: true);
+                    try
+                    {
+                        await _board.DisconnectAsync(); // the port must be free for the upload
+                        SetStatus("Uploading the CodeBridge firmware... keep the board plugged in.");
+                        AppendLog("Uploading the CodeBridge firmware...");
+                        var result = await _board.UploadFirmwareAsync();
+                        if (result.Success)
+                        {
+                            AppendLog("Firmware uploaded.");
+                            SetStatus("Firmware uploaded. The board is restarting.");
+                            return true;
+                        }
+
+                        AppendLog("Firmware upload failed." + Environment.NewLine + result.Log);
+                        SetStatus("The firmware upload failed. The log has the details.", error: true);
+                        return false;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (_closing)
+                            return false;
+
+                        AppendLog("Firmware upload failed: " + ex.Message);
+                        SetStatus(FirstLine(ex.Message), error: true);
+                        return false;
+                    }
+                    finally
+                    {
+                        UpdateState();
+                    }
+                }
+
+                private bool AskToUploadFirmware(string? port)
+                {
+                    var where = string.IsNullOrWhiteSpace(port) ? "The board" : "The board on " + port;
+                    var answer = MessageBox.Show(
+                        this,
+                        where + " is not running the CodeBridge firmware yet." + Environment.NewLine + Environment.NewLine +
+                        "Upload it now? This replaces the program on the board.",
+                        "CodeBridge firmware",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question);
+                    return answer == DialogResult.Yes;
+                }
+
+                private void SyncConnectionSettings()
+                {
+                    if (SelectedPort == SimulatorPort)
+                    {
+                        _board.TransportMode = CodeBridgeTransportMode.Simulator;
+                        return;
+                    }
+
+                    _board.TransportMode = CodeBridgeTransportMode.Serial;
+                    _board.PortName = SelectedPort;
+                }
+
+                private void LoadBlinkFlow()
+                {
+                    _flow.FlowName = "ESP32 Blink";
+                    _flow.ExecutionMode = FlowExecutionMode.Trigger;
+                    _flow.LoadBlinkPreset(SelectedPin, delayMs: 500);
+                    AppendLog($"Blink flow loaded for GPIO {SelectedPin}.");
+                }
+
+                private void ShowDetection()
+                {
+                    if (_board.IsConnected)
+                    {
+                        ShowConnection();
+                        return;
+                    }
+
+                    if (SelectedPort == SimulatorPort)
+                    {
+                        SetStatus("Simulator: nothing is sent to a board. Press Run.");
+                    }
+                    else if (SelectedPort != CodeBridgeBoardComponent.AutoPort)
+                    {
+                        SetStatus("Port " + SelectedPort + " selected. Press Run.");
+                    }
+                    else
+                    {
+                        var boards = BoardDiscovery.RankCandidates(_ports);
+                        SetStatus(boards.Length > 0
+                            ? "Board found: " + boards[0] + ". Press Run."
+                            : "No board found. Plug it in and press Refresh, or press Run to try the flow on the simulator.");
+                    }
+                }
+
+                private void ShowConnection()
+                {
+                    if (_board.IsConnected)
+                    {
+                        SetStatus(!_board.IsSimulated
+                            ? "Connected to " + _board.ConnectionDescription + "."
+                            : SelectedPort == SimulatorPort
+                                ? "Running on the simulator."
+                                : "No board found: running on the simulator.");
+                    }
+                }
+
+                private void UpdateState(bool busy = false)
+                {
+                    if (IsDisposed)
+                        return;
+
+                    var running = busy || _flow.IsRunning;
+                    var simulator = SelectedPort == SimulatorPort;
+                    _runButton.Enabled = !running;
+                    _stopButton.Enabled = _flow.IsRunning;
+                    _refreshButton.Enabled = !running;
+                    _uploadButton.Enabled = !running && !simulator;
+                    _portInput.Enabled = !running;
+                    _pinInput.Enabled = !running;
+                    _editButton.Enabled = !running;
+                    _presetButton.Enabled = !running;
+                }
+
+                private void SetStatus(string text, bool error = false)
+                {
+                    if (IsDisposed)
+                        return;
+                    _status.Text = text;
+                    _status.ForeColor = error ? Color.Firebrick : Color.FromArgb(40, 44, 46);
+                }
+
+                private string SelectedPort => _portInput.SelectedItem is PortItem item ? item.Value : CodeBridgeBoardComponent.AutoPort;
+
+                private int SelectedPin => _pinInput.SelectedItem is PinItem item ? item.Number : 2;
+
+                private static string FirstLine(string message)
+                {
+                    var end = message.IndexOfAny(new[] { '\r', '\n' });
+                    return end < 0 ? message : message.Substring(0, end);
+                }
+
+                private static string FormatTrace(FlowExecutionEventKind kind)
+                {
+                    return kind switch
+                    {
+                        FlowExecutionEventKind.NodeStarted => "started",
+                        FlowExecutionEventKind.NodeCompleted => "completed",
+                        FlowExecutionEventKind.NodeSkipped => "skipped",
+                        FlowExecutionEventKind.NodeFailed => "failed",
+                        _ => kind.ToString()
+                    };
+                }
+
+                private static void AddRow(TableLayoutPanel panel, int row, string label, Control control)
+                {
+                    panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 38));
+                    panel.Controls.Add(new Label { Text = label, Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft }, 0, row);
+                    control.Dock = DockStyle.Fill;
+                    control.Margin = new Padding(0, 3, 0, 3);
+                    panel.Controls.Add(control, 1, row);
+                }
+
+                private static void ConfigureButton(Button button, string text)
+                {
+                    button.Text = text;
+                    button.Height = 30;
+                    button.Dock = DockStyle.Fill;
+                    button.Margin = new Padding(0, 3, 0, 3);
+                }
+
+                private void AppendLog(string message)
+                {
+                    if (IsDisposed)
+                        return;
+                    if (InvokeRequired)
+                    {
+                        BeginInvoke((MethodInvoker)(() => AppendLog(message)));
+                        return;
+                    }
+                    _log.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}{Environment.NewLine}");
+                }
+
+                protected override async void OnFormClosing(FormClosingEventArgs e)
+                {
+                    _closing = true;
+                    _flow.Stop();
+                    try
+                    {
+                        await _board.DisposeAsync();
+                    }
+                    catch (Exception)
+                    {
+                        // closing anyway
+                    }
+                    base.OnFormClosing(e);
+                }
+
+                private sealed class PortItem
+                {
+                    public PortItem(string label, string value)
+                    {
+                        Label = label;
+                        Value = value;
+                    }
+
+                    public string Label { get; }
+
+                    public string Value { get; }
+
+                    public override string ToString() => Label;
+                }
+
+                private sealed class PinItem
+                {
+                    public PinItem(FlowPropertyOption option)
+                    {
+                        Label = option.Label;
+                        Number = Convert.ToInt32(option.Value, CultureInfo.InvariantCulture);
+                    }
+
+                    public string Label { get; }
+
+                    public int Number { get; }
+
+                    public override string ToString() => Label;
+                }
+            }
+        }
+        """;
 }

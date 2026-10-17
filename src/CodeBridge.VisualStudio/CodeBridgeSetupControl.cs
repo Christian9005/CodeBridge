@@ -67,7 +67,7 @@ internal sealed class CodeBridgeSetupControl : UserControl
 
         _root.Children.Add(Heading("Recommended first run"));
         _root.Children.Add(Text(
-            "Add the starter form, rebuild, run the project, select the board COM port, use Upload FW if the board is fresh, then click Run Blink.",
+            "Create a CodeBridge WinForms App (or add the starter form to a project), run it and click Run. The form finds the board on USB, uses the simulator when none is plugged in, and offers to upload the firmware if the board needs it.",
             12, FontWeights.Normal, "VsToolWindowText", new Thickness(0, 0, 0, 14)));
 
         _root.Children.Add(Buttons(model));

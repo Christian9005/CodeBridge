@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="CodeBridge.FlowHost" />
+    <InternalsVisibleTo Include="CodeBridge.Designer.WinForms.Tests" />
   </ItemGroup>
 
   <ItemGroup>

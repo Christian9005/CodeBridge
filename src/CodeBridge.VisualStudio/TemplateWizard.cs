@@ -20,6 +20,9 @@ namespace CodeBridge.VisualStudio
             _dte = (DTE)automationObject;
             _destinationDirectory = replacementsDictionary["$destinationdirectory$"];
             _safeProjectName = replacementsDictionary["$safeprojectname$"];
+
+            // The project file asks for the CodeBridge package of this very version, so a new project restores from NuGet like any other.
+            replacementsDictionary["$codebridgeversion$"] = ResolvePackageVersion();
         }
 
         public void ProjectFinishedGenerating(Project project)
@@ -37,27 +40,6 @@ namespace CodeBridge.VisualStudio
                 // 2. Generate the starter form.
                 var context = new VisualStudioProjectContext(project, projectFullName, _safeProjectName);
                 CodeBridgeStarterFormService.AddStarterForm(context);
-
-                // 3. Try to install the NuGet package (best-effort, non-blocking).
-                try
-                {
-                    var manifest = ToolboxManifestLoader.LoadDefault();
-                    var packageFeedPath = CodeBridgePackageInstaller.ResolvePackageFeedPath(manifest);
-
-                    if (!string.IsNullOrEmpty(packageFeedPath))
-                    {
-                        // Run synchronously on the UI thread — we're already on it.
-                        ThreadHelper.JoinableTaskFactory.Run(async () =>
-                        {
-                            await CodeBridgePackageInstaller.InstallPackageAsync(
-                                projectFullName, manifest.Package, packageFeedPath!);
-                        });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ActivityLog.LogWarning("CodeBridge", $"Template Wizard NuGet installation warning: {ex.Message}");
-                }
             }
             catch (Exception ex)
             {
@@ -69,6 +51,20 @@ namespace CodeBridge.VisualStudio
         public void ProjectItemFinishedGenerating(ProjectItem projectItem) { }
         public bool ShouldAddProjectItem(string filePath) => true;
         public void BeforeOpeningFile(ProjectItem projectItem) { }
+
+        private static string ResolvePackageVersion()
+        {
+            try
+            {
+                return ToolboxManifestLoader.LoadDefault().Package.Version;
+            }
+            catch (Exception ex)
+            {
+                ActivityLog.LogWarning("CodeBridge", $"Template Wizard could not read the package version from the manifest: {ex.Message}");
+                var version = typeof(TemplateWizard).Assembly.GetName().Version;
+                return $"{version.Major}.{version.Minor}.{version.Build}";
+            }
+        }
 
         /// <summary>
         /// Writes Program.cs to disk if it does not already exist.

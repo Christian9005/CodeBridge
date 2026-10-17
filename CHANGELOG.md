@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **A new WinForms project works the moment it runs.** The *CodeBridge WinForms App* template now carries the `CodeBridge.Designer.WinForms` package in its project file (the version is filled in by the template), instead of installing it from a local folder after the project is created.
+- **The starter form needs no set-up:** its *Port* box starts on *Auto*, which finds the board on USB; with no board plugged in, *Run* uses the simulator. *Run* connects by itself (the *Connect* button is gone), the pin starts on the on-board LED (GPIO 2) instead of GPIO 0, and a one-line status says what it found and what it is connected to.
+- A board that answers but has no CodeBridge firmware is now offered the upload (*Upload it now?*) instead of a message about a timeout; after the upload the flow runs again.
+- `CodeBridgeBoardComponent`: `PortName` defaults to `"auto"` and the new `FallbackToSimulator` property runs on the virtual board when no board is found. `ConnectionDescription` and `IsSimulated` describe the connection ("ESP32 DevKit on COM5"). Connection failures are now reported as `BoardConnectionException`, with a message for people and `FirmwareMissing` for apps that want to offer the upload (it was a raw `TimeoutException`).
+- Finding a board skips the built-in COM1 of a desktop PC and Bluetooth ports: a recognised board comes first, then any other USB serial adapter (`BoardDiscovery.FindBoardCandidates`, `PortInfo.IsUsb`). The *Detect Serial Ports* verb of the designer uses the same order.
+
 ## [0.6.0] - 2026-10-16
 
 First public release: the NuGet packages and the Visual Studio extension are published from this version. It brings together everything below with the first assembled 0.6.0 (2026-10-04, listed last).

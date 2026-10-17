@@ -55,6 +55,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/CodeBridge.Core.Tests/CodeBridge.Core.Tests.csproj" />
+    <Project Path="tests/CodeBridge.Designer.WinForms.Tests/CodeBridge.Designer.WinForms.Tests.csproj" />
     <Project Path="tests/CodeBridge.Blazor.Tests/CodeBridge.Blazor.Tests.csproj" />
     <Project Path="tests/CodeBridge.HomeAssistant.Tests/CodeBridge.HomeAssistant.Tests.csproj" />
     <Project Path="tests/CodeBridge.Mcp.Tests/CodeBridge.Mcp.Tests.csproj" />

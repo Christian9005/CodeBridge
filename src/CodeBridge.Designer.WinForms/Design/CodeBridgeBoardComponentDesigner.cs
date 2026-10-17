@@ -48,7 +48,8 @@ internal sealed class CodeBridgeBoardComponentDesigner : ComponentDesigner
             return;
         }
 
-        var selectedPort = ports[0].Name;
+        // a real board before the legacy COM1 of the PC
+        var selectedPort = (BoardDiscovery.RankCandidates(ports).FirstOrDefault() ?? ports[0]).Name;
         var suggestedBoard = Hardware.BoardPortDetector.SuggestBoardForPort(selectedPort);
         SetProperty(component, nameof(CodeBridgeBoardComponent.TransportMode), CodeBridgeTransportMode.Serial);
         SetProperty(component, nameof(CodeBridgeBoardComponent.PortName), selectedPort);
@@ -226,7 +227,7 @@ internal sealed class CodeBridgeBoardComponentActionList : DesignerActionList
             new DesignerActionMethodItem(this, nameof(UploadFirmware), "Upload Firmware...", "CodeBridge Board", "Flash CodeBridge firmware to the selected board and port.", includeAsDesignerVerb: true),
             new DesignerActionPropertyItem(nameof(BoardId), "Board", "CodeBridge Board", "Board profile used for firmware and pin validation."),
             new DesignerActionPropertyItem(nameof(TransportMode), "Transport", "CodeBridge Board", "Serial or ESP32 WiFi connection mode."),
-            new DesignerActionPropertyItem(nameof(PortName), "Port Name", "CodeBridge Board", "Serial port, for example COM3."),
+            new DesignerActionPropertyItem(nameof(PortName), "Port Name", "CodeBridge Board", "Serial port, for example COM3. \"auto\" uses the board found on USB."),
             new DesignerActionPropertyItem(nameof(BaudRate), "Baud Rate", "CodeBridge Board", "Serial baud rate."),
             new DesignerActionPropertyItem(nameof(Host), "WiFi Host", "CodeBridge Board", "ESP32 IP address when using WiFi."),
             new DesignerActionPropertyItem(nameof(TcpPort), "TCP Port", "CodeBridge Board", "ESP32 TCP port when using WiFi."),
