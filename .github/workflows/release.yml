@@ -7,10 +7,15 @@ on:
 
 permissions:
   contents: write
+  id-token: write   # NuGet trusted publishing: GitHub proves who is pushing, no long-lived API key is stored
 
 jobs:
   release:
     runs-on: windows-latest
+    # Holds the NUGET_USER secret (the nuget.org profile name). Create it once in Settings > Environments.
+    environment: release
+    env:
+      NUGET_USER: ${{ secrets.NUGET_USER }}
     steps:
       - uses: actions/checkout@v4
 
@@ -35,15 +40,29 @@ jobs:
       - name: Test
         run: dotnet test CodeBridge.slnx -c Release
 
+      # Trusted publishing: nuget.org must have a policy for this repository and this workflow file (release.yml).
+      - name: NuGet login (trusted publishing)
+        id: nuget-login
+        if: ${{ env.NUGET_USER != '' }}
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Push NuGet packages
+        if: ${{ steps.nuget-login.outcome == 'success' }}
         shell: pwsh
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
         run: |
-          if (-not $env:NUGET_API_KEY) { Write-Warning 'NUGET_API_KEY not set - skipping nuget.org push'; exit 0 }
           Get-ChildItem artifacts/packages -Filter "*.$($env:PRODUCT_VERSION).nupkg" | ForEach-Object {
             dotnet nuget push $_.FullName --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json --skip-duplicate
+            if ($LASTEXITCODE -ne 0) { throw "dotnet nuget push failed for $($_.Name)" }
           }
+
+      - name: NuGet skipped
+        if: ${{ env.NUGET_USER == '' }}
+        shell: pwsh
+        run: Write-Warning 'NUGET_USER is not set in the "release" environment - nothing was pushed to nuget.org'
 
       - name: Publish to Visual Studio Marketplace
         shell: pwsh
@@ -51,8 +70,11 @@ jobs:
           VS_MARKETPLACE_PAT: ${{ secrets.VS_MARKETPLACE_PAT }}
         run: |
           if (-not $env:VS_MARKETPLACE_PAT) { Write-Warning 'VS_MARKETPLACE_PAT not set - skipping Marketplace publish'; exit 0 }
+          if (-not (Get-Content vs-publish.json -Raw | ConvertFrom-Json).publisher) { throw 'vs-publish.json has an empty "publisher": put your Marketplace publisher ID there (and in the vsixmanifest) first' }
           $publisher = Get-ChildItem "${env:ProgramFiles}\Microsoft Visual Studio" -Recurse -Filter VsixPublisher.exe | Select-Object -First 1
+          if (-not $publisher) { throw 'VsixPublisher.exe not found on this runner' }
           & $publisher.FullName publish -payload artifacts/vsix/CodeBridge.VisualStudio.vsix -publishManifest vs-publish.json -personalAccessToken $env:VS_MARKETPLACE_PAT -ignoreWarnings "VSIXValidatorWarning01,VSIXValidatorWarning02,VSIXValidatorWarning08"
+          if ($LASTEXITCODE -ne 0) { throw "VsixPublisher failed ($LASTEXITCODE)" }
 
       - name: GitHub release
         uses: softprops/action-gh-release@v2

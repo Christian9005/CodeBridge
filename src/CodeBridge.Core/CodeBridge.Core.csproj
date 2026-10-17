@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PackageId>CodeBridge.Core</PackageId>
+    <PackageId>CodeBridge.Abstractions</PackageId>
     <Description>Core abstractions and protocol contracts for CodeBridge microcontroller integrations.</Description>
   </PropertyGroup>
 

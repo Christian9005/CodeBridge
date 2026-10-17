@@ -5,8 +5,16 @@ Everything is driven by one version: `<Version>` in `Directory.Build.props`. The
 
 ## One-time setup
 
-1. **nuget.org**: create an account, reserve the `CodeBridge.` ID prefix, create an API key scoped to `CodeBridge.*`, store it as the GitHub
-   secret `NUGET_API_KEY`.
+1. **nuget.org**: create an account (turn on two-factor authentication) and note your profile name (not your e-mail). No API key is stored: the
+   `Release` workflow uses *trusted publishing*, where GitHub proves which repository and workflow is pushing.
+   - At <https://www.nuget.org/account/trustedpublishing> add a policy: owner `Christian9005`, repository `CodeBridge`, workflow file
+     `release.yml` (the file name only, not the `name:` inside it), environment `release`.
+   - In the GitHub repository: *Settings > Environments > New environment* `release`, and add the environment secret `NUGET_USER` = your nuget.org
+     profile name. Optionally require yourself as a reviewer to get an approval gate before every publish.
+   - The id `CodeBridge.Core` on nuget.org belongs to another project (as do `CodeBridge.Cli` and `CodeBridge.MSBuild`), so the package built from
+     `src/CodeBridge.Core` is published as **`CodeBridge.Abstractions`**. The `CodeBridge.` prefix cannot be reserved for the same reason; the other
+     nine ids were free when 0.6.0 was prepared. A package id on nuget.org is permanent: check `https://api.nuget.org/v3-flatcontainer/<id in lower case>/index.json`
+     (404 means free) before adding a new package.
 2. **Visual Studio Marketplace**: create a publisher at <https://marketplace.visualstudio.com/manage>. Put its ID in `vs-publish.json`
    (`publisher`) and in `source.extension.vsixmanifest` (`Identity/@Publisher`). Create an Azure DevOps PAT with scope
    *Marketplace > Manage* and store it as `VS_MARKETPLACE_PAT`.
@@ -21,4 +29,6 @@ Everything is driven by one version: `<Version>` in `Directory.Build.props`. The
 3. `./build/pack.ps1 -Vsix` then `dotnet test CodeBridge.slnx -c Release` and `./tests/smoke_test.ps1 -VsixPath artifacts/vsix/CodeBridge.VisualStudio.vsix`.
 4. **Manual test on a clean machine / VS Experimental Instance**: install the VSIX, create the project, *Tools > CodeBridge Setup > Install*,
    add the starter form, build, flash a real ESP32, run Blink, open a `.cbflow` file in Light and Dark themes.
-5. `git tag vX.Y.Z && git push --tags`. The `Release` workflow pushes NuGet packages, publishes the VSIX and creates the GitHub release.
+5. Merge the release branch into `master`, then tag that commit: `git tag vX.Y.Z && git push origin vX.Y.Z`. The `Release` workflow builds,
+   tests, pushes the NuGet packages, publishes the VSIX and creates the GitHub release. A published NuGet version cannot be deleted (only
+   unlisted), so if something is wrong fix it and publish the next version.

@@ -7,7 +7,7 @@ Only the latest released version receives security fixes.
 ## Reporting a vulnerability
 
 Please do **not** open a public issue. Use GitHub's private reporting:
-<https://github.com/Christian9005/CodeBrigde/security/advisories/new>
+<https://github.com/Christian9005/CodeBridge/security/advisories/new>
 
 Include the affected version, reproduction steps and impact. You will get an answer within 7 days.
 

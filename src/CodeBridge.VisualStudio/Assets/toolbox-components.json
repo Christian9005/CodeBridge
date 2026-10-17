@@ -14,7 +14,7 @@
     "vsixPackageFeed": "Packages",
     "preferredInstallMode": "NuGetPackage",
     "requiredPackages": [
-      "CodeBridge.Core",
+      "CodeBridge.Abstractions",
       "CodeBridge.Transport",
       "CodeBridge.ESP32",
       "CodeBridge.Flow"
