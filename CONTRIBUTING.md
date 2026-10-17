@@ -18,8 +18,8 @@ Thank you for your interest in contributing to **CodeBridge**! We welcome contri
 
 1. **Fork and Clone** the repository:
    ```bash
-   git clone https://github.com/Christian9005/CodeBrigde.git
-   cd CodeBrigde
+   git clone https://github.com/Christian9005/CodeBridge.git
+   cd CodeBridge
    ```
 
 2. **Restore & Build** the solution:

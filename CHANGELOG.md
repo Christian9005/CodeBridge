@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-16
+
+First public release: the NuGet packages and the Visual Studio extension are published from this version. It brings together everything below with the first assembled 0.6.0 (2026-10-04, listed last).
+
 ### Added
 - **Serial monitor and plotter** (*Tools > CodeBridge Serial Monitor*, or the *Monitor* button of the flow editor): connect to a board's USB port, read what it prints, send text with the line ending you choose (history with Up/Down), pause, clear, save, timestamps, reset the board, and switch to the **Plotter**, which draws `name:value` pairs or comma-separated numbers as a live chart like the Arduino Serial Plotter. A port held by the monitor is released automatically when you run a flow or upload firmware on it. `--port simulator` gives demo data. Host: `monitor`.
 - **Code mode with PlatformIO** (*Tools > CodeBridge Firmware: New Project / Build / Upload / Clean*): create a C++ project for any supported board from a template (Blink, Serial plot, the customizable CodeBridge bridge firmware, Empty), build and upload it, with the compiler output in the CodeBridge Output pane and every error and warning in the **Error List** with a link to the line. New package `CodeBridge.PlatformIO` (`PioLocator`, `PioProject`, `PioRunner`); host: `pio-info`, `pio-new`, `pio-build`, `pio-upload`, `pio-clean`.
@@ -42,16 +46,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.6.0] - 2026-10-04
+### Changed
+- **NuGet id of the abstractions: `CodeBridge.Abstractions`.** The id `CodeBridge.Core` on nuget.org belongs to another project, so the package built from `src/CodeBridge.Core` is published as `CodeBridge.Abstractions`. The assembly and the namespace are still `CodeBridge.Core`; only the package id changes.
+
+### Also in 0.6.0 (first assembled on 2026-10-04)
 
 Security and stability hardening, Wi-Fi pairing from the editor, and the first math/PWM blocks.
 
-### Security (firmware 0.9.0)
+#### Security (firmware 0.9.0)
 - **The Wi-Fi/TCP port is closed by default.** Clients must authenticate with a pairing token (`AUTH`) set over USB (`WTOK`); before, anyone on the network could drive the GPIO pins, change the Wi-Fi settings or start an OTA update.
 - OTA only accepts `http(s)` URLs, checks every flash write, aborts on a stalled download and cannot be started without authentication.
 - Constant-time token check, unauthenticated clients are dropped after 5 s, three failures drop the connection.
 
-### Fixed
+#### Fixed
 - Command lines longer than the buffer were executed truncated; they are now discarded with `ERR:Line too long` (USB and TCP).
 - `R`, `RS`, `P`, `I`, `V`... matched `RST`, `PING`, `INFO`, `VER` by prefix (a stray `R` rebooted the board); commands now match exactly.
 - I2C commands validate address and length (`IR`/`IRR` accepted any length, `IW`/`IWR` allocated whatever the line said).
@@ -59,14 +66,14 @@ Security and stability hardening, Wi-Fi pairing from the editor, and the first m
 - `WifiTransport`: a late answer to a timed-out command could be taken as the answer to the next one (the connection now re-synchronizes with `PING` first); lines are length-limited; a dropped connection is reported instead of hanging; authentication errors are explained.
 - One chatty TCP client can no longer starve the board's main loop.
 
-### Added
+#### Added
 - **Wi-Fi setup in the flow editor** (toolbar button): scan networks, enter the password, pair. Tokens are stored DPAPI-encrypted; the Port box accepts the board's IP afterwards.
 - `Esp32WifiProvisioner` (`ScanAsync`, `GetStatusAsync`, `ProvisionAsync`, `ClearTokenAsync`), `.WiFi(ip, port, token)` and `WifiTransport(ip, port, token)`; `FlowHost wifi-scan|wifi-status|wifi-config|wifi-unpair`.
 - **Map** block (convert a range, e.g. a 0-4095 reading into 0-255, with clamp/round) and **PWM Output** block (LED brightness, motor speed), both in the editor, the runtime and *Export C#*.
 - Analog Read `samples` option (average several readings) to calm ADC noise.
 - Tests: Wi-Fi transport against a fake 0.9 board (token, oversized lines, late answers), Map/PWM runtime-vs-export equivalence.
 
-### Changed
+#### Changed
 - Firmware protocol 0.9: the SDK refuses older firmware (upload the new one from the editor). Wi-Fi clients without a token are rejected with a clear message.
 - Samples `WiFiSetup` and `WiFiBlink` follow the pairing flow.
 

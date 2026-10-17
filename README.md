@@ -4,7 +4,7 @@
 
 # CodeBridge
 
-[![CI](https://github.com/Christian9005/CodeBrigde/actions/workflows/ci.yml/badge.svg)](https://github.com/Christian9005/CodeBrigde/actions/workflows/ci.yml)
+[![CI](https://github.com/Christian9005/CodeBridge/actions/workflows/ci.yml/badge.svg)](https://github.com/Christian9005/CodeBridge/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/vpre/CodeBridge.ESP32?label=NuGet&logo=nuget)](https://www.nuget.org/packages/CodeBridge.ESP32)
 [![Visual Studio 2022+](https://img.shields.io/badge/Visual%20Studio-2022%20%7C%202026-5C2D91?logo=visual-studio&logoColor=white)](https://marketplace.visualstudio.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -24,7 +24,7 @@ C# instead of embedded C/C++.
 
 | Package | Purpose | Target |
 |---|---|---|
-| `CodeBridge.Core` | Abstractions (`IBoard`, `ITransport`), wire protocol, exceptions | net8.0 |
+| `CodeBridge.Abstractions` | Abstractions (`IBoard`, `ITransport`), wire protocol, exceptions. The assembly and namespace are `CodeBridge.Core`; the NuGet id `CodeBridge.Core` belongs to another project | net8.0 |
 | `CodeBridge.Transport` | Serial and TCP/Wi-Fi transports, USB board discovery | net8.0 (Windows for USB discovery) |
 | `CodeBridge.ESP32` | ESP32 board + sensor/actuator drivers | net8.0 |
 | `CodeBridge.Flow` | Flow document model, validation, runtime | net8.0 |

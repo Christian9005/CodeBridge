@@ -127,7 +127,7 @@
   <!-- A VSIX without the embedded NuGet packages cannot install the toolbox components: fail the build instead of shipping it. -->
   <Target Name="EnsureCodeBridgePackagesEmbedded" BeforeTargets="BeforeBuild" Condition="'$(Configuration)' == 'Release'">
     <ItemGroup>
-      <_RequiredPackage Include="CodeBridge.Core;CodeBridge.Transport;CodeBridge.ESP32;CodeBridge.Flow;CodeBridge.Designer.WinForms" />
+      <_RequiredPackage Include="CodeBridge.Abstractions;CodeBridge.Transport;CodeBridge.ESP32;CodeBridge.Flow;CodeBridge.Designer.WinForms" />
     </ItemGroup>
     <Error Condition="!Exists('$(MSBuildThisFileDirectory)..\..\artifacts\FlowHost.zip')"
            Text="Missing artifacts\FlowHost.zip. Run build\pack.ps1 -Vsix (it publishes and zips the FlowHost) before building the VSIX in Release." />
