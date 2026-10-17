@@ -8,13 +8,13 @@ CodeBridge is now usable as a Visual Studio-first WinForms extension:
 - Open or create a WinForms project.
 - Run `Tools > Add CodeBridge Starter Form`.
 - Build and run the project.
-- Click `Run`: the starter form finds the board on USB (or uses the simulator) and offers to upload the firmware if the board needs it.
+- The starter form runs `Flows\Blink.cbflow` on the board it finds on USB (or on the simulator) and offers to upload the firmware if the board needs it. Edit the `.cbflow` and save: the running app picks the change up.
 
 The VSIX embeds the local CodeBridge NuGet packages, installs `CodeBridge.Designer.WinForms` into the active project, adds a starter form, and only exposes the public Toolbox components.
 
 ## What Feels Product-Ready
 
-- `CodeBridgeFlowControl` and `CodeBridgeEsp32Component` are discoverable in the WinForms Toolbox.
+- `CodeBridgeFlowControl` and `CodeBridgeBoardComponent` are discoverable in the WinForms Toolbox.
 - The ESP32 package can run real serial flows.
 - The visual flow editor supports presets, tracing, trigger mode, and loop mode.
 - The VSIX command table is registered and visible under `Tools`.

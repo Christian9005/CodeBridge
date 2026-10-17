@@ -21,6 +21,9 @@ internal static class CodeBridgeStarterFormService
             Path.GetFileNameWithoutExtension(filePath));
 
         File.WriteAllText(filePath, source, Encoding.UTF8);
+
+        // The form runs this flow file; it comes with the form so the project works as it is.
+        CodeBridgeStarterFlow.EnsureIn(context.ProjectDirectory);
         return filePath;
     }
 

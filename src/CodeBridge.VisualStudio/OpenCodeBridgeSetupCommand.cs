@@ -255,7 +255,7 @@ internal sealed class OpenCodeBridgeSetupCommand
             ? "Program.cs was updated to start CodeBridgeStarterForm."
             : "Program.cs was not changed. Open Program.cs and run CodeBridgeStarterForm when you want this to be the startup form.");
         builder.AppendLine();
-        builder.AppendLine("Build and run the project, then click Run. The form finds the board on USB (or uses the simulator) and offers to upload the firmware if the board needs it.");
+        builder.AppendLine("Build and run the project. The form runs Flows\\Blink.cbflow on the board it finds on USB (or on the simulator) and offers to upload the firmware if the board needs it. Open the .cbflow, change it and save: the running app picks the change up.");
         return builder.ToString();
     }
 

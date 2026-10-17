@@ -6,4 +6,17 @@
   <ItemGroup Condition="Exists('$(_CodeBridgeFirmwareRoot)')">
     <None Include="$(_CodeBridgeFirmwareRoot)**\*" Link="firmware\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>
+
+  <!-- The flows of the project are files (.cbflow): the app runs the copy next to it. -->
+  <ItemGroup>
+    <None Update="**\*.cbflow" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- A debug build remembers the project folder, so the running app reads the .cbflow the editor saves instead of the older copy in bin\. -->
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>CodeBridge.ProjectDirectory</_Parameter1>
+      <_Parameter2>$(MSBuildProjectDirectory)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
 </Project>

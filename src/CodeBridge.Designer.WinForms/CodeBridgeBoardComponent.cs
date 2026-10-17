@@ -22,6 +22,8 @@ public sealed class CodeBridgeBoardComponent : Component, IAsyncDisposable
     private string _boardId = BuiltInBoardProfiles.Default.Id;
     private bool _autoDetectBoard = true;
     private string _connectedTo = string.Empty;
+    private string? _detectedChip;
+    private BoardProfile? _detectedBoard;
     private string? _lastAttemptedPort;
     private bool _simulated;
 
@@ -105,7 +107,17 @@ public sealed class CodeBridgeBoardComponent : Component, IAsyncDisposable
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public bool IsSimulated => IsConnected && _simulated;
 
-    /// <summary>What the board is connected to, ready to show in a status bar: "ESP32 DevKit on COM5", "ESP32 DevKit (simulator)". Empty when not connected.</summary>
+    /// <summary>The chip the connected board reports about itself ("ESP32-S3"), or null when it does not say (the Arduino Uno sketch has no INFO).</summary>
+    [Browsable(false)]
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public string? DetectedChip => IsConnected ? _detectedChip : null;
+
+    /// <summary>The board profile that matches the chip the connected board reports, or null when there is none to tell. <see cref="BoardId"/> is what the app was made for; this is what is plugged in.</summary>
+    [Browsable(false)]
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public BoardProfile? DetectedBoard => IsConnected ? _detectedBoard : null;
+
+    /// <summary>What the board is connected to, ready to show in a status bar: "ESP32-S3 DevKit on COM5", "ESP32 DevKit (simulator)". Empty when not connected.</summary>
     [Browsable(false)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public string ConnectionDescription
@@ -114,10 +126,27 @@ public sealed class CodeBridgeBoardComponent : Component, IAsyncDisposable
         {
             if (!IsConnected)
                 return string.Empty;
+
+            var name = _detectedBoard?.DisplayName ?? BoardName;
             if (_simulated)
-                return BoardName + " (simulator)";
-            return TransportMode == CodeBridgeTransportMode.WiFi ? $"{BoardName} at {Host}" : $"{BoardName} on {_connectedTo}";
+                return name + " (simulator)";
+            return TransportMode == CodeBridgeTransportMode.WiFi ? $"{name} at {Host}" : $"{name} on {_connectedTo}";
         }
+    }
+
+    /// <summary>
+    /// A sentence for the person when the connected board cannot take the flow that was made for <paramref name="flowBoardId"/> (an ESP32-S3 where the flow says ESP32 DevKit,
+    /// an Arduino for an ESP32 flow), or null when it can, or when the board does not say what it is.
+    /// </summary>
+    public string? DescribeMismatch(string? flowBoardId)
+    {
+        if (!IsConnected || _detectedBoard is null || BuiltInBoardProfiles.FindById(flowBoardId) is not { } flowBoard)
+            return null;
+
+        if (BoardIdentification.IsCompatible(flowBoard, _detectedBoard))
+            return null;
+
+        return $"The flow is made for {flowBoard.DisplayName} but the connected board is {_detectedBoard.DisplayName} ({_detectedChip}). Open the flow and pick the board you have before you trust its pins.";
     }
 
     /// <summary>The value of <see cref="PortName"/> that picks the board found on USB.</summary>
@@ -207,7 +236,31 @@ public sealed class CodeBridgeBoardComponent : Component, IAsyncDisposable
 
         _simulated = mode == CodeBridgeTransportMode.Simulator;
         _connectedTo = portName;
+        await IdentifyAsync(board, cancellationToken);
         return board;
+    }
+
+    /// <summary>Asks the board what chip it is. An answer is exact; no answer (a firmware without INFO) just leaves the profile the app was made for.</summary>
+    private async Task IdentifyAsync(IBoard board, CancellationToken cancellationToken)
+    {
+        _detectedChip = null;
+        _detectedBoard = null;
+        try
+        {
+            using var limit = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            limit.CancelAfter(TimeSpan.FromSeconds(2));
+            var info = await board.GetInfoAsync(limit.Token);
+            _detectedChip = info.ChipModel;
+            _detectedBoard = BoardIdentification.FromChip(info.ChipModel);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            // The Arduino Uno sketch has no INFO, and an old firmware may not answer: the board is what the app says it is.
+        }
     }
 
     private IReadOnlyList<PortInfo> DiscoverBoardsSafely()
@@ -234,6 +287,8 @@ public sealed class CodeBridgeBoardComponent : Component, IAsyncDisposable
         _board = null;
         _connectedTo = string.Empty;
         _simulated = false;
+        _detectedChip = null;
+        _detectedBoard = null;
         Disconnected?.Invoke(this, EventArgs.Empty);
     }
 

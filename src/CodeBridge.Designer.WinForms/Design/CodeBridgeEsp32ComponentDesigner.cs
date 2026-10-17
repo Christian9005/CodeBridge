@@ -1,3 +1,4 @@
+#pragma warning disable CS0618 // the designer of an obsolete component still has to name it
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Windows.Forms.Design;

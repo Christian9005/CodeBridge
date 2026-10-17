@@ -1,37 +1,26 @@
 using Microsoft.Win32;
 using CodeBridge.Flow;
+using CodeBridge.Transport;
 
 namespace CodeBridge.Designer.WinForms.Hardware;
 
 internal static class BoardPortDetector
 {
+    /// <summary>The board a port most likely has behind it, from its USB identity (see <see cref="BoardIdentification.FromUsb"/>). Null when it cannot tell.</summary>
     public static BoardProfile? SuggestBoardForPort(string portName)
     {
         if (string.IsNullOrWhiteSpace(portName))
             return null;
 
-        var description = TryGetUsbPortDescription(portName);
-        if (string.IsNullOrWhiteSpace(description))
-            return null;
+        // The registry answers at once; it does not know every adapter, so ask Windows what it knows about the port when it says nothing.
+        var suggestion = BoardIdentification.FromUsb(null, null, TryGetUsbPortDescription(portName));
+        if (suggestion is not null)
+            return suggestion;
 
-        if (Contains(description, "arduino") ||
-            Contains(description, "vid_2341") ||
-            Contains(description, "vid_2a03"))
-        {
-            return BuiltInBoardProfiles.ArduinoUno;
-        }
-
-        if (Contains(description, "esp32") ||
-            Contains(description, "usb jtag") ||
-            Contains(description, "silicon labs") ||
-            Contains(description, "cp210") ||
-            Contains(description, "vid_10c4") ||
-            Contains(description, "vid_303a"))
-        {
-            return BuiltInBoardProfiles.Esp32DevKit;
-        }
-
-        return null;
+        var port = FindPort(portName);
+        return port is null
+            ? null
+            : BoardIdentification.FromUsb(port.VendorId, port.ProductId, port.BoardHint + " " + port.Description);
     }
 
     /// <summary>Human readable USB description of a COM port (for example "Silicon Labs CP210x"), or null.</summary>
@@ -39,15 +28,24 @@ internal static class BoardPortDetector
     {
         var description = TryGetUsbPortDescription(portName);
         if (string.IsNullOrWhiteSpace(description))
-            return null;
+            return FindPort(portName)?.Description;
 
         // "<friendly name> <VID_xxxx&PID_xxxx> <serial>": keep the friendly part.
         var vid = description.IndexOf("VID_", StringComparison.OrdinalIgnoreCase);
         return (vid > 0 ? description[..vid] : description).Trim();
     }
 
-    private static bool Contains(string? value, string filter) =>
-        value?.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
+    private static PortInfo? FindPort(string portName)
+    {
+        try
+        {
+            return BoardDiscovery.DiscoverPorts().FirstOrDefault(port => string.Equals(port.Name, portName, StringComparison.OrdinalIgnoreCase));
+        }
+        catch (Exception)
+        {
+            return null; // ports cannot be described on this system
+        }
+    }
 
     private static string? TryGetUsbPortDescription(string portName)
     {

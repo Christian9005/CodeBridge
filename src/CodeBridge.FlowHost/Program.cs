@@ -136,9 +136,14 @@ internal static partial class Program
 
     private static int Ports()
     {
-        var real = System.IO.Ports.SerialPort.GetPortNames()
+        // A port that looks like a board comes first, so it is the one the editor starts on (the built-in COM1 of a PC comes last).
+        var names = System.IO.Ports.SerialPort.GetPortNames()
             .OrderBy(name => name.Length)
             .ThenBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var likely = CodeBridge.Transport.BoardDiscovery.RankCandidates(CodeBridge.Transport.BoardDiscovery.DiscoverPorts()).Select(port => port.Name).ToList();
+        var real = names
+            .OrderBy(name => likely.FindIndex(known => known.Equals(name, StringComparison.OrdinalIgnoreCase)) is var index && index >= 0 ? index : int.MaxValue)
             .Select(name => new
             {
                 name,
@@ -597,10 +602,7 @@ internal static partial class Program
     }
 
     private static string SuggestBoardForChip(string? chip) =>
-        chip is not null && chip.Contains("S3", StringComparison.OrdinalIgnoreCase) ? BuiltInBoardProfiles.Esp32S3DevKit.Id
-        : chip is not null && chip.Contains("S2", StringComparison.OrdinalIgnoreCase) ? BuiltInBoardProfiles.Esp32S2Mini.Id
-        : chip is not null && chip.Contains("C3", StringComparison.OrdinalIgnoreCase) ? BuiltInBoardProfiles.Esp32C3DevKit.Id
-        : BuiltInBoardProfiles.Esp32DevKit.Id;
+        (BoardIdentification.FromChip(chip) ?? BuiltInBoardProfiles.Esp32DevKit).Id;
 
     /// <summary>Updates the firmware over Wi-Fi: this PC serves the image, the board downloads it and restarts.</summary>
     private static async Task<int> OtaAsync(Options options, CancellationToken ct)
