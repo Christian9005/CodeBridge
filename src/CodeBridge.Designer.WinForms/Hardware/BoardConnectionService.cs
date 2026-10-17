@@ -45,16 +45,20 @@ internal static class BoardConnectionService
         return await ConnectAsync(request.BoardProfile, Observe(new WifiTransport(request.Host.Trim(), request.TcpPort, request.AccessToken)), string.Empty, cancellationToken);
     }
 
+    /// <summary>The port answered, but not with the CodeBridge greeting: the board has other firmware (or none) on it.</summary>
+    public static bool IsFirmwareMissing(Exception ex) =>
+        ex is TimeoutException || ex.Message.Contains("CODEBRIDGE_READY", StringComparison.OrdinalIgnoreCase);
+
     public static string FormatConnectionFailure(Exception ex, BoardProfile boardProfile, string? portName)
     {
-        if (ex is TimeoutException || ex.Message.Contains("CODEBRIDGE_READY", StringComparison.OrdinalIgnoreCase))
+        if (IsFirmwareMissing(ex))
         {
             var port = string.IsNullOrWhiteSpace(portName) ? "the selected port" : portName;
             return string.Join(
                 Environment.NewLine,
                 $"{boardProfile.DisplayName} was found on {port}, but it is not running CodeBridge firmware yet.",
                 "",
-                "Use Upload FW to flash the matching firmware, then press Connect again.",
+                "Upload the CodeBridge firmware to the board, then try again.",
                 "",
                 $"Details: {ex.Message}");
         }

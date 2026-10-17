@@ -8,8 +8,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <!-- We will let the CodeBridge Installer handle the NuGet package if they use the Setup Window, 
-       but for the template, we can't easily reference a local VSIX path for NuGet without a nuget.config. 
-       So we'll create the project, and then recommend they open the CodeBridge Setup Tool Window! -->
+  <ItemGroup>
+    <!-- The template wizard fills in the version with the CodeBridge release this extension ships with. -->
+    <PackageReference Include="CodeBridge.Designer.WinForms" Version="$codebridgeversion$" />
+  </ItemGroup>
 
 </Project>

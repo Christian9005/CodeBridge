@@ -282,9 +282,8 @@ public sealed class BoardService : IAsyncDisposable
     {
         try
         {
-            var ports = BoardDiscovery.DiscoverPorts();
-            var preferred = ports.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.BoardHint)) ?? ports.FirstOrDefault();
-            return preferred?.Name;
+            // a recognised board first, then any other USB adapter; the built-in COM1 of a PC is not a board
+            return BoardDiscovery.FindBoardCandidates().FirstOrDefault()?.Name;
         }
         catch (Exception)
         {

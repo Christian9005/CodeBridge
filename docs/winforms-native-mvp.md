@@ -163,7 +163,7 @@ After installation:
 2. Select the project in Solution Explorer or open `Form1.cs [Design]`.
 3. Run `Tools > Add CodeBridge Starter Form`.
 4. Rebuild the WinForms project.
-5. Run the project, select the ESP32 COM port, and click `Run Blink`.
+5. Run the project and click `Run`. The starter form finds the ESP32 on USB, or uses the simulator when no board is plugged in, and offers to upload the CodeBridge firmware if the board needs it.
 
 If Visual Studio still shows an empty CodeBridge tab, right-click the Toolbox and choose `Reset Toolbox`, then reopen the designer. The project reference is the important source of truth.
 
