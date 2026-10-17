@@ -70,6 +70,14 @@ public class StarterFormTemplateTests
     }
 
     [Fact]
+    public void TheFormSaysWhenTheFlowIsMadeForAnotherBoardThanTheOneConnected()
+    {
+        var source = Form();
+
+        Assert.Contains("_board.DescribeMismatch(_flow.Document.BoardId)", source);
+    }
+
+    [Fact]
     public void ABoardWithoutTheFirmwareIsOfferedTheUpload()
     {
         var source = Form();

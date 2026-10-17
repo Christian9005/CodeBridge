@@ -15,7 +15,7 @@ You do **not** need Python, PlatformIO or the Arduino IDE to use an ESP32: CodeB
 
 Before the board can talk to your app it needs the CodeBridge bridge firmware. There are three ways:
 
-- **From Visual Studio (recommended):** in a WinForms form, select `CodeBridgeEsp32Component` (or the flow control), choose the
+- **From Visual Studio (recommended):** in a WinForms form, select `CodeBridgeBoardComponent` (or the flow control), choose the
   COM port in the Smart Tag and click **Upload firmware**. On first use CodeBridge downloads `esptool` (about 8 MB, HTTPS + SHA-256 verified).
 - **From code:** `await CodeBridgeBoardComponent.UploadFirmwareAsync()`.
 - **Build it yourself (other ESP32 variants):** install PlatformIO, then

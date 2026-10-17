@@ -153,7 +153,10 @@ internal static class CodeBridgeStarterFormTemplate
                     _portInput.SelectedIndexChanged += async (_, _) => await PortChangedAsync();
                     _board.Connected += (_, _) =>
                     {
-                        AppendLog("Connected: " + _board.ConnectionDescription);
+                        AppendLog("Connected: " + _board.ConnectionDescription + (_board.DetectedChip is null ? string.Empty : " (" + _board.DetectedChip + ")"));
+                        var mismatch = _board.DescribeMismatch(_flow.Document.BoardId);
+                        if (mismatch is not null)
+                            AppendLog(mismatch);
                         ShowConnection(); // a flow that repeats never returns to Run, so say it here
                     };
                     _board.Disconnected += (_, _) => AppendLog("Disconnected.");
@@ -416,11 +419,17 @@ internal static class CodeBridgeStarterFormTemplate
                 {
                     if (_board.IsConnected)
                     {
-                        SetStatus(!_board.IsSimulated
+                        var text = !_board.IsSimulated
                             ? "Connected to " + _board.ConnectionDescription + "."
                             : SelectedPort == SimulatorPort
                                 ? "Running on the simulator."
-                                : "No board found: running on the simulator.");
+                                : "No board found: running on the simulator.";
+
+                        // The board says which chip it is: a flow made for another one would use pins that are not there.
+                        var mismatch = _board.DescribeMismatch(_flow.Document.BoardId);
+                        SetStatus(
+                            mismatch is null ? text : text + " The flow is made for another board: the log says which.",
+                            error: mismatch is not null);
                     }
                 }
 

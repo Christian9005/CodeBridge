@@ -8,7 +8,7 @@ namespace CodeBridge.Samples.WinFormsNativeDemo;
 
 public sealed class MainForm : Form
 {
-    private readonly CodeBridgeEsp32Component _esp32 = new();
+    private readonly CodeBridgeBoardComponent _board = new();
     private readonly CodeBridgeFlowControl _flow = new();
     private readonly ComboBox _portInput = new();
     private readonly NumericUpDown _baudRateInput = new();
@@ -278,9 +278,9 @@ public sealed class MainForm : Form
         _loopIntervalInput.ValueChanged += (_, _) => SyncFlowSettings();
         _traceDelayInput.ValueChanged += (_, _) => SyncFlowSettings();
 
-        _esp32.Connected += (_, _) => AppendLog("ESP32 connected.");
-        _esp32.Disconnected += (_, _) => AppendLog("ESP32 disconnected.");
-        _esp32.ConnectionFailed += (_, ex) =>
+        _board.Connected += (_, _) => AppendLog("ESP32 connected.");
+        _board.Disconnected += (_, _) => AppendLog("ESP32 disconnected.");
+        _board.ConnectionFailed += (_, ex) =>
         {
             AppendLog("Connection failed: " + ex.Message);
             _status.Set(BadgeState.Faulted, "Connection failed");
@@ -332,7 +332,7 @@ public sealed class MainForm : Form
 
         try
         {
-            await _esp32.ConnectAsync();
+            await _board.ConnectAsync();
         }
         catch (Exception ex)
         {
@@ -347,7 +347,7 @@ public sealed class MainForm : Form
     private async Task DisconnectAsync()
     {
         _flow.Stop();
-        await _esp32.DisconnectAsync();
+        await _board.DisconnectAsync();
         UpdateState();
     }
 
@@ -359,7 +359,7 @@ public sealed class MainForm : Form
 
         try
         {
-            await _esp32.RunAsync(_flow);
+            await _board.RunAsync(_flow);
         }
         catch (Exception ex) when (!_closing)
         {
@@ -373,9 +373,9 @@ public sealed class MainForm : Form
 
     private void SyncConnectionSettings()
     {
-        _esp32.TransportMode = CodeBridgeTransportMode.Serial;
-        _esp32.PortName = _portInput.Text.Trim();
-        _esp32.BaudRate = (int)_baudRateInput.Value;
+        _board.TransportMode = CodeBridgeTransportMode.Serial;
+        _board.PortName = _portInput.Text.Trim();
+        _board.BaudRate = (int)_baudRateInput.Value;
     }
 
     private void SyncFlowSettings()
@@ -404,7 +404,7 @@ public sealed class MainForm : Form
     private void UpdateState(bool connecting = false, bool running = false)
     {
         var isRunning = running || _flow.IsRunning;
-        var isConnected = _esp32.IsConnected;
+        var isConnected = _board.IsConnected;
 
         if (connecting)
             _status.Set(BadgeState.Connecting, "Connecting");
@@ -558,7 +558,7 @@ public sealed class MainForm : Form
     {
         _closing = true;
         _flow.Stop();
-        await _esp32.DisposeAsync();
+        await _board.DisposeAsync();
         base.OnFormClosing(e);
     }
 

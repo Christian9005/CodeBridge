@@ -1,6 +1,7 @@
 using CodeBridge.Core.Abstractions;
 using CodeBridge.Designer.WinForms;
 using CodeBridge.Designer.WinForms.Hardware;
+using CodeBridge.Flow;
 using CodeBridge.Transport;
 
 namespace CodeBridge.Designer.WinForms.Tests;
@@ -142,6 +143,69 @@ public class CodeBridgeBoardComponentTests
         await component.ConnectAsync();
 
         Assert.True(component.IsSimulated);
+    }
+
+    /// <summary>Answers as the given board whatever the app was made for, as the hardware would.</summary>
+    private static Func<BoardConnectionRequest, CancellationToken, Task<IBoard>> PluggedIn(BoardProfile hardware) =>
+        (request, token) => BoardConnectionService.ConnectAsync(
+            request with { BoardProfile = hardware, TransportMode = CodeBridgeTransportMode.Simulator },
+            token);
+
+    [Fact]
+    public async Task AfterConnecting_TheBoardIsAskedWhatItIs()
+    {
+        using var component = new CodeBridgeBoardComponent
+        {
+            DiscoverBoards = () => new[] { Port(FirstPort) },
+            Connector = PluggedIn(BuiltInBoardProfiles.Esp32S3DevKit)
+        };
+
+        await component.ConnectAsync();
+
+        Assert.Equal(BuiltInBoardProfiles.Esp32S3DevKit.Id, component.DetectedBoard?.Id);
+        Assert.Contains("S3", component.DetectedChip);
+        Assert.Equal("esp32-devkit", component.BoardId); // what the app was made for does not change by itself
+        Assert.StartsWith(BuiltInBoardProfiles.Esp32S3DevKit.DisplayName, component.ConnectionDescription);
+        Assert.Equal($"{BuiltInBoardProfiles.Esp32S3DevKit.DisplayName} on {FirstPort}", component.ConnectionDescription);
+    }
+
+    [Fact]
+    public async Task AFlowMadeForAnotherChip_IsToldAboutTheDifference()
+    {
+        using var component = new CodeBridgeBoardComponent
+        {
+            DiscoverBoards = () => new[] { Port(FirstPort) },
+            Connector = PluggedIn(BuiltInBoardProfiles.Esp32S3DevKit)
+        };
+        await component.ConnectAsync();
+
+        var message = component.DescribeMismatch("esp32-devkit");
+
+        Assert.NotNull(message);
+        Assert.Contains(BuiltInBoardProfiles.Esp32DevKit.DisplayName, message);
+        Assert.Contains(BuiltInBoardProfiles.Esp32S3DevKit.DisplayName, message);
+        Assert.Null(component.DescribeMismatch("esp32-s3-devkit"));
+        Assert.Null(component.DescribeMismatch("xiao-esp32-s3")); // another shape of the same chip
+        Assert.NotNull(component.DescribeMismatch("arduino-uno"));
+        Assert.Null(component.DescribeMismatch("no-such-board"));
+        Assert.Null(component.DescribeMismatch(null));
+    }
+
+    [Fact]
+    public async Task NothingIsKnownAboutTheBoardBeforeAndAfterTheConnection()
+    {
+        using var component = new CodeBridgeBoardComponent { DiscoverBoards = () => Array.Empty<PortInfo>(), FallbackToSimulator = true };
+
+        Assert.Null(component.DetectedBoard);
+        Assert.Null(component.DetectedChip);
+        Assert.Null(component.DescribeMismatch("esp32-devkit"));
+
+        await component.ConnectAsync();
+        Assert.Equal("esp32-devkit", component.DetectedBoard?.Id);
+
+        await component.DisconnectAsync();
+        Assert.Null(component.DetectedBoard);
+        Assert.Null(component.DetectedChip);
     }
 
     [Fact]

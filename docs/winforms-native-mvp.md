@@ -5,7 +5,7 @@ This is the first native Visual Studio workflow for CodeBridge.
 ## Toolbox Components
 
 - `CodeBridgeFlowControl` is the visible component that lives on a WinForms surface.
-- `CodeBridgeEsp32Component` is the non-visual component that lives in the component tray and owns the ESP32 connection.
+- `CodeBridgeBoardComponent` is the non-visual component that lives in the component tray and owns the board connection. With its default `PortName = "auto"` it finds the board on USB by itself (and with `FallbackToSimulator` it runs on the virtual board when none is plugged in); after connecting it asks the board which chip it is (`DetectedBoard`, `ConnectionDescription`, `DescribeMismatch`). `CodeBridgeEsp32Component`, the older ESP32-only component, is obsolete.
 - Double-click `CodeBridgeFlowControl`, or call `ShowEditor(owner)`, to open the visual flow editor.
 - Use the `CodeBridgeFlowControl` smart tag to load starter presets directly in the WinForms designer.
 - Call `RunAsync(...)` to run once in `Trigger` mode or continuously in `Loop` mode.
@@ -86,16 +86,16 @@ The default flow blinks GPIO 2 once. To test repeated execution, switch `Mode` t
 For a normal WinForms app, reference `CodeBridge.Designer.WinForms`, then add these components to the Toolbox:
 
 - `CodeBridge.Designer.WinForms.CodeBridgeFlowControl`
-- `CodeBridge.Designer.WinForms.CodeBridgeEsp32Component`
+- `CodeBridge.Designer.WinForms.CodeBridgeBoardComponent`
 
 A basic button click can stay close to normal WinForms code:
 
 ```csharp
 private async void runButton_Click(object sender, EventArgs e)
 {
-    codeBridgeEsp32Component1.PortName = "COM3";
+    // codeBridgeBoardComponent1.PortName is "auto" by default: it finds the board on USB. Set "COM3" to be explicit.
     codeBridgeFlowControl1.ExecutionMode = FlowExecutionMode.Trigger;
-    await codeBridgeEsp32Component1.RunAsync(codeBridgeFlowControl1);
+    await codeBridgeBoardComponent1.RunAsync(codeBridgeFlowControl1);
 }
 ```
 

@@ -1,3 +1,4 @@
+#pragma warning disable CS0618 // the component is obsolete for people; the library still has to name it
 using System.ComponentModel;
 using System.Drawing;
 using CodeBridge.Core;
@@ -12,6 +13,8 @@ public enum CodeBridgeTransportMode
     Simulator
 }
 
+[Obsolete("Use CodeBridgeBoardComponent: it finds the board on USB by itself, runs on the simulator when none is plugged in, and also works with Arduino boards.")]
+[EditorBrowsable(EditorBrowsableState.Never)]
 [ToolboxItem(false)]
 [ToolboxBitmap(typeof(CodeBridgeEsp32Component), "CodeBridge.Designer.WinForms.Resources.CodeBridgeEsp32Component.bmp")]
 [Designer(typeof(CodeBridgeEsp32ComponentDesigner))]

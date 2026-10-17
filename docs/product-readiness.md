@@ -14,7 +14,7 @@ The VSIX embeds the local CodeBridge NuGet packages, installs `CodeBridge.Design
 
 ## What Feels Product-Ready
 
-- `CodeBridgeFlowControl` and `CodeBridgeEsp32Component` are discoverable in the WinForms Toolbox.
+- `CodeBridgeFlowControl` and `CodeBridgeBoardComponent` are discoverable in the WinForms Toolbox.
 - The ESP32 package can run real serial flows.
 - The visual flow editor supports presets, tracing, trigger mode, and loop mode.
 - The VSIX command table is registered and visible under `Tools`.

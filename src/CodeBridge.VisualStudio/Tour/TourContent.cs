@@ -201,7 +201,7 @@ namespace CodeBridge.VisualStudio.Tour
                     "Web API: POST /led/on and GET /sensor/34 over HTTP (Integration.Api).",
                     "Windows service: log a reading to CSV every minute and reconnect by itself (Integration.WindowsService).",
                     "Export: in the flow editor press Export C# > Add to project as a class, then call YourFlow.RunAsync(board) from any of the hosts above.",
-                    "WinForms: drop CodeBridgeFlowControl and CodeBridgeEsp32Component from the Toolbox onto a form."
+                    "WinForms: drop CodeBridgeFlowControl and CodeBridgeBoardComponent from the Toolbox onto a form."
                 },
                 Code = new[]
                 {

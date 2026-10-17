@@ -66,7 +66,7 @@ See the [API reference](docs/api-reference.md).
   per-block status, undo/redo, copy/paste, multi-select and live validation. Hover any block for an animated explanation;
   five ready-made [examples](docs/examples.md) are available from *Add > New Item*, and *Tools > CodeBridge Tour*
   walks you from the first blink to using the SDK from a [console app, web API or Windows service](samples).
-- **WinForms Toolbox components**: `CodeBridgeFlowControl` and `CodeBridgeEsp32Component` with Smart Tags to pick a COM port,
+- **WinForms Toolbox components**: `CodeBridgeFlowControl` and `CodeBridgeBoardComponent` with Smart Tags to pick a COM port,
   detect the board and flash the firmware.
 - **One-click firmware flashing for ESP32**: uses `esptool`, downloaded on first use over HTTPS and verified by SHA-256.
   No Python, PlatformIO or Arduino IDE needed. The firmware binaries ship inside `CodeBridge.Designer.WinForms`.

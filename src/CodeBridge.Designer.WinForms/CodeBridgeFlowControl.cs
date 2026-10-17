@@ -236,6 +236,7 @@ public sealed partial class CodeBridgeFlowControl : Control
         return EditFlow(null, owner);
     }
 
+#pragma warning disable CS0618 // the obsolete component is still accepted
     public bool ShowEditor(CodeBridgeEsp32Component? boardComponent, IWin32Window? owner = null)
     {
         var previous = _boardComponent;
@@ -542,6 +543,7 @@ public sealed partial class CodeBridgeFlowControl : Control
             CodeBridgeEsp32Component esp32Component => esp32Component.Board,
             _ => null
         };
+#pragma warning restore CS0618
 
         return board is { IsConnected: true } ? board : null;
     }

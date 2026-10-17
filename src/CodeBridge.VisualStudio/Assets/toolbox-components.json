@@ -103,7 +103,7 @@
       "displayName": "CodeBridge Board",
       "toolboxItemName": "CodeBridge Board",
       "icon": "Resources/CodeBridgeEsp32Component.bmp",
-      "description": "Non-visual WinForms component that detects boards, uploads CodeBridge firmware, owns the hardware connection, and can run a CodeBridge Flow.",
+      "description": "Non-visual WinForms component that finds the board on USB by itself, identifies it, uploads CodeBridge firmware, owns the hardware connection (or runs on the simulator), and can run a CodeBridge Flow.",
       "category": "CodeBridge",
       "isVisible": true,
       "defaultProperty": "BoardId",
@@ -128,7 +128,11 @@
         },
         {
           "name": "PortName",
-          "value": "COM3"
+          "value": "auto"
+        },
+        {
+          "name": "FallbackToSimulator",
+          "value": true
         },
         {
           "name": "BaudRate",
@@ -155,7 +159,8 @@
         "UploadFirmwareAsync(cancellationToken)",
         "ConnectAsync(cancellationToken)",
         "DisconnectAsync()",
-        "RunAsync(flow, cancellationToken)"
+        "RunAsync(flow, cancellationToken)",
+        "DescribeMismatch(flowBoardId)"
       ]
     },
     {
