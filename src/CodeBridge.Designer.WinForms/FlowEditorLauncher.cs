@@ -28,7 +28,8 @@ internal static class FlowEditorLauncher
         return Path.GetFullPath(path).StartsWith(root, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool TryOpenInVisualStudio(string path)
+    /// <summary>Opens the file in the Visual Studio that has its solution open. False when there is none: the caller decides what else to do.</summary>
+    internal static bool TryOpenInVisualStudio(string path)
     {
         if (!OperatingSystem.IsWindows())
             return false;

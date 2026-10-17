@@ -6,7 +6,7 @@ This is the first native Visual Studio workflow for CodeBridge.
 
 - `CodeBridgeFlowControl` is the visible component that lives on a WinForms surface.
 - `CodeBridgeBoardComponent` is the non-visual component that lives in the component tray and owns the board connection. With its default `PortName = "auto"` it finds the board on USB by itself (and with `FallbackToSimulator` it runs on the virtual board when none is plugged in); after connecting it asks the board which chip it is (`DetectedBoard`, `ConnectionDescription`, `DescribeMismatch`). `CodeBridgeEsp32Component`, the older ESP32-only component, is obsolete.
-- Double-click `CodeBridgeFlowControl`, or call `ShowEditor(owner)`, to open the visual flow editor.
+- Double-click `CodeBridgeFlowControl`, or call `ShowEditor(owner)`, to edit the flow. A flow that lives in a `.cbflow` file (`FlowFile`) opens in the Visual Studio editor while the app runs from its project; anywhere else (no Visual Studio, or an installed app) the built-in editor opens and saves what it changes back to the file. Without a `FlowFile`, the built-in editor edits the flow stored in the form.
 - Use the `CodeBridgeFlowControl` smart tag to load starter presets directly in the WinForms designer.
 - Call `RunAsync(...)` to run once in `Trigger` mode or continuously in `Loop` mode.
 - Call `Stop()` to end a running loop.
@@ -22,7 +22,8 @@ codeBridgeFlowControl1.FlowFile = "Flows/Blink.cbflow";   // or set FlowFile in 
 - The CodeBridge package copies every `.cbflow` of the project next to the program when it builds.
 - A debug build also remembers the project folder, so the running app reads the file you edit and save in Visual Studio, not the older copy in `bin\`. Release builds read the copy next to the program.
 - Save the file and the control reloads it (`FlowFileLoaded`, with `IsReload` true). A half-saved or invalid file raises `FlowFileFailed` and the flow that was loaded keeps working. Set `WatchFlowFile = false` to reload only when you call `ReloadFlowFile()`.
-- `OpenFlowFile()` opens the file in Visual Studio (when the project is open there) or with the program Windows has for `.cbflow`.
+- `OpenFlowFile()` opens the file in Visual Studio (when the project is open there) or with the program Windows has for `.cbflow`. Double-clicking the control (`ShowEditor`) does the same without ever handing the file to an unknown program: Visual Studio, or else the built-in editor, which saves back to the file.
+- At design time the flow of the form is not used while `FlowFile` is set, so *Edit CodeBridge Flow* tells you to open the file from Solution Explorer instead.
 - The starter form uses all of this: it runs `Flows\Blink.cbflow` when it starts and runs it again every time the file is saved.
 
 ## Built-In Presets

@@ -109,6 +109,41 @@ public class CodeBridgeFlowControlFileTests
     }
 
     [Fact]
+    public void WhatTheBuiltInEditorChanges_IsSavedBackToTheFile()
+    {
+        using var folder = new TempFolder();
+        var path = folder.File("led.cbflow", FlowJson("Before"));
+        using var control = new CodeBridgeFlowControl { PostToUi = action => action(), FlowFile = path };
+        var failures = new List<Exception>();
+        control.FlowFileFailed += (_, ex) => failures.Add(ex);
+        using var reloaded = new ManualResetEventSlim();
+        control.FlowFileLoaded += (_, e) =>
+        {
+            if (e.IsReload)
+                reloaded.Set();
+        };
+        var document = control.Document;
+        document.Name = "Edited";
+        control.Document = document;
+
+        Assert.True(control.SaveToFlowFile());
+
+        Assert.Contains("Edited", File.ReadAllText(path));
+        Assert.True(reloaded.Wait(TimeSpan.FromSeconds(10)), "the control did not read its own file back");
+        Assert.Equal("Edited", control.FlowName);
+        Assert.Empty(failures); // the file is never seen half written
+        Assert.Empty(Directory.GetFiles(folder.Path, "*.tmp"));
+    }
+
+    [Fact]
+    public void WithoutAFlowFile_NothingIsSaved()
+    {
+        using var control = new CodeBridgeFlowControl();
+
+        Assert.False(control.SaveToFlowFile());
+    }
+
+    [Fact]
     public async Task TheStarterFlowRunsOnTheSimulator()
     {
         using var folder = new TempFolder();

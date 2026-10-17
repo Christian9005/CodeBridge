@@ -149,7 +149,7 @@ internal static class CodeBridgeStarterFormTemplate
                     _stopButton.Click += (_, _) => StopFlow();
                     _refreshButton.Click += async (_, _) => await RefreshAsync();
                     _uploadButton.Click += async (_, _) => await UploadFirmwareAsync();
-                    _editButton.Click += (_, _) => EditFlow();
+                    _editButton.Click += (_, _) => _flow.ShowEditor(_board, this);
                     _portInput.SelectedIndexChanged += async (_, _) => await PortChangedAsync();
                     _board.Connected += (_, _) =>
                     {
@@ -166,7 +166,11 @@ internal static class CodeBridgeStarterFormTemplate
                         AppendLog(ex.Message);
                         SetStatus("The flow file has a problem. The flow that was loaded keeps running; the log says what to fix.", error: true);
                     };
-                    _flow.FlowStarted += (_, _) => AppendLog("Flow started.");
+                    _flow.FlowStarted += (_, _) =>
+                    {
+                        AppendLog("Flow started.");
+                        UpdateState(); // now there is something to stop
+                    };
                     _flow.FlowCompleted += (_, result) => AppendLog($"Flow completed. Nodes: {result.NodeOutputs.Count}");
                     _flow.FlowFailed += (_, ex) => AppendLog("Flow failed: " + ex.Message);
                     _flow.FlowTrace += (_, trace) =>
@@ -205,12 +209,6 @@ internal static class CodeBridgeStarterFormTemplate
                 {
                     _stopRequested = true;
                     _flow.Stop();
-                }
-
-                private void EditFlow()
-                {
-                    if (!_flow.OpenFlowFile())
-                        AppendLog("Open " + (_flow.ResolvedFlowFile ?? FlowFile) + " in Visual Studio to edit the flow.");
                 }
 
                 private void RefreshPorts()
