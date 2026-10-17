@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-17
+
+Plug and play for the WinForms apps: a new project runs the moment it is started, and the flow it runs is a `.cbflow` file you edit in Visual Studio.
+
 ### Added
 - **The board says which board it is.** `BoardIdentification` (`CodeBridge.Flow`) is the one place that knows which profile is which: `FromChip` for the chip the firmware reports (`ESP32-D0WD-V3`, `ESP32-S3`, `ATmega328P`), `FromUsb` for the USB identity of a port (a guess, since a CP210x bridge is on many boards), and `IsCompatible` for whether a flow made for one board can run on another. A chip without a profile (an ESP32-C6) gives no answer instead of the wrong profile.
 - `CodeBridgeBoardComponent` asks the board what it is once connected: `DetectedChip`, `DetectedBoard`, and `DescribeMismatch(flowBoardId)` for a sentence when the flow was made for another chip (an ESP32-S3 where the flow says ESP32 DevKit). `ConnectionDescription` names the board that is really plugged in. The starter form shows it in the log and in the status line.

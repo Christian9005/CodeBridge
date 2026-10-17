@@ -1,13 +1,13 @@
 {
   "$schema": "./toolbox-components.schema.json",
   "schemaVersion": "1.0",
-  "manifestVersion": "0.6.0",
+  "manifestVersion": "0.7.0",
   "extensionId": "CodeBridge.VisualStudio",
   "displayName": "CodeBridge WinForms Toolbox",
   "description": "Toolbox registration contract for CodeBridge WinForms visual flow and board onboarding components.",
   "package": {
     "id": "CodeBridge.Designer.WinForms",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "assemblyName": "CodeBridge.Designer.WinForms",
     "targetFramework": "net8.0-windows",
     "localFeedHint": "artifacts/packages",
