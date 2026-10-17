@@ -18,7 +18,7 @@ namespace CodeBridge.Designer.WinForms;
 [Description("Hosts, edits, and runs a CodeBridge visual flow inside a WinForms app.")]
 [DefaultProperty(nameof(FlowName))]
 [DefaultEvent(nameof(FlowCompleted))]
-public sealed class CodeBridgeFlowControl : Control
+public sealed partial class CodeBridgeFlowControl : Control
 {
     private FlowDocument _document = new() { Name = "Embedded Flow" };
     private FlowExecutionMode _executionMode = FlowExecutionMode.Trigger;

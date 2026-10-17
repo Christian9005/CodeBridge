@@ -55,12 +55,18 @@ public class StarterFormTemplateTests
     }
 
     [Fact]
-    public void TheFormStartsOnTheOnBoardLedAndNotOnABootPin()
+    public void TheFormRunsTheFlowFileOfTheProject_AndRunsItAgainWhenItIsSaved()
     {
         var source = Form();
 
-        Assert.Contains("BuiltInBoardProfiles.Esp32DevKit.BuiltInLedPin", source);
-        Assert.Contains("item.Number == led", source);
+        Assert.Contains("private const string FlowFile = \"Flows/Blink.cbflow\";", source);
+        Assert.Contains("_flow.FlowFile = FlowFile;", source);
+        Assert.Contains("_flow.FlowFileLoaded +=", source);
+        Assert.Contains("e.IsReload", source);
+        Assert.Contains("_flow.OpenFlowFile()", source);
+        Assert.Contains("Shown += async", source);
+        Assert.DoesNotContain("LoadBlinkPreset", source); // the flow is the file, not a preset in memory
+        Assert.DoesNotContain("ShowEditor", source);
     }
 
     [Fact]

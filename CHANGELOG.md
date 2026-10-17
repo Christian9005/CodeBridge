@@ -9,9 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Flows are files.** `CodeBridgeFlowControl.FlowFile` points the control at a `.cbflow` file of the project, the one the Visual Studio editor opens. The control reloads it when it is saved (`FlowFileLoaded`, `FlowFileFailed`, `WatchFlowFile`, `ReloadFlowFile()`) and keeps the flow that works when the file is half saved. `OpenFlowFile()` opens it in Visual Studio (or with the program Windows has for `.cbflow`). The package copies every `.cbflow` of the project next to the program when it builds, and a debug build remembers the project folder, so the running app reads the file you just saved instead of the older copy in `bin\`.
+- The starter form comes with `Flows\Blink.cbflow`, runs it as soon as it is shown and runs it again every time the file is saved: edit the blink in Visual Studio, save, and the board follows. *Add CodeBridge Starter Form* adds the file to existing projects too.
+
 ### Changed
 - **A new WinForms project works the moment it runs.** The *CodeBridge WinForms App* template now carries the `CodeBridge.Designer.WinForms` package in its project file (the version is filled in by the template), instead of installing it from a local folder after the project is created.
-- **The starter form needs no set-up:** its *Port* box starts on *Auto*, which finds the board on USB; with no board plugged in, *Run* uses the simulator. *Run* connects by itself (the *Connect* button is gone), the pin starts on the on-board LED (GPIO 2) instead of GPIO 0, and a one-line status says what it found and what it is connected to.
+- **The starter form needs no set-up:** its *Port* box starts on *Auto*, which finds the board on USB; with no board plugged in, *Run* uses the simulator. *Run* connects by itself (the *Connect* button is gone) and a one-line status says what it found and what it is connected to. The pin and the presets are gone from the form: the flow is the `.cbflow` file.
 - A board that answers but has no CodeBridge firmware is now offered the upload (*Upload it now?*) instead of a message about a timeout; after the upload the flow runs again.
 - `CodeBridgeBoardComponent`: `PortName` defaults to `"auto"` and the new `FallbackToSimulator` property runs on the virtual board when no board is found. `ConnectionDescription` and `IsSimulated` describe the connection ("ESP32 DevKit on COM5"). Connection failures are now reported as `BoardConnectionException`, with a message for people and `FirmwareMissing` for apps that want to offer the upload (it was a raw `TimeoutException`).
 - Finding a board skips the built-in COM1 of a desktop PC and Bluetooth ports: a recognised board comes first, then any other USB serial adapter (`BoardDiscovery.FindBoardCandidates`, `PortInfo.IsUsb`). The *Detect Serial Ports* verb of the designer uses the same order.
