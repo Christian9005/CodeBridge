@@ -10,7 +10,7 @@
     <ReleaseNotes>https://github.com/Christian9005/CodeBridge/blob/master/CHANGELOG.md</ReleaseNotes>
     <Icon>Assets\CodeBridgeIcon.png</Icon>
     <PreviewImage>Assets\CodeBridgePreview.png</PreviewImage>
-    <Tags>ESP32, Arduino, WinForms, Toolbox, Visual Flow, IoT, Embedded, Microcontroller, Robotics, Hardware, Serial, Sensors, Automation, .NET</Tags>
+    <Tags>ESP32;Arduino;IoT;Microcontroller;WinForms;Embedded;Visual Flow;Robotics;Sensors;.NET</Tags>
   </Metadata>
   <Installation>
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0,19.0)">
