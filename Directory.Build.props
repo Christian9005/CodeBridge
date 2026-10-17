@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <!-- Single source of truth for every package, the VSIX and the toolbox manifest. -->
-    <Version>0.6.0</Version>
+    <Version>0.7.0</Version>
     <Authors>Christian Alexander Albarracin Adriano</Authors>
     <Company>CodeBridge</Company>
     <Copyright>Copyright (c) 2026 Christian Alexander Albarracin Adriano</Copyright>

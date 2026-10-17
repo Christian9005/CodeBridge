@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="CodeBridge.VisualStudio" Version="0.6.0" Language="en-US" Publisher="Christian Albarracin" />
+    <Identity Id="CodeBridge.VisualStudio" Version="0.7.0" Language="en-US" Publisher="Christian Albarracin" />
     <DisplayName>CodeBridge Visual Studio Tools</DisplayName>
     <Description xml:space="preserve">Visual programming for microcontrollers inside Visual Studio. Design ESP32 and Arduino flows in a native .cbflow editor, drop IoT components from the WinForms Toolbox, and flash the CodeBridge firmware over USB with one click.</Description>
     <MoreInfo>https://github.com/Christian9005/CodeBridge</MoreInfo>
