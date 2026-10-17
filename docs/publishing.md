@@ -15,9 +15,14 @@ Everything is driven by one version: `<Version>` in `Directory.Build.props`. The
      `src/CodeBridge.Core` is published as **`CodeBridge.Abstractions`**. The `CodeBridge.` prefix cannot be reserved for the same reason; the other
      nine ids were free when 0.6.0 was prepared. A package id on nuget.org is permanent: check `https://api.nuget.org/v3-flatcontainer/<id in lower case>/index.json`
      (404 means free) before adding a new package.
-2. **Visual Studio Marketplace**: create a publisher at <https://marketplace.visualstudio.com/manage>. Put its ID in `vs-publish.json`
-   (`publisher`) and in `source.extension.vsixmanifest` (`Identity/@Publisher`). Create an Azure DevOps PAT with scope
-   *Marketplace > Manage* and store it as `VS_MARKETPLACE_PAT`.
+2. **Visual Studio Marketplace**: create a publisher at <https://marketplace.visualstudio.com/manage>. Two different names are involved, and the
+   Marketplace checks both:
+   - the publisher **ID** (`ChristianAlbarracin`) goes in `vs-publish.json` (`publisher`);
+   - the publisher **display name** (`Christian Albarracin`, exactly as the Marketplace shows it) goes in `source.extension.vsixmanifest`
+     (`Identity/@Publisher`). Anything else fails with `VsixPub0029: Publisher display name ... and Author name ... need to be the same`.
+
+   Create an Azure DevOps PAT with scope *Marketplace > Manage* (all accessible organizations) and store it as the secret `VS_MARKETPLACE_PAT` of the
+   `release` environment. The `<Tags>` of the manifest are separated by semicolons and each tag is at most 50 characters (`VsixPub0023`).
 3. Optional: sign the VSIX (`tools/CodeBridge.VisualStudio.Signing`). Not required by the Marketplace.
 
 ## Each release
