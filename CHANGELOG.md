@@ -35,6 +35,7 @@ First public release: the NuGet packages and the Visual Studio extension are pub
 - **More boards**: ESP32-S3 DevKit, ESP32-C3 DevKit, Arduino Nano (both bootloaders) and Arduino Mega 2560, with pin maps, ADC ranges, per-chip firmware images (`firmware/prebuilt/<chip>`), esptool chip/offset and Arduino FQBN taken from the board profile. The firmware builds for all of them in CI.
 
 ### Fixed
+- The extension tags in the VSIX manifest are separated by semicolons, as the manifest schema asks. They were comma-separated, which the Marketplace read as one 133-character tag and refused.
 - The installed extension only shipped the firmware images of the original ESP32, so ESP32-S3 and ESP32-C3 boards could not be flashed from it: every chip's images are packaged now.
 - PlatformIO child processes inherited the caller's standard input; under an MCP server that is the protocol pipe, so the build could swallow protocol bytes and the PlatformIO probe timed out. Their input is now closed.
 - The validator did not check the pin of the PWM Output block (a missing or input-only pin was accepted and only failed on the board) nor an empty Map range; both are errors now.
