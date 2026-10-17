@@ -156,6 +156,28 @@ public sealed partial class CodeBridgeFlowControl
         }
     }
 
+    /// <summary>Writes the flow back to its file (the built-in editor was used), so the file stays the one place the flow lives in.</summary>
+    internal bool SaveToFlowFile()
+    {
+        var path = _resolvedFlowFile;
+        if (path is null || IsDesignTime)
+            return false;
+
+        try
+        {
+            // Through a temp file and a move, so nobody (the editor, our own watcher) ever reads half of it.
+            var temp = path + "." + Guid.NewGuid().ToString("N")[..8] + ".tmp";
+            File.WriteAllText(temp, FlowDocumentJson.Serialize(_document));
+            File.Move(temp, path, overwrite: true);
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            RaiseFlowFileFailed(new IOException($"The flow could not be saved to '{path}': {ex.Message}", ex));
+            return false;
+        }
+    }
+
     private void RaiseFlowFileFailed(Exception exception) => FlowFileFailed?.Invoke(this, exception);
 
     private void StartWatchingFlowFile(string path)

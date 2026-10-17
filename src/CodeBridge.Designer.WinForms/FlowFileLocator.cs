@@ -12,6 +12,10 @@ internal static class FlowFileLocator
     /// <summary>Written into Debug builds by the CodeBridge package: the folder of the project the app was built from.</summary>
     public const string ProjectDirectoryMetadataKey = "CodeBridge.ProjectDirectory";
 
+    /// <summary>True for an app that was built in Debug from a project that is still on this machine: the flow files are there to be edited.</summary>
+    public static bool RunsFromProject(Assembly? application) =>
+        ProjectDirectoryOf(application) is { } directory && Directory.Exists(directory);
+
     public static string? Resolve(string? flowFile, Assembly? application) =>
         Resolve(flowFile, ProjectDirectoryOf(application), AppContext.BaseDirectory);
 

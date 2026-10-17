@@ -66,6 +66,17 @@ public class FlowFileLocatorTests
         Assert.Null(FlowFileLocator.Resolve("led.cbflow", (Assembly?)null));
     }
 
+    [Fact]
+    public void AnAppBuiltFromAProjectThatIsStillThere_RunsFromTheProject()
+    {
+        using var project = new TempFolder();
+
+        Assert.True(FlowFileLocator.RunsFromProject(AppBuiltIn(project.Path)));
+        Assert.False(FlowFileLocator.RunsFromProject(AppBuiltIn(Path.Combine(project.Path, "gone"))));
+        Assert.False(FlowFileLocator.RunsFromProject(typeof(FlowFileLocatorTests).Assembly)); // a build that recorded nothing
+        Assert.False(FlowFileLocator.RunsFromProject(null));
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

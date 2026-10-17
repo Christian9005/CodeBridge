@@ -63,10 +63,9 @@ public class StarterFormTemplateTests
         Assert.Contains("_flow.FlowFile = FlowFile;", source);
         Assert.Contains("_flow.FlowFileLoaded +=", source);
         Assert.Contains("e.IsReload", source);
-        Assert.Contains("_flow.OpenFlowFile()", source);
+        Assert.Contains("_flow.ShowEditor(_board, this)", source); // opens the file in Visual Studio, or the built-in editor that saves to it
         Assert.Contains("Shown += async", source);
         Assert.DoesNotContain("LoadBlinkPreset", source); // the flow is the file, not a preset in memory
-        Assert.DoesNotContain("ShowEditor", source);
     }
 
     [Fact]
@@ -75,6 +74,16 @@ public class StarterFormTemplateTests
         var source = Form();
 
         Assert.Contains("_board.DescribeMismatch(_flow.Document.BoardId)", source);
+    }
+
+    [Fact]
+    public void StopIsAvailableOnceTheFlowIsRunning()
+    {
+        var source = Form().Replace("\r\n", "\n");
+
+        // a flow that repeats never returns to Run, so the buttons have to follow the flow itself
+        Assert.Matches(@"_flow\.FlowStarted \+= \(_, _\) =>\s*\{\s*AppendLog\(""Flow started\.""\);\s*UpdateState\(\);", source);
+        Assert.Contains("_flow.FlowStopped += (_, _) => UpdateState();", source);
     }
 
     [Fact]

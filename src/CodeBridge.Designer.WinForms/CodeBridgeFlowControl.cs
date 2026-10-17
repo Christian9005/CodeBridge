@@ -372,8 +372,31 @@ public sealed partial class CodeBridgeFlowControl : Control
             TextFormatFlags.EndEllipsis);
     }
 
+    /// <summary>
+    /// Opens the flow in an editor. A flow that lives in a file (<see cref="FlowFile"/>) belongs to the Visual Studio editor while the app runs from its project, so that is
+    /// where it opens. Anywhere else (Visual Studio is not running, or the app is installed and not run from its project) this built-in editor opens, and
+    /// what it changes is saved back to the file. Without a flow file it edits the flow stored in the form.
+    /// </summary>
     internal bool EditFlow(IComponentChangeService? changeService, IWin32Window? owner = null)
     {
+        if (_flowFile.Length > 0)
+        {
+            if (IsDesignTime)
+            {
+                // At design time the file is not read, so editing the flow of the form would change something that is never used.
+                MessageBox.Show(
+                    owner ?? FindForm(),
+                    $"This flow comes from the file '{_flowFile}'. Open it from Solution Explorer to edit it with the CodeBridge editor; the flow stored in the form is not used while FlowFile is set.",
+                    "CodeBridge Flow",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                return false;
+            }
+
+            if (_resolvedFlowFile is { } file && FlowFileLocator.RunsFromProject(System.Reflection.Assembly.GetEntryAssembly()) && FlowEditorLauncher.TryOpenInVisualStudio(file))
+                return true;
+        }
+
         var externalBoard = ResolveEditorBoard(owner);
         using var dialog = new CodeBridgeFlowEditorDialog(_document, externalBoard);
         if (dialog.ShowDialog(owner ?? FindForm()) != DialogResult.OK)
@@ -381,6 +404,7 @@ public sealed partial class CodeBridgeFlowControl : Control
 
         var oldValue = FlowJson;
         ApplyDocument(dialog.Document, changeService, oldValue);
+        SaveToFlowFile();
         return true;
     }
 
