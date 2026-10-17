@@ -36,6 +36,7 @@ First public release: the NuGet packages and the Visual Studio extension are pub
 
 ### Fixed
 - The extension tags in the VSIX manifest are separated by semicolons, as the manifest schema asks. They were comma-separated, which the Marketplace read as one 133-character tag and refused.
+- The author of the extension in the VSIX manifest is the Marketplace publisher's display name ("Christian Albarracin"), which the Marketplace requires to match; the publisher ID stays in `vs-publish.json`.
 - The installed extension only shipped the firmware images of the original ESP32, so ESP32-S3 and ESP32-C3 boards could not be flashed from it: every chip's images are packaged now.
 - PlatformIO child processes inherited the caller's standard input; under an MCP server that is the protocol pipe, so the build could swallow protocol bytes and the PlatformIO probe timed out. Their input is now closed.
 - The validator did not check the pin of the PWM Output block (a missing or input-only pin was accepted and only failed on the board) nor an empty Map range; both are errors now.
