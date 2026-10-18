@@ -72,7 +72,7 @@ See the [API reference](docs/api-reference.md).
   No Python, PlatformIO or Arduino IDE needed. The firmware binaries ship inside `CodeBridge.Designer.WinForms`.
 - **Serial monitor and plotter** inside Visual Studio, and **code mode**: create, build and upload C++ firmware with PlatformIO, with errors in the Error List.
 - **Export C#**: turn any flow into readable SDK code (a class for your project, or a console `Program.cs`) from the editor toolbar.
-- **Project and item templates**, a setup window (*Tools > CodeBridge Setup...*) and a starter form command.
+- **Project and item templates**: the *CodeBridge WinForms App* template runs `Flows\Blink.cbflow` on the first F5 (on the board it finds, or on the simulator) and runs it again every time you save it. Also a setup window (*Tools > CodeBridge Setup...*) and a starter form command.
 - **Automatic USB board detection** for CP210x, CH340/CH9102, FTDI and official Arduino adapters.
 
 ## Hardware support

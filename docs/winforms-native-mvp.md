@@ -107,7 +107,7 @@ private async void startButton_Click(object sender, EventArgs e)
 {
     codeBridgeFlowControl1.ExecutionMode = FlowExecutionMode.Loop;
     codeBridgeFlowControl1.LoopIntervalMs = 1000;
-    await codeBridgeEsp32Component1.RunAsync(codeBridgeFlowControl1);
+    await codeBridgeBoardComponent1.RunAsync(codeBridgeFlowControl1);
 }
 
 private void stopButton_Click(object sender, EventArgs e)
