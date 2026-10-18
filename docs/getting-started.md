@@ -63,7 +63,11 @@ The easiest way to get started is by using the Visual Studio Extension.
 4. Search for "CodeBridge" and select the **CodeBridge WinForms App** template.
 5. Click **Next**, name your project, and click **Create**.
 
-Then open *Tools > CodeBridge Setup...* and click **Install / Update** (packages are bundled in the extension, no NuGet feed configuration needed) followed by **Add Starter Form**.
+The new project is complete: it already references the CodeBridge package, has a starter form and a flow, `Flows\Blink.cbflow`. **Press F5.** The form finds your ESP32 on USB (or runs on the simulator when none is plugged in), runs the flow, and offers to upload the CodeBridge firmware if the board does not have it yet.
+
+Open `Flows\Blink.cbflow` (it opens in the flow editor), change a block and save: the running app reloads the file and runs the new version. If you made a mistake, the form says so and keeps running the last flow that worked. **Edit Flow** in the form opens the same file.
+
+To add the starter form (and its flow) to a project you already have, select the project and use *Tools > CodeBridge Setup...* (**Install / Update**, then **Add Starter Form**; the packages are bundled in the extension). The [WinForms components](winforms-native-mvp.md) page explains how a flow file works.
 
 ## Use the `.cbflow` editor (Visual Studio)
 
