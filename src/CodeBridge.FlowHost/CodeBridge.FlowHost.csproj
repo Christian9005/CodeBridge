@@ -23,6 +23,7 @@
     <ProjectReference Include="..\CodeBridge.Designer.WinForms\CodeBridge.Designer.WinForms.csproj" />
     <ProjectReference Include="..\CodeBridge.PlatformIO\CodeBridge.PlatformIO.csproj" />
     <ProjectReference Include="..\CodeBridge.HomeAssistant\CodeBridge.HomeAssistant.csproj" />
+    <ProjectReference Include="..\CodeBridge.IotBindings\CodeBridge.IotBindings.csproj" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
   </ItemGroup>
 

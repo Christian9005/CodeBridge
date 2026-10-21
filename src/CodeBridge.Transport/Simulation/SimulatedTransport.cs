@@ -51,6 +51,7 @@ public sealed class SimulatedTransport : ITransport
     private readonly Dictionary<int, double> _servoAngles = new();
     private readonly Dictionary<string, SampleChannel> _channels = new();
     private readonly List<string> _log = new();
+    private readonly Dictionary<int, ISimulatedI2cDevice> _i2cDevices = new();
     private bool _connected;
     private int _nextChannel;
 
@@ -83,6 +84,16 @@ public sealed class SimulatedTransport : ITransport
 
     /// <summary>Distance returned by ultrasonic reads (cm).</summary>
     public double Distance { get; set; } = 42.0;
+
+    /// <summary>
+    /// Puts a virtual chip on the I2C bus at <paramref name="address"/>: scans list it, and reads and writes to that address reach it (so the drivers of the
+    /// .NET IoT bindings can be tried without hardware). Addresses with no chip keep the simulator's default answers.
+    /// </summary>
+    public void AddI2cDevice(int address, ISimulatedI2cDevice device)
+    {
+        ArgumentNullException.ThrowIfNull(device);
+        lock (_gate) _i2cDevices[address] = device;
+    }
 
     /// <summary>Makes a digital input read HIGH or LOW (like pressing a button).</summary>
     public void SetDigitalInput(int pin, bool high)
@@ -240,7 +251,20 @@ public sealed class SimulatedTransport : ITransport
             case "SU":
                 return TryPin(args, 0, out _) ? "OK" : "ERR:Invalid pin";
 
-            case "IS": return "OK:35,60,118";                  // BH1750, SSD1306, BME280
+            case "IS": return "OK:" + (_i2cDevices.Count > 0 ? string.Join(",", _i2cDevices.Keys.Order()) : "35,60,118");   // default: BH1750, SSD1306, BME280
+            case "IW" or "IR" or "IWR" or "IRR" when _i2cDevices.Count > 0 && !_i2cDevices.ContainsKey(Arg(args, 0)):
+                return "ERR:I2C_NACK at address " + Arg(args, 0);   // a bus with virtual chips behaves like a real one: nobody answers at an empty address
+            case "IW" when _i2cDevices.TryGetValue(Arg(args, 0), out var device):
+                device.Write(HexBytes(args.ElementAtOrDefault(1)));
+                return "OK";
+            case "IWR" when _i2cDevices.TryGetValue(Arg(args, 0), out var device):
+                device.Write([(byte)Arg(args, 1), .. HexBytes(args.ElementAtOrDefault(2))]);
+                return "OK";
+            case "IR" when _i2cDevices.TryGetValue(Arg(args, 0), out var device):
+                return "OK:" + Convert.ToHexString(device.Read(Math.Clamp(Arg(args, 1), 0, 128)));
+            case "IRR" when _i2cDevices.TryGetValue(Arg(args, 0), out var device):
+                device.Write([(byte)Arg(args, 1)]);
+                return "OK:" + Convert.ToHexString(device.Read(Math.Clamp(Arg(args, 2), 0, 128)));
             case "IW": case "IWR": return "OK";
             case "IR": return "OK:" + new string('0', Math.Clamp(Arg(args, 1), 0, 128) * 2);
             case "IRR": return "OK:" + new string('0', Math.Clamp(Arg(args, 2), 0, 128) * 2);
@@ -295,6 +319,8 @@ public sealed class SimulatedTransport : ITransport
         pin = index < args.Length && int.TryParse(args[index], NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : -1;
         return pin >= 0 && pin <= _options.MaxPin;
     }
+
+    private static byte[] HexBytes(string? hex) => string.IsNullOrEmpty(hex) ? [] : Convert.FromHexString(hex);
 
     private static int Arg(string[] args, int index) =>
         index < args.Length && int.TryParse(args[index], NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : 0;
@@ -375,4 +401,17 @@ public sealed class SimulatedTransport : ITransport
         channel.Delivered += count;
         return "OK:" + string.Join(';', frames);
     }
+}
+
+/// <summary>
+/// A virtual I2C chip for <see cref="SimulatedTransport.AddI2cDevice"/>. It sees the bus the way a real chip does: bytes written to it, and reads that
+/// return the next bytes it wants to send (a register read is a write of the register number, then a read).
+/// </summary>
+public interface ISimulatedI2cDevice
+{
+    /// <summary>The master wrote these bytes (a register number, a command, a register number and its value...).</summary>
+    void Write(byte[] data);
+
+    /// <summary>The master reads <paramref name="length"/> bytes.</summary>
+    byte[] Read(int length);
 }

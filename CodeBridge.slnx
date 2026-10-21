@@ -50,11 +50,13 @@
     <Project Path="src/CodeBridge.HomeAssistant/CodeBridge.HomeAssistant.csproj" />
     <Project Path="src/CodeBridge.Mcp/CodeBridge.Mcp.csproj" />
     <Project Path="src/CodeBridge.PlatformIO/CodeBridge.PlatformIO.csproj" />
+    <Project Path="src/CodeBridge.IotBindings/CodeBridge.IotBindings.csproj" />
     <Project Path="src/CodeBridge.Transport/CodeBridge.Transport.csproj" />
     <Project Path="src/CodeBridge.VisualStudio/CodeBridge.VisualStudio.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/CodeBridge.Core.Tests/CodeBridge.Core.Tests.csproj" />
+    <Project Path="tests/CodeBridge.IotBindings.Tests/CodeBridge.IotBindings.Tests.csproj" />
     <Project Path="tests/CodeBridge.Designer.WinForms.Tests/CodeBridge.Designer.WinForms.Tests.csproj" />
     <Project Path="tests/CodeBridge.Blazor.Tests/CodeBridge.Blazor.Tests.csproj" />
     <Project Path="tests/CodeBridge.HomeAssistant.Tests/CodeBridge.HomeAssistant.Tests.csproj" />

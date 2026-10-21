@@ -39,6 +39,9 @@ public sealed class ModuleBlock
     /// <summary>The block talks to peripherals through the ESP32 SDK classes (I2C, OneWire, DHT, tone...), so it is offered on the ESP32 family only.</summary>
     public bool Esp32Only { get; init; }
 
+    /// <summary>The block talks over the board's I2C bus: on boards whose I2C pins are not the default ones the validator reminds the user to check the wiring.</summary>
+    public bool UsesI2c { get; init; }
+
     public required Func<ModuleRun, ValueTask<IReadOnlyDictionary<string, object?>>> Run { get; init; }
     public required Action<ModuleCode> Emit { get; init; }
 

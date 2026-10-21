@@ -189,7 +189,7 @@ public sealed class FlowValidator
                 node.Id));
         }
 
-        if (module.Type is ModuleBlocks.Bme280 or ModuleBlocks.Bh1750 or ModuleBlocks.Mpu6050 or ModuleBlocks.Ina219 or ModuleBlocks.ColorSensor or ModuleBlocks.Lcd or ModuleBlocks.Oled &&
+        if ((module.UsesI2c || module.Type is ModuleBlocks.Bme280 or ModuleBlocks.Bh1750 or ModuleBlocks.Mpu6050 or ModuleBlocks.Ina219 or ModuleBlocks.ColorSensor or ModuleBlocks.Lcd or ModuleBlocks.Oled) &&
             board.Family == CodeBridge.Core.Enums.BoardFamily.ESP32 && board.Id != "esp32-devkit")
         {
             issues.Add(new FlowValidationIssue(

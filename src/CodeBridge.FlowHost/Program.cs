@@ -34,6 +34,9 @@ internal static partial class Program
     {
         Console.OutputEncoding = new UTF8Encoding(false);
 
+        // the blocks of the .NET IoT device bindings: part of every catalog, run, validation and export this host does
+        CodeBridge.IotBindings.IotBindingBlocks.Register();
+
         if (args.Length == 0)
         {
             Emit(new { type = "error", message = "Missing command. Use: boards, ports, catalog, validate, test, upload, run." });

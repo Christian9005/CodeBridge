@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>CodeBridge.IotBindings</PackageId>
+    <Description>Runs the .NET IoT device bindings (Iot.Device.Bindings) on a CodeBridge board over its I2C bus, and offers them as flow blocks.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CodeBridge.Flow\CodeBridge.Flow.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Iot.Device.Bindings" Version="4.2.0" />
+  </ItemGroup>
+
+</Project>

@@ -182,6 +182,62 @@ namespace CodeBridge.VisualStudio.Editor
                 "b", "The second true/false value (not needed for NOT).",
                 "result", "The combined value."),
 
+            // ---- .NET IoT bindings (CodeBridge.IotBindings): the host registers them, so they reach the toolbox like the built-in blocks
+            ["iot.sht3x"] = new BlockHelpEntry(
+                "Reads an SHT30, SHT31 or SHT35 over I2C: how warm it is and how humid the air is, more accurately than a DHT22.",
+                "I2C modules share two wires (SDA and SCL), so several can sit on the same pins. If it is not found, try the other address.",
+                DemoKind.Temperature,
+                "trigger", "Read the sensor when this fires.",
+                "temperature", "Temperature in degrees Celsius.",
+                "humidity", "Relative humidity, 0 to 100 %."),
+
+            ["iot.mcp9808"] = new BlockHelpEntry(
+                "Reads an MCP9808: a precision digital thermometer, accurate to half a degree.",
+                "Three address pins let you put up to eight on the same two wires. Good for thermostats and for checking another sensor.",
+                DemoKind.Temperature,
+                "trigger", "Read the sensor when this fires.",
+                "temperature", "Temperature in degrees Celsius."),
+
+            ["iot.mlx90614"] = new BlockHelpEntry(
+                "Measures the temperature of an object without touching it (an infrared thermometer), and of the air around the sensor.",
+                "Point the sensor at the object from a few centimetres away. The object reading depends on the surface: shiny metal reads low.",
+                DemoKind.Temperature,
+                "trigger", "Measure when this fires.",
+                "object", "Temperature of what the sensor points at, in degrees Celsius.",
+                "ambient", "Temperature of the sensor itself, in degrees Celsius."),
+
+            ["iot.vl53l0x"] = new BlockHelpEntry(
+                "Measures distance with a laser (VL53L0X time-of-flight sensor), up to about 2 metres, more precisely than an ultrasonic sensor.",
+                "It is small and works at 3.3 V. The first measurement takes about a second while the chip starts. Dark or shiny surfaces shorten its range.",
+                DemoKind.Distance,
+                "trigger", "Measure when this fires.",
+                "distance", "Distance in centimetres.",
+                "millimetres", "Distance in millimetres."),
+
+            ["iot.ads1115"] = new BlockHelpEntry(
+                "Adds precise analog inputs: an ADS1115 has four inputs of 16 bits each and does not depend on Wi-Fi like the ESP32's own ADC2 pins.",
+                "Pick the channel (A0 to A3). The voltage is from 0 to 4.096 V; never feed it more than its own supply voltage.",
+                DemoKind.Level,
+                "trigger", "Read when this fires.",
+                "voltage", "Voltage on the channel, in volts.",
+                "raw", "The raw 16-bit reading."),
+
+            ["iot.ds3231"] = new BlockHelpEntry(
+                "Reads a DS3231 real-time clock: the date and time as text, and the chip's own temperature. It keeps time with a coin cell when the board is off.",
+                "The clock must be set once (with its time set from your code or another tool); this block only reads it.",
+                DemoKind.Screen,
+                "trigger", "Read the clock when this fires.",
+                "time", "Date and time as yyyy-MM-dd HH:mm:ss.",
+                "temperature", "Temperature of the chip in degrees Celsius."),
+
+            ["iot.pca9685"] = new BlockHelpEntry(
+                "Gives the board 16 more PWM outputs over two wires (a PCA9685): servos, LEDs or motors without using its own pins.",
+                "For hobby servos keep 50 Hz: 2.5 % is one end, 7.5 % the middle and 12.5 % the other end. Power the servos from their own supply.",
+                DemoKind.Servo,
+                "trigger", "Set the duty cycle when this fires.",
+                "duty", "Optional: the duty cycle, 0 to 100 %. Overrides the Duty property.",
+                "done", "Fires after the output was set."),
+
             ["math.calc"] = new BlockHelpEntry(
                 "Adds, subtracts, multiplies or divides two numbers, or takes the smaller or larger one.",
                 "Convert units: multiply by 1.8 and add 32 to turn °C into °F (use two Calculate blocks). Division by zero stops the flow with a clear message.",
