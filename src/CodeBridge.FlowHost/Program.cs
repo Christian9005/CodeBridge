@@ -18,7 +18,7 @@ namespace CodeBridge.FlowHost;
 
 /// <summary>
 /// Usage: CodeBridge.FlowHost &lt;command&gt; [--option value]...
-/// Commands: boards | ports | wifi-boards | catalog | validate | export | test | upload | ota | run | wifi-scan | wifi-status | wifi-config | wifi-unpair | monitor | mesh-status | mesh-scan | mesh-provision | ha-find | ha-test | ha-bridge | pio-info | pio-new | pio-build | pio-upload | pio-clean
+/// Commands: boards | ports | wifi-boards | catalog | validate | export | test | upload | ota | run | serve | wifi-scan | wifi-status | wifi-config | wifi-unpair | monitor | mesh-status | mesh-scan | mesh-provision | ha-find | ha-test | ha-bridge | pio-info | pio-new | pio-build | pio-upload | pio-clean
 /// </summary>
 internal static partial class Program
 {
@@ -39,7 +39,7 @@ internal static partial class Program
 
         if (args.Length == 0)
         {
-            Emit(new { type = "error", message = "Missing command. Use: boards, ports, catalog, validate, test, upload, run." });
+            Emit(new { type = "error", message = "Missing command. Use: boards, ports, catalog, validate, test, upload, run, serve." });
             return 2;
         }
 
@@ -77,6 +77,7 @@ internal static partial class Program
                 "test" => await TestAsync(options, cancellation.Token),
                 "upload" => await UploadAsync(options, cancellation.Token),
                 "run" => await RunAsync(options, cancellation),
+                "serve" => await ServeAsync(options, cancellation),
                 "wifi-scan" => await WifiScanAsync(options, cancellation.Token),
                 "wifi-status" => await WifiStatusAsync(options, cancellation.Token),
                 "wifi-config" => await WifiConfigAsync(options, cancellation.Token),

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **A flow that runs by itself**: `FlowHost serve` (and `FlowSupervisor` in `CodeBridge.Flow`) runs a flow again and again and connects again when the board goes away, with a growing wait; `--service` makes it a Windows service. See [docs/headless.md](docs/headless.md).
+- **.NET IoT drivers on a board** (proof of concept, `CodeBridge.IotBindings`): `BridgeI2cDevice` lets the drivers of `Iot.Device.Bindings` that take an `I2cDevice` run on a board over USB or Wi-Fi, and seven are flow blocks (SHT3x, MCP9808, MLX90614, VL53L0X, ADS1115, DS3231, PCA9685). `ModuleBlocks.Register` lets a package add blocks, and the simulator accepts virtual I2C chips (`AddI2cDevice`).
+
 ## [0.7.0] - 2026-10-17
 
 Plug and play for the WinForms apps: a new project runs the moment it is started, and the flow it runs is a `.cbflow` file you edit in Visual Studio.
