@@ -183,7 +183,7 @@ public class SerialTransport : ITransport
             }
 
             // Set up response waiter
-            _responseWaiter = new TaskCompletionSource<string>();
+            _responseWaiter = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             // Register cancellation
             using var registration = ct.Register(() =>

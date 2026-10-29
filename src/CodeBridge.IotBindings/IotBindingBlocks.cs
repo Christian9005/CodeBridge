@@ -19,9 +19,10 @@ namespace CodeBridge.IotBindings;
 /// </summary>
 /// <remarks>
 /// Adding a device is one <see cref="ModuleBlock"/> of about twenty lines: its ports and properties, how it is read, and the C# it exports to. This proof of
-/// concept ships seven; more than a hundred drivers in the package take an <c>I2cDevice</c> and follow the same pattern.
+/// concept ships a first batch; more than a hundred drivers in the package take an <c>I2cDevice</c> and follow the same pattern. The three generic
+/// blocks (scan, read register, write register) reach any chip that has no block yet.
 /// </remarks>
-public static class IotBindingBlocks
+public static partial class IotBindingBlocks
 {
     public const string Sht3x = "iot.sht3x";
     public const string Mcp9808 = "iot.mcp9808";
@@ -37,7 +38,7 @@ public static class IotBindingBlocks
     private static bool _registered;
 
     /// <summary>The blocks of this package, in toolbox order.</summary>
-    public static IReadOnlyList<ModuleBlock> All { get; } = Build();
+    public static IReadOnlyList<ModuleBlock> All { get; } = [.. Build(), .. More()];
 
     /// <summary>Adds the blocks to <see cref="ModuleBlocks"/>. Safe to call more than once.</summary>
     public static void Register()
@@ -196,7 +197,7 @@ public static class IotBindingBlocks
             ],
             Run = r => Read(r, () =>
             {
-                var driver = Cached(r, "pca9685", r.Int("address") * 10000 + r.Int("frequencyHz"), bus => new Pca9685(bus, r.Int("frequencyHz"), 0, false));
+                var driver = Cached(r, "pca9685", r.Int("address"), bus => new Pca9685(bus, r.Int("frequencyHz"), 0, false), variant: r.Int("frequencyHz").ToString());
                 var duty = Math.Clamp(r.InputOr<double>("duty", "duty"), 0, 100) / 100.0;
                 driver.SetDutyCycle(Math.Clamp(r.Int("channel"), 0, 15), duty);
                 return ModuleRun.Output(("done", true));
@@ -245,20 +246,23 @@ public static class IotBindingBlocks
         {
             return await Task.Run(work, run.Ct);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (ex is not OperationCanceledException and not I2cChipException)
         {
-            throw new InvalidOperationException($"I2C: {ex.Message} Check the wiring, the power and the address of the chip.", ex);
+            var reason = ex.Message.Trim();
+            if (!reason.EndsWith(".", StringComparison.Ordinal))
+                reason += ".";
+
+            throw new InvalidOperationException($"I2C: {reason} Check the wiring, the power and the address of the chip.", ex);
         }
     }
 
     private static readonly ConditionalWeakTable<IBoard, ConcurrentDictionary<string, object>> Drivers = new();
 
     /// <summary>One driver per board, device and address: starting a driver is the slow part, and the chip keeps its state between reads.</summary>
-    private static T Cached<T>(ModuleRun run, string kind, int key, Func<BridgeI2cDevice, T> create) where T : class
+    private static T Cached<T>(ModuleRun run, string kind, int address, Func<BridgeI2cDevice, T> create, string variant = "") where T : class
     {
         var board = run.Board;
         var cache = Drivers.GetOrCreateValue(board);
-        var address = kind == "pca9685" ? key / 10000 : key;
-        return (T)cache.GetOrAdd($"{kind}@{key}", _ => create(new BridgeI2cDevice(board.I2C, address)));
+        return (T)cache.GetOrAdd($"{kind}@{address}/{variant}", _ => create(new BridgeI2cDevice(board.I2C, address)));
     }
 }
