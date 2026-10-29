@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using CodeBridge.Core.Enums;
 using CodeBridge.ESP32;
@@ -38,7 +39,7 @@ public static class ModuleBlocks
     public const string Gate = "logic.gate";
     public const string Calc = "math.calc";
 
-    private static readonly Dictionary<string, ModuleBlock> ByType = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, ModuleBlock> ByType = new(StringComparer.OrdinalIgnoreCase);
 
     static ModuleBlocks()
     {
@@ -46,9 +47,19 @@ public static class ModuleBlocks
             ByType[block.Type] = block;
     }
 
-    public static IReadOnlyCollection<ModuleBlock> All => ByType.Values;
+    public static IReadOnlyCollection<ModuleBlock> All => ByType.Values.ToArray();
 
     public static bool TryGet(string type, out ModuleBlock block) => ByType.TryGetValue(type, out block!);
+
+    /// <summary>
+    /// Adds (or replaces) a block that lives outside this assembly: a plug-in package describes its blocks the same way and registers them once at start-up,
+    /// before any catalog, runtime or exporter is created. The block then shows up everywhere the built-in ones do.
+    /// </summary>
+    public static void Register(ModuleBlock block)
+    {
+        ArgumentNullException.ThrowIfNull(block);
+        ByType[block.Type] = block;
+    }
 
     /// <summary>The blocks offered on <paramref name="board"/>: the ones that only need GPIO everywhere, the rest on the ESP32 family.</summary>
     public static IEnumerable<ModuleBlock> For(BoardProfile board) =>

@@ -220,7 +220,7 @@ namespace CodeBridge.VisualStudio.Tour
                 Story = new[]
                 {
                     "Go wireless: give the board a Wi-Fi network once (see the WiFiSetup sample), then type its IP address in the Port box instead of a COM port.",
-                    "The ESP32 package already includes drivers for DHT, BME280, DS18B20, BH1750, MPU6050, ultrasonic and PIR sensors, OLED and LCD displays, NeoPixels, stepper and DC motors, relays, MQTT and OTA updates. Explore them from code today; they are coming to the block catalog.",
+                    "Sensors and modules are blocks in the toolbox: DHT, BME280, DS18B20, BH1750, MPU6050, ultrasonic and PIR sensors, OLED and LCD displays, NeoPixels, motors and relays, plus many I2C chips from the .NET IoT drivers (SHT3x, BMP280, SCD4x CO2, laser distance, real-time clocks...). For a chip with no block, I2C Scan finds its address and I2C Read and Write Register talk to it.",
                     "On the roadmap: controlling the RGB lighting of your PC through OpenRGB from the same flows."
                 },
                 Steps = new[]

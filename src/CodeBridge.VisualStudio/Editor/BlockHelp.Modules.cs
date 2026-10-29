@@ -167,6 +167,151 @@ namespace CodeBridge.VisualStudio.Editor
                 "steps", "Optional: the number of steps. Overrides the Steps property.",
                 "done", "Fires after the motor moved."),
 
+            ["iot.bmp280"] = new BlockHelpEntry(
+                "Reads a BMP280: air pressure, temperature and the altitude that pressure means.",
+                "Altitude is worked out from the pressure at sea level today (about 1013 hPa; look it up for your town for a precise value). Not the same as the BME280: this one has no humidity.",
+                DemoKind.Level,
+                "trigger", "Read the sensor when this fires.",
+                "pressure", "Air pressure in hectopascals.",
+                "temperature", "Temperature in degrees Celsius.",
+                "altitude", "Altitude in metres, from the sea-level pressure property."),
+
+            ["iot.bme280"] = new BlockHelpEntry(
+                "A small weather station: temperature, humidity, air pressure and the altitude that pressure means, from one BME280 chip.",
+                "The same chip as the Weather (BME280) block, read with the .NET IoT driver, plus the altitude. Altitude is worked out from the pressure at sea level today (about 1013 hPa).",
+                DemoKind.Temperature,
+                "trigger", "Read the sensor when this fires.",
+                "temperature", "Temperature in degrees Celsius.",
+                "humidity", "Relative humidity, 0 to 100 %.",
+                "pressure", "Air pressure in hectopascals.",
+                "altitude", "Altitude in metres, from the sea-level pressure property."),
+
+            ["iot.lm75"] = new BlockHelpEntry(
+                "Reads an LM75 (or a TMP75 or PCT2075): a simple digital thermometer on two wires.",
+                "Three address pins let eight of them share the same two wires, for example to measure several rooms.",
+                DemoKind.Temperature,
+                "trigger", "Read the sensor when this fires.",
+                "temperature", "Temperature in degrees Celsius."),
+
+            ["iot.sht4x"] = new BlockHelpEntry(
+                "Reads an SHT40, SHT41 or SHT45: temperature and humidity in one measurement.",
+                "The newest and most accurate of the SHT family. It has a fixed address that depends on the variant printed on the chip.",
+                DemoKind.Temperature,
+                "trigger", "Read the sensor when this fires.",
+                "temperature", "Temperature in degrees Celsius.",
+                "humidity", "Relative humidity, 0 to 100 %."),
+
+            ["iot.aht20"] = new BlockHelpEntry(
+                "Reads an AHT20 (also sold as AHT21): temperature and humidity from a very small, cheap chip.",
+                "Good for a room or a plant. Leave a second between reads: the chip needs time to measure.",
+                DemoKind.Temperature,
+                "trigger", "Read the sensor when this fires.",
+                "temperature", "Temperature in degrees Celsius.",
+                "humidity", "Relative humidity, 0 to 100 %."),
+
+            ["iot.scd4x"] = new BlockHelpEntry(
+                "Measures carbon dioxide with an SCD40 or SCD41, and the temperature and humidity beside it.",
+                "Above about 1000 ppm a closed room feels stuffy: use a Threshold block to light a LED or open a window. It measures every 5 seconds, so the first run after power-on says there is no reading yet.",
+                DemoKind.Level,
+                "trigger", "Read the sensor when this fires.",
+                "co2", "Carbon dioxide in parts per million (outdoors is about 420).",
+                "temperature", "Temperature in degrees Celsius.",
+                "humidity", "Relative humidity, 0 to 100 %."),
+
+            ["iot.max44009"] = new BlockHelpEntry(
+                "Measures how bright it is with a MAX44009, in lux, from moonlight to full sun.",
+                "Very low power and a wide range. Use a Threshold block to switch a lamp on when it gets dark.",
+                DemoKind.Light,
+                "trigger", "Read the sensor when this fires.",
+                "lux", "Light level in lux."),
+
+            ["iot.hmc5883l"] = new BlockHelpEntry(
+                "A magnetic compass (HMC5883L): the direction the board points to, in degrees from north.",
+                "Keep it away from motors, magnets and wires with current: they bend the field. Many cheap boards sold as HMC5883L carry a QMC5883L, a different chip that this block does not read.",
+                DemoKind.Tilt,
+                "trigger", "Read the compass when this fires.",
+                "heading", "Direction in degrees, 0 to 360 (0 = north).",
+                "x", "Magnetic field on X.",
+                "y", "Magnetic field on Y.",
+                "z", "Magnetic field on Z."),
+
+            ["iot.vl53l1x"] = new BlockHelpEntry(
+                "Measures distance with a VL53L1X laser, up to about 4 metres: twice the range of the VL53L0X.",
+                "The first measurement takes about a second while the chip starts. Dark or shiny surfaces shorten its range.",
+                DemoKind.Distance,
+                "trigger", "Measure when this fires.",
+                "distance", "Distance in centimetres.",
+                "millimetres", "Distance in millimetres."),
+
+            ["iot.ds1307"] = new BlockHelpEntry(
+                "Reads a DS1307 real-time clock: the date and time as text. It keeps time with a coin cell when the board is off.",
+                "The DS1307 drifts more than the DS3231 (a minute or so a month). The clock must be set once with another tool; this block only reads it.",
+                DemoKind.Screen,
+                "trigger", "Read the clock when this fires.",
+                "time", "Date and time as yyyy-MM-dd HH:mm:ss."),
+
+            ["iot.pcf8563"] = new BlockHelpEntry(
+                "Reads a PCF8563 real-time clock: the date and time as text. It keeps time with a coin cell when the board is off.",
+                "A low-power clock found on many small modules. The clock must be set once with another tool; this block only reads it.",
+                DemoKind.Screen,
+                "trigger", "Read the clock when this fires.",
+                "time", "Date and time as yyyy-MM-dd HH:mm:ss."),
+
+            ["iot.ht16k33-7seg"] = new BlockHelpEntry(
+                "Shows a number on a 4-digit 7-segment display driven by an HT16K33 (the Adafruit and many clone backpacks).",
+                "It fits four digits: 23.456 shows as 23.46 and a number too big shows ----. Wire a sensor block into value to make a thermometer.",
+                DemoKind.Screen,
+                "trigger", "Show the number when this fires.",
+                "value", "Optional: the number shown. Overrides the Value property.",
+                "done", "Fires after the number was shown."),
+
+            ["iot.pcf8574-write"] = new BlockHelpEntry(
+                "Sets the 8 pins of a PCF8574 expander with one number from 0 to 255: each bit is one pin.",
+                "A cheap way to get 8 more outputs for relays or LEDs. Many relay boards switch on with a 0, so 255 is all off and 254 switches the first one on.",
+                DemoKind.Relay,
+                "trigger", "Write when this fires.",
+                "value", "Optional: the number, 0 to 255. Overrides the Value property.",
+                "done", "Fires after the pins were set."),
+
+            ["iot.pcf8574-read"] = new BlockHelpEntry(
+                "Reads the 8 pins of a PCF8574 expander as one number from 0 to 255: each bit is one pin.",
+                "A pin must have been written as 1 (with Expander Write) to be used as an input: the chip pulls it up and a button to GND reads 0.",
+                DemoKind.Press,
+                "trigger", "Read when this fires.",
+                "value", "The pins as a number, 0 to 255."),
+
+            ["iot.mpr121"] = new BlockHelpEntry(
+                "Reads 12 capacitive touch keys (MPR121): touch a pad, a wire or a piece of foil with a finger.",
+                "The number has one bit per key: key 0 is 1, key 1 is 2, key 2 is 4, so keys 0 and 2 together read 5. Touched says whether any key is.",
+                DemoKind.Press,
+                "trigger", "Read the keys when this fires.",
+                "keys", "The touched keys as one number (bit 0 is key 0).",
+                "touched", "True while any key is touched."),
+
+            ["iot.i2c-scan"] = new BlockHelpEntry(
+                "Lists the chips that answer on the I2C bus, as addresses like 0x44, 0x76.",
+                "The quickest way to find out whether a sensor is wired and which address it has. Send it to a Debug block and press Run.",
+                DemoKind.Screen,
+                "trigger", "Scan when this fires.",
+                "devices", "The addresses found, for example 0x44, 0x76.",
+                "count", "How many chips answered."),
+
+            ["iot.i2c-read"] = new BlockHelpEntry(
+                "Reads 1 to 4 bytes from a register of any I2C chip and gives them as one number.",
+                "For a chip that has no block yet: its datasheet lists the address and the registers. Pick the byte order the datasheet uses; most use the most significant byte first.",
+                DemoKind.Number,
+                "trigger", "Read when this fires.",
+                "value", "The bytes as one number.",
+                "hex", "The bytes as hexadecimal text, for example 1A2B."),
+
+            ["iot.i2c-write"] = new BlockHelpEntry(
+                "Writes a number (1 to 4 bytes) to a register of any I2C chip: start a measurement, set a mode, change a setting.",
+                "For a chip that has no block yet: its datasheet lists the address and the registers. A wrong value can put some chips in an odd mode: cut the power to reset them.",
+                DemoKind.Number,
+                "trigger", "Write when this fires.",
+                "value", "Optional: the number written. Overrides the Value property.",
+                "done", "Fires after the register was written."),
+
             ["logic.threshold"] = new BlockHelpEntry(
                 "True when a number is above (or below) a limit: turns a reading into an on/off decision.",
                 "Wire a sensor into value and the result into a Relay or Digital Write. Example: a lamp that turns on when the light drops below a limit.",
@@ -181,6 +326,62 @@ namespace CodeBridge.VisualStudio.Editor
                 "a", "The first true/false value.",
                 "b", "The second true/false value (not needed for NOT).",
                 "result", "The combined value."),
+
+            // ---- .NET IoT bindings (CodeBridge.IotBindings): the host registers them, so they reach the toolbox like the built-in blocks
+            ["iot.sht3x"] = new BlockHelpEntry(
+                "Reads an SHT30, SHT31 or SHT35 over I2C: how warm it is and how humid the air is, more accurately than a DHT22.",
+                "I2C modules share two wires (SDA and SCL), so several can sit on the same pins. If it is not found, try the other address.",
+                DemoKind.Temperature,
+                "trigger", "Read the sensor when this fires.",
+                "temperature", "Temperature in degrees Celsius.",
+                "humidity", "Relative humidity, 0 to 100 %."),
+
+            ["iot.mcp9808"] = new BlockHelpEntry(
+                "Reads an MCP9808: a precision digital thermometer, accurate to half a degree.",
+                "Three address pins let you put up to eight on the same two wires. Good for thermostats and for checking another sensor.",
+                DemoKind.Temperature,
+                "trigger", "Read the sensor when this fires.",
+                "temperature", "Temperature in degrees Celsius."),
+
+            ["iot.mlx90614"] = new BlockHelpEntry(
+                "Measures the temperature of an object without touching it (an infrared thermometer), and of the air around the sensor.",
+                "Point the sensor at the object from a few centimetres away. The object reading depends on the surface: shiny metal reads low.",
+                DemoKind.Temperature,
+                "trigger", "Measure when this fires.",
+                "object", "Temperature of what the sensor points at, in degrees Celsius.",
+                "ambient", "Temperature of the sensor itself, in degrees Celsius."),
+
+            ["iot.vl53l0x"] = new BlockHelpEntry(
+                "Measures distance with a laser (VL53L0X time-of-flight sensor), up to about 2 metres, more precisely than an ultrasonic sensor.",
+                "It is small and works at 3.3 V. The first measurement takes about a second while the chip starts. Dark or shiny surfaces shorten its range.",
+                DemoKind.Distance,
+                "trigger", "Measure when this fires.",
+                "distance", "Distance in centimetres.",
+                "millimetres", "Distance in millimetres."),
+
+            ["iot.ads1115"] = new BlockHelpEntry(
+                "Adds precise analog inputs: an ADS1115 has four inputs of 16 bits each and does not depend on Wi-Fi like the ESP32's own ADC2 pins.",
+                "Pick the channel (A0 to A3). The voltage is from 0 to 4.096 V; never feed it more than its own supply voltage.",
+                DemoKind.Level,
+                "trigger", "Read when this fires.",
+                "voltage", "Voltage on the channel, in volts.",
+                "raw", "The raw 16-bit reading."),
+
+            ["iot.ds3231"] = new BlockHelpEntry(
+                "Reads a DS3231 real-time clock: the date and time as text, and the chip's own temperature. It keeps time with a coin cell when the board is off.",
+                "The clock must be set once (with its time set from your code or another tool); this block only reads it.",
+                DemoKind.Screen,
+                "trigger", "Read the clock when this fires.",
+                "time", "Date and time as yyyy-MM-dd HH:mm:ss.",
+                "temperature", "Temperature of the chip in degrees Celsius."),
+
+            ["iot.pca9685"] = new BlockHelpEntry(
+                "Gives the board 16 more PWM outputs over two wires (a PCA9685): servos, LEDs or motors without using its own pins.",
+                "For hobby servos keep 50 Hz: 2.5 % is one end, 7.5 % the middle and 12.5 % the other end. Power the servos from their own supply.",
+                DemoKind.Servo,
+                "trigger", "Set the duty cycle when this fires.",
+                "duty", "Optional: the duty cycle, 0 to 100 %. Overrides the Duty property.",
+                "done", "Fires after the output was set."),
 
             ["math.calc"] = new BlockHelpEntry(
                 "Adds, subtracts, multiplies or divides two numbers, or takes the smaller or larger one.",

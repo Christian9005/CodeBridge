@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CodeBridge Flow</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f6f8; --panel: #ffffff; --panel-2: #eef0f4; --line: #d5d9e0; --text: #1c2330; --muted: #5b6577;
+    --accent: #0b6bcb; --accent-ink: #ffffff; --live: #12803a; --warn: #9a6100; --fault: #c0262d;
+    --canvas: #fafbfc; --grid: #e6e9ee; --node: #ffffff; --wire: #7b8598; --focus: #0b6bcb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1d22; --panel: #24272e; --panel-2: #2c3039; --line: #3a3f4b; --text: #e8ebf0; --muted: #a2abbb;
+      --accent: #4c9dff; --accent-ink: #0b1220; --live: #3ec26a; --warn: #f0b34a; --fault: #ff7b80;
+      --canvas: #1e2025; --grid: #2a2d35; --node: #2b2f38; --wire: #8892a6; --focus: #4c9dff;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 13px/1.4 "Segoe UI", system-ui, -apple-system, sans-serif; display: grid; grid-template: "top top top" auto "tool canvas props" 1fr "log log log" 150px / 230px 1fr 280px; }
+  button, select, input { font: inherit; color: inherit; }
+  button { background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 5px 11px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  button:disabled { opacity: .5; cursor: default; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+  header { grid-area: top; display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  header h1 { font-size: 14px; margin: 0 8px 0 0; }
+  header .spacer { flex: 1; }
+  select, input[type=text], input[type=number] { background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 4px 7px; min-width: 0; }
+  .state { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; }
+  .state i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .state.running i { background: var(--live); }
+  .state.waiting i { background: var(--warn); }
+  .chip { border: 1px solid var(--warn); color: var(--warn); border-radius: 4px; padding: 1px 7px; font-weight: 600; font-size: 11px; letter-spacing: .04em; }
+  aside { background: var(--panel); overflow: auto; }
+  #toolbox { grid-area: tool; border-right: 1px solid var(--line); padding: 8px; }
+  #props { grid-area: props; border-left: 1px solid var(--line); padding: 12px; }
+  #toolbox input { width: 100%; margin-bottom: 8px; }
+  #toolbox h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 12px 0 4px; }
+  #toolbox button.block { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; background: none; border: 0; border-radius: 4px; padding: 4px 6px; }
+  #toolbox button.block:hover { background: var(--panel-2); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  #canvasWrap { grid-area: canvas; position: relative; overflow: hidden; background: var(--canvas); }
+  svg#canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+  svg#canvas.panning { cursor: grabbing; }
+  .grid-line { stroke: var(--grid); stroke-width: 1; }
+  .wire { fill: none; stroke: var(--wire); stroke-width: 2; }
+  .wire.sel { stroke: var(--accent); stroke-width: 3; }
+  .wire-hit { fill: none; stroke: transparent; stroke-width: 12; cursor: pointer; }
+  .node rect.body { fill: var(--node); stroke: var(--line); stroke-width: 1; rx: 6; }
+  .node.sel rect.body { stroke: var(--accent); stroke-width: 2; }
+  .node.error rect.body { stroke: var(--fault); stroke-width: 2; }
+  .node.warning rect.body { stroke: var(--warn); stroke-width: 2; }
+  .node.running rect.body { stroke: var(--live); stroke-width: 2; }
+  .node.failed rect.body { stroke: var(--fault); stroke-width: 3; }
+  .node text { fill: var(--text); font-size: 12px; pointer-events: none; }
+  .node .muted { fill: var(--muted); font-size: 11px; }
+  .node .title { font-weight: 600; }
+  .node .head { cursor: move; }
+  .port { stroke: var(--node); stroke-width: 2; cursor: crosshair; }
+  .port:hover { stroke: var(--accent); }
+  #empty[hidden] { display: none; }
+  #empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); pointer-events: none; text-align: center; }
+  #props h2 { font-size: 14px; margin: 0 0 2px; }
+  #props .meta { color: var(--muted); margin-bottom: 10px; }
+  #props label { display: block; font-size: 11px; font-weight: 600; margin: 10px 0 3px; }
+  #props input, #props select { width: 100%; }
+  #props .help { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  #log { grid-area: log; border-top: 1px solid var(--line); background: var(--panel); display: grid; grid-template-columns: 1fr 1fr; min-height: 0; }
+  #log section { overflow: auto; padding: 6px 12px; min-height: 0; border-right: 1px solid var(--line); }
+  #log h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 4px; position: sticky; top: 0; background: var(--panel); }
+  .issue { padding: 2px 0; cursor: pointer; }
+  .issue b { display: inline-block; min-width: 56px; }
+  .issue.error b { color: var(--fault); } .issue.warning b { color: var(--warn); }
+  .line { font: 12px/1.4 ui-monospace, Consolas, monospace; white-space: pre-wrap; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  @media (max-width: 900px) { body { grid-template: "top" auto "canvas" 1fr "log" 130px / 1fr; } #toolbox, #props { display: none; } }
+  @media (prefers-reduced-motion: no-preference) { .node rect.body { transition: stroke .15s; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>CodeBridge Flow</h1>
+  <span id="file" class="state" title="The file this editor saves to"></span>
+  <label class="sr" for="board">Board</label>
+  <select id="board" title="Board the flow is for"></select>
+  <span id="simChip" class="chip" hidden>SIMULATOR</span>
+  <span class="spacer"></span>
+  <span id="state" class="state" role="status"><i></i><span>Idle</span></span>
+  <button id="fit" title="Show the whole flow (F)">Fit</button>
+  <button id="validate">Validate</button>
+  <button id="save" class="primary">Save</button>
+  <button id="run">Run</button>
+  <button id="stop" disabled>Stop</button>
+</header>
+
+<aside id="toolbox" aria-label="Blocks">
+  <label class="sr" for="search">Search blocks</label>
+  <input id="search" type="text" placeholder="Search blocks…" autocomplete="off">
+  <div id="blocks"></div>
+</aside>
+
+<main id="canvasWrap">
+  <svg id="canvas" role="application" aria-label="Flow canvas. Drag blocks, drag from an output to an input to connect, Delete removes the selection."></svg>
+  <div id="empty" hidden><div><p><b>This flow is empty.</b></p><p>Click a block in the toolbox to add it.</p></div></div>
+</main>
+
+<aside id="props" aria-label="Properties"></aside>
+
+<footer id="log">
+  <section aria-label="Problems"><h3>Problems <span id="problemCount"></span></h3><div id="issues"></div></section>
+  <section aria-label="Run log"><h3>Run</h3><div id="runlog"></div></section>
+</footer>
+
+<script>
+(() => {
+  'use strict';
+  const key = location.hash.slice(1);
+  const NS = 'http://www.w3.org/2000/svg';
+  const W = 210, MAX_W = 340, HEAD = 28, ROW = 22;
+  // a block is as wide as its title (plus the dot and room for the live status), never narrower than W nor wider than MAX_W
+  const measure = document.createElement('canvas').getContext('2d');
+  const widths = new Map();
+  const widthOf = n => {
+    const title = state.catalog.get(n.type)?.displayName || n.type + ' (unknown)';
+    if (!widths.has(title)) { measure.font = `600 12px ${getComputedStyle(document.body).fontFamily}`; widths.set(title, Math.min(MAX_W, Math.max(W, Math.ceil(26 + measure.measureText(title).width + 70)))); }
+    return widths.get(title);
+  };
+  const palette = { Flow: '#a855f7', Logic: '#3b9be8', GPIO: '#14b8a6', Math: '#ec6aa8', Modules: '#c08bf0', Sensors: '#d65bd0', Actuators: '#f08a4b', Debug: '#8892a6' };
+  const colorOf = c => palette[c] || '#7b8598';
+
+  const state = { doc: null, catalog: new Map(), selected: null, selectedWire: null, view: { x: 40, y: 30, k: 1 }, live: new Map(), issues: [], dirty: false, running: false };
+  const $ = id => document.getElementById(id);
+  const svg = $('canvas');
+  const world = el('g', {}); svg.append(world);
+  const wiresLayer = el('g', {}); const nodesLayer = el('g', {}); const dragLayer = el('g', {});
+  world.append(wiresLayer, nodesLayer, dragLayer);
+
+  function el(name, attrs = {}, text) { const n = document.createElementNS(NS, name); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); if (text !== undefined) n.textContent = text; return n; }
+  function h(tag, attrs = {}, ...kids) { const n = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === 'class') n.className = v; else if (k.startsWith('on')) n.addEventListener(k.slice(2), v); else n.setAttribute(k, v); } n.append(...kids); return n; }
+
+  async function api(path, options = {}) {
+    const response = await fetch('/api/' + path, { ...options, headers: { 'X-CodeBridge-Key': key, ...(options.headers || {}) } });
+    if (!response.ok) throw new Error(`${path}: ${response.status}`);
+    return response.json();
+  }
+
+  // ------------------------------------------------------------------ model helpers
+  const block = type => state.catalog.get(type);
+  const inputs = type => (block(type)?.ports || []).filter(p => p.direction === 'input');
+  const outputs = type => (block(type)?.ports || []).filter(p => p.direction === 'output');
+  const nodeById = id => state.doc.nodes.find(n => n.id === id);
+  const rows = n => Math.max(inputs(n.type).length, outputs(n.type).length, 1);
+  const summaryOf = n => {
+    const def = block(n.type); if (!def) return [];
+    return def.properties.filter(p => !p.isAdvanced && n.parameters && n.parameters[p.name] !== undefined && n.parameters[p.name] !== null).slice(0, 2).map(p => { const v = n.parameters[p.name]; const o = p.options?.find(o => String(o.value) === String(v)); return `${p.name}: ${o ? o.label : v}`; });
+  };
+  const height = n => HEAD + rows(n) * ROW + (summaryOf(n).length ? summaryOf(n).length * 15 + 8 : 6);
+  const portPos = (n, name, dir) => {
+    const list = dir === 'input' ? inputs(n.type) : outputs(n.type);
+    const i = Math.max(0, list.findIndex(p => p.name === name));
+    return { x: n.position.x + (dir === 'input' ? 0 : widthOf(n)), y: n.position.y + HEAD + i * ROW + ROW / 2 };
+  };
+  const dirty = () => { state.dirty = true; $('save').textContent = 'Save *'; scheduleValidate(); };
+
+  // ------------------------------------------------------------------ rendering
+  function render() {
+    wiresLayer.replaceChildren(); nodesLayer.replaceChildren();
+    world.setAttribute('transform', `translate(${state.view.x} ${state.view.y}) scale(${state.view.k})`);
+    for (const c of state.doc.connections) {
+      const from = nodeById(c.fromNodeId), to = nodeById(c.toNodeId); if (!from || !to) continue;
+      const a = portPos(from, c.fromPort, 'output'), b = portPos(to, c.toPort, 'input');
+      const d = `M${a.x},${a.y} C${a.x + 60},${a.y} ${b.x - 60},${b.y} ${b.x},${b.y}`;
+      const g = el('g', {});
+      g.append(el('path', { d, class: 'wire' + (state.selectedWire === c.id ? ' sel' : '') }));
+      const hit = el('path', { d, class: 'wire-hit' });
+      hit.addEventListener('pointerdown', e => { e.stopPropagation(); state.selectedWire = c.id; state.selected = null; render(); renderProps(); });
+      g.append(hit); wiresLayer.append(g);
+    }
+    for (const n of state.doc.nodes) nodesLayer.append(nodeView(n));
+    $('empty').hidden = state.doc.nodes.length > 0;
+  }
+
+  function nodeView(n) {
+    const def = block(n.type); const live = state.live.get(n.id); const issue = state.issues.filter(i => i.nodeId === n.id);
+    const cls = ['node']; if (state.selected === n.id) cls.push('sel');
+    if (issue.some(i => i.severity === 'error')) cls.push('error'); else if (issue.length) cls.push('warning');
+    if (live?.status === 'running') cls.push('running'); if (live?.status === 'failed') cls.push('failed');
+    const g = el('g', { class: cls.join(' '), transform: `translate(${n.position.x} ${n.position.y})`, 'data-id': n.id });
+    const hgt = height(n);
+    const w = widthOf(n);
+    g.append(el('rect', { class: 'body', width: w, height: hgt }));
+    g.append(el('rect', { class: 'head', width: w, height: HEAD, rx: 6, fill: colorOf(def?.category), 'fill-opacity': '.22' }));
+    g.append(el('circle', { cx: 14, cy: HEAD / 2, r: 4.5, fill: colorOf(def?.category) }));
+    g.append(el('text', { x: 26, y: 18, class: 'title' }, def ? def.displayName : n.type + ' (unknown)'));
+    if (live?.status) g.append(el('text', { x: w - 8, y: 18, class: 'muted', 'text-anchor': 'end' }, live.status));
+    const head = g.children[1];
+    head.addEventListener('pointerdown', e => startDragNode(e, n));
+    g.addEventListener('pointerdown', e => { if (e.target.classList.contains('port')) return; e.stopPropagation(); select(n.id); });
+    inputs(n.type).forEach((p, i) => port(g, n, p, 'input', 0, HEAD + i * ROW + ROW / 2));
+    outputs(n.type).forEach((p, i) => port(g, n, p, 'output', w, HEAD + i * ROW + ROW / 2));
+    summaryOf(n).forEach((t, i) => g.append(el('text', { x: 10, y: HEAD + rows(n) * ROW + 14 + i * 15, class: 'muted' }, t)));
+    if (live?.outputs) { const t = Object.entries(live.outputs).filter(([, v]) => v !== null).map(([k, v]) => `${k}=${v}`).join('  '); if (t) g.append(el('text', { x: 10, y: hgt + 14, class: 'muted' }, t.length > 34 ? t.slice(0, 33) + '…' : t)); }
+    return g;
+  }
+
+  function port(g, n, p, dir, x, y) {
+    const c = el('circle', { cx: x, cy: y, r: 5.5, class: 'port', fill: p.valueKind === 'trigger' ? '#a855f7' : '#14b8a6', 'data-node': n.id, 'data-port': p.name, 'data-dir': dir });
+    c.append(el('title', {}, `${p.name} (${p.valueKind})`));
+    c.addEventListener('pointerdown', e => { e.stopPropagation(); if (dir === 'output') startLink(e, n, p); });
+    g.append(c);
+    g.append(el('text', { x: dir === 'input' ? 12 : x - 12, y: y + 4, 'text-anchor': dir === 'input' ? 'start' : 'end' }, p.name));
+  }
+
+  function fit() {
+    const r = svg.getBoundingClientRect(); const nodes = state.doc.nodes; if (!nodes.length || !r.width) return;
+    const x0 = Math.min(...nodes.map(n => n.position.x)), y0 = Math.min(...nodes.map(n => n.position.y));
+    const x1 = Math.max(...nodes.map(n => n.position.x + widthOf(n))), y1 = Math.max(...nodes.map(n => n.position.y + height(n) + 16));
+    const k = Math.min(1.2, Math.max(.3, Math.min((r.width - 60) / (x1 - x0), (r.height - 60) / (y1 - y0))));
+    state.view = { k, x: (r.width - (x1 - x0) * k) / 2 - x0 * k, y: (r.height - (y1 - y0) * k) / 2 - y0 * k }; render();
+  }
+
+  // ------------------------------------------------------------------ interaction
+  const toWorld = e => { const r = svg.getBoundingClientRect(); return { x: (e.clientX - r.left - state.view.x) / state.view.k, y: (e.clientY - r.top - state.view.y) / state.view.k }; };
+
+  function startDragNode(e, n) {
+    e.stopPropagation(); select(n.id);
+    const start = toWorld(e), origin = { ...n.position }; let moved = false;
+    const move = ev => { const p = toWorld(ev); n.position = { x: Math.round(origin.x + p.x - start.x), y: Math.round(origin.y + p.y - start.y) }; moved = true; render(); };
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); if (moved) dirty(); };
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+  }
+
+  function startLink(e, node, p) {
+    const a = portPos(node, p.name, 'output'); const line = el('path', { class: 'wire', 'stroke-dasharray': '5 4' }); dragLayer.append(line);
+    const move = ev => { const b = toWorld(ev); line.setAttribute('d', `M${a.x},${a.y} C${a.x + 60},${a.y} ${b.x - 60},${b.y} ${b.x},${b.y}`); };
+    const up = ev => {
+      window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); dragLayer.replaceChildren();
+      const target = document.elementFromPoint(ev.clientX, ev.clientY);
+      if (target?.dataset?.dir === 'input') connect(node.id, p.name, target.dataset.node, target.dataset.port);
+    };
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); move(e);
+  }
+
+  function connect(fromNode, fromPort, toNode, toPort) {
+    if (fromNode === toNode) return say('A block cannot be wired to itself.');
+    // an input takes one wire: a new one replaces the old
+    state.doc.connections = state.doc.connections.filter(c => !(c.toNodeId === toNode && c.toPort === toPort));
+    state.doc.connections.push({ id: crypto.randomUUID().replaceAll('-', ''), fromNodeId: fromNode, fromPort, toNodeId: toNode, toPort });
+    dirty(); render();
+  }
+
+  svg.addEventListener('pointerdown', e => {
+    state.selected = null; state.selectedWire = null; render(); renderProps();
+    const sx = e.clientX, sy = e.clientY, ox = state.view.x, oy = state.view.y; svg.classList.add('panning');
+    const move = ev => { state.view.x = ox + ev.clientX - sx; state.view.y = oy + ev.clientY - sy; world.setAttribute('transform', `translate(${state.view.x} ${state.view.y}) scale(${state.view.k})`); };
+    const up = () => { svg.classList.remove('panning'); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+  });
+  svg.addEventListener('wheel', e => {
+    e.preventDefault(); const r = svg.getBoundingClientRect(); const k = Math.min(2, Math.max(.3, state.view.k * (e.deltaY < 0 ? 1.1 : 1 / 1.1)));
+    const mx = e.clientX - r.left, my = e.clientY - r.top; state.view.x = mx - (mx - state.view.x) * k / state.view.k; state.view.y = my - (my - state.view.y) * k / state.view.k; state.view.k = k; render();
+  }, { passive: false });
+  window.addEventListener('keydown', e => {
+    if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
+    if (e.key === 'f' || e.key === 'F') return fit();
+    if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+    if (state.selected) { state.doc.nodes = state.doc.nodes.filter(n => n.id !== state.selected); state.doc.connections = state.doc.connections.filter(c => c.fromNodeId !== state.selected && c.toNodeId !== state.selected); state.selected = null; }
+    else if (state.selectedWire) { state.doc.connections = state.doc.connections.filter(c => c.id !== state.selectedWire); state.selectedWire = null; } else return;
+    dirty(); render(); renderProps();
+  });
+
+  function select(id) { state.selected = id; state.selectedWire = null; render(); renderProps(); }
+
+  function addBlock(type) {
+    const def = block(type); const r = svg.getBoundingClientRect(); const n = state.doc.nodes.length;
+    const params = {}; for (const p of def.properties) if (p.defaultValue !== undefined && p.defaultValue !== null) params[p.name] = p.defaultValue;
+    const node = { id: crypto.randomUUID().replaceAll('-', '').slice(0, 12), type, position: { x: Math.round((r.width / 2 - state.view.x) / state.view.k - W / 2 + (n % 5) * 24), y: Math.round((r.height / 2 - state.view.y) / state.view.k - 40 + (n % 5) * 24) }, parameters: params };
+    state.doc.nodes.push(node); dirty(); select(node.id);
+  }
+
+  // ------------------------------------------------------------------ side panels
+  function renderToolbox() {
+    const q = $('search').value.trim().toLowerCase(); const root = $('blocks'); root.replaceChildren(); let cat = null;
+    for (const b of [...state.catalog.values()].sort((a, b) => a.category.localeCompare(b.category) || a.displayName.localeCompare(b.displayName))) {
+      if (q && !(b.displayName + ' ' + b.description + ' ' + b.type).toLowerCase().includes(q)) continue;
+      if (b.category !== cat) { cat = b.category; root.append(h('h3', {}, cat)); }
+      const btn = h('button', { class: 'block', type: 'button', title: b.description || '', onclick: () => addBlock(b.type) }, h('span', { class: 'dot', style: `background:${colorOf(b.category)}` }), b.displayName);
+      root.append(btn);
+    }
+  }
+
+  function renderProps() {
+    const root = $('props'); root.replaceChildren();
+    const n = state.selected && nodeById(state.selected);
+    if (!n) { root.append(h('h2', {}, state.doc.name), h('div', { class: 'meta' }, `${state.doc.nodes.length} blocks · ${state.doc.connections.length} wires`), h('p', {}, 'Click a block in the toolbox to add it. Drag from an output dot to an input dot to wire two blocks. Delete removes the selection.')); return; }
+    const def = block(n.type); root.append(h('h2', {}, def?.displayName || n.type), h('div', { class: 'meta' }, `${def?.category || ''} · ${n.id}`), h('p', {}, def?.description || ''));
+    for (const p of def?.properties || []) {
+      const id = 'p-' + p.name; const value = n.parameters?.[p.name] ?? p.defaultValue ?? '';
+      root.append(h('label', { for: id }, p.name + (p.required ? ' *' : '')));
+      let input;
+      if (p.options?.length) { input = h('select', { id }); for (const o of p.options) { const opt = h('option', { value: String(o.value) }, o.label); if (String(o.value) === String(value)) opt.selected = true; input.append(opt); } input.addEventListener('change', () => setParam(n, p, input.value)); }
+      else if (p.valueKind === 'boolean') { input = h('select', { id }, h('option', { value: 'true' }, 'Yes'), h('option', { value: 'false' }, 'No')); input.value = String(value === true || value === 'true'); input.addEventListener('change', () => setParam(n, p, input.value)); }
+      else { input = h('input', { id, type: p.valueKind === 'integer' || p.valueKind === 'number' ? 'number' : 'text', value: String(value), step: p.valueKind === 'integer' ? '1' : 'any' }); input.addEventListener('input', () => setParam(n, p, input.value)); }
+      root.append(input);
+    }
+  }
+
+  function setParam(n, p, raw) {
+    let v = raw;
+    if (p.valueKind === 'integer') v = raw === '' ? null : Math.round(Number(raw)); else if (p.valueKind === 'number') v = raw === '' ? null : Number(raw); else if (p.valueKind === 'boolean') v = raw === 'true';
+    else if (p.options?.length) { const o = p.options.find(o => String(o.value) === raw); v = o ? o.value : raw; }
+    n.parameters = n.parameters || {}; n.parameters[p.name] = v; dirty(); render();
+  }
+
+  function renderIssues() {
+    const root = $('issues'); root.replaceChildren();
+    $('problemCount').textContent = state.issues.length ? `(${state.issues.length})` : '';
+    if (!state.issues.length) root.append(h('div', { class: 'issue' }, 'No problems.'));
+    for (const i of state.issues) root.append(h('div', { class: 'issue ' + i.severity, onclick: () => i.nodeId && nodeById(i.nodeId) && select(i.nodeId) }, h('b', {}, i.severity === 'error' ? 'Error' : 'Warning'), i.message));
+  }
+
+  function say(text) { const l = h('div', { class: 'line' }, `${new Date().toLocaleTimeString()}  ${text}`); const root = $('runlog'); root.append(l); l.scrollIntoView({ block: 'nearest' }); }
+
+  // ------------------------------------------------------------------ server
+  let timer = 0;
+  function scheduleValidate() { clearTimeout(timer); timer = setTimeout(() => send(false), 500); }
+  async function send(save) {
+    try {
+      const result = await api('flow?save=' + save, { method: 'PUT', body: JSON.stringify(state.doc) });
+      state.issues = result.issues || []; renderIssues(); render();
+      if (save) { if (result.saved) { state.dirty = false; $('save').textContent = 'Save'; say('Saved.'); } else say('Not saved: fix the errors first.'); }
+      return result;
+    } catch (e) { say('Could not reach the editor: ' + e.message); }
+  }
+
+  function setRunning(running, label) {
+    state.running = running; $('run').disabled = running; $('stop').disabled = !running;
+    const s = $('state'); s.className = 'state' + (running ? ' running' : ''); s.lastChild.textContent = label || (running ? 'Running' : 'Idle');
+  }
+
+  function listen() {
+    const source = new EventSource('/api/events?k=' + key);
+    source.onmessage = m => {
+      const e = JSON.parse(m.data);
+      if (e.type === 'state') { setRunning(e.running); if (!e.running) { state.live.clear(); render(); } }
+      else if (e.type === 'supervisor') {
+        if (e.kind === 'waiting') { const s = $('state'); s.className = 'state waiting'; s.lastChild.textContent = 'Reconnecting'; }
+        if (e.kind === 'connected') setRunning(true);
+        if (e.kind !== 'iteration') say(`${e.kind}: ${e.message}`);
+      } else if (e.type === 'node') {
+        const prev = state.live.get(e.nodeId) || {};
+        if (e.kind === 'nodestarted') state.live.set(e.nodeId, { ...prev, status: 'running' });
+        else if (e.kind === 'nodecompleted') state.live.set(e.nodeId, { status: 'done', outputs: e.outputs });
+        else if (e.kind === 'nodefailed') { state.live.set(e.nodeId, { status: 'failed' }); say(`${e.blockType}: ${e.message || 'failed'}`); }
+        else if (e.kind === 'nodeskipped') state.live.set(e.nodeId, { status: 'skipped' });
+        render();
+      }
+    };
+    source.onerror = () => { setRunning(false, 'Disconnected'); };
+  }
+
+  $('fit').onclick = fit;
+  $('save').onclick = () => send(true);
+  $('validate').onclick = async () => { const r = await send(false); if (r) say(r.valid ? 'The flow is valid.' : 'The flow has errors.'); };
+  $('run').onclick = async () => { const r = await send(false); if (!r?.valid) return say('Fix the errors before running.'); const s = await api('run', { method: 'POST' }); say(s.started ? 'Starting…' : s.message); };
+  $('stop').onclick = () => api('stop', { method: 'POST' });
+  $('search').addEventListener('input', renderToolbox);
+  $('board').onchange = async () => { state.doc.boardId = $('board').value; await loadCatalog(); dirty(); render(); renderProps(); };
+  window.addEventListener('beforeunload', e => { if (state.dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+  async function loadCatalog() {
+    const c = await api('catalog?board=' + encodeURIComponent(state.doc.boardId));
+    state.catalog = new Map(c.blocks.map(b => [b.type, b])); renderToolbox();
+  }
+
+  async function init() {
+    if (!key) { document.body.innerHTML = '<p style="padding:2rem">Open the address printed in the terminal: it ends with the key (#…).</p>'; return; }
+    const info = await api('state'); state.doc = await api('flow');
+    state.doc.nodes ||= []; state.doc.connections ||= [];
+    $('file').textContent = info.file; $('board').replaceChildren(...info.boards.map(b => h('option', { value: b.id }, b.displayName))); $('board').value = state.doc.boardId;
+    $('simChip').hidden = info.target.toLowerCase() !== 'simulator'; $('simChip').title = 'Runs on the virtual board: nothing real is switched';
+    await loadCatalog(); setRunning(info.running); render(); fit(); renderProps(); renderIssues(); listen(); send(false);
+  }
+  init().catch(e => { document.body.append(h('p', { style: 'padding:2rem' }, 'Could not start: ' + e.message)); });
+})();
+</script>
+</body>
+</html>

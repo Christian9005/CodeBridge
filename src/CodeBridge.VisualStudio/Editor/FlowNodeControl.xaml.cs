@@ -24,11 +24,19 @@ namespace CodeBridge.VisualStudio.Editor
 
     public partial class FlowNodeControl : UserControl
     {
+        /// <summary>The narrowest a block is, and the width used to place a new block before it exists.</summary>
         public const double NodeWidth = 168;
+
+        /// <summary>A block grows with its title up to this width; a longer title ends with an ellipsis (the full name is in the tooltip).</summary>
+        public const double MaxNodeWidth = 320;
+
         public const double PortTop = 41;
         public const double PortPitch = 22;
 
         public CodeBridge.Flow.FlowNode NodeData { get; private set; }
+
+        /// <summary>The width of this block on the canvas: enough for its title (see <see cref="WidthFor"/>).</summary>
+        public double BlockWidth { get; private set; } = NodeWidth;
         public CodeBridge.Flow.FlowBlockDefinition? Definition { get; private set; }
 
         public Action<FlowNodeControl, MouseButtonEventArgs>? NodeMouseDown;
@@ -71,6 +79,9 @@ namespace CodeBridge.VisualStudio.Editor
                 ToolTip = $"Unknown block '{data.Type}' for {catalog.DisplayName}. It is kept in the file but cannot run.";
                 SetStatus(NodeStatus.Warning, "Unknown block for the selected board");
             }
+
+            BlockWidth = WidthFor(TitleText.Text, new Typeface(TitleText.FontFamily, TitleText.FontStyle, TitleText.FontWeight, TitleText.FontStretch), TitleText.FontSize);
+            Width = BlockWidth;
 
             RefreshSummary();
 
@@ -250,6 +261,29 @@ namespace CodeBridge.VisualStudio.Editor
             return panel;
         }
 
+        /// <summary>
+        /// How wide a block must be to show <paramref name="title"/> whole: the margins, the category dot, the title and room for the status badge,
+        /// never narrower than <see cref="NodeWidth"/> nor wider than <see cref="MaxNodeWidth"/>.
+        /// </summary>
+        internal static double WidthFor(string title, Typeface typeface, double fontSize)
+        {
+            var text = new FormattedText(title ?? string.Empty, System.Globalization.CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, typeface, fontSize, Brushes.Black, 1.0);
+            var needed = 10 + 8 + 8 + text.WidthIncludingTrailingWhitespace + BadgeReserve(typeface) + 8;
+            return Math.Min(MaxNodeWidth, Math.Max(NodeWidth, Math.Ceiling(needed)));
+        }
+
+        /// <summary>
+        /// Room kept beside the title for the status badge, so the badge never covers the name: the widest of its texts (RUN, OK, SKIP, FAIL, WARN)
+        /// in the badge's bold 9 pt, its padding and its margin.
+        /// </summary>
+        private static double BadgeReserve(Typeface title)
+        {
+            var bold = new Typeface(title.FontFamily, FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
+            var widest = new[] { "RUN", "OK", "SKIP", "FAIL", "WARN" }
+                .Max(word => new FormattedText(word, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight, bold, 9, Brushes.Black, 1.0).WidthIncludingTrailingWhitespace);
+            return Math.Ceiling(widest) + 8 + 6;
+        }
+
         /// <summary>Canvas position of a port's centre.</summary>
         public Point GetPortPosition(string portName, FlowPortDirection direction)
         {
@@ -275,7 +309,7 @@ namespace CodeBridge.VisualStudio.Editor
                 }
             }
 
-            var portX = direction == FlowPortDirection.Input ? nodeX : nodeX + NodeWidth;
+            var portX = direction == FlowPortDirection.Input ? nodeX : nodeX + BlockWidth;
             var portY = nodeY + PortTop + (portIndex * PortPitch);
             return new Point(portX, portY);
         }

@@ -95,6 +95,9 @@ relays, buzzers, servos, DC/stepper motors, RGB LED, WS2812B NeoPixel, SSD1306 O
 |---|---|
 | `CodeBridge.Hosting` | `services.AddCodeBridge()`: one shared, thread-safe board connection with reconnection and the simulator, for ASP.NET Core, workers and MAUI |
 | `DeviceFleet` (in `CodeBridge.Hosting`) | Any number of named boards (USB, Wi-Fi, or boards reached over an [ESP-NOW mesh](docs/mesh.md) through a gateway that keeps its Wi-Fi) behind one object, with discovery, persistence and per-device reconnection |
+| `FlowSupervisor` (in `CodeBridge.Flow`) and `FlowHost serve` | A flow that keeps running by itself (Windows service, container, headless PC): it reconnects when the board goes away. See [docs/headless.md](docs/headless.md) |
+| `CodeBridge.IotBindings` | The .NET IoT device drivers (`Iot.Device.Bindings`) on a board over its I2C bus, and 25 of them as flow blocks (weather, air quality, light, distance, clocks, a display, I/O expanders) plus three generic blocks (I2C scan, read and write register) for any chip. See [docs/iot-bindings.md](docs/iot-bindings.md). Proof of concept |
+| `codebridge-web` (`CodeBridge.WebEditor`) | The flow editor in a browser, served from your own computer: design, validate, save and run a `.cbflow` on Windows, Linux or macOS without Visual Studio. See [docs/web-editor.md](docs/web-editor.md). Proof of concept |
 | `CodeBridge.Blazor` | `<BoardStatus/>`, `<PinToggle/>`, `<PwmSlider/>`, `<AnalogGauge/>`, `<SensorChart/>` components for a live dashboard |
 | `CodeBridge.Mcp` | An [MCP server](docs/mcp.md) so an AI assistant can read the board manifest, design and test flows on the simulator and export C# (hardware is opt-in and confirmed per action) |
 | `CodeBridge.HomeAssistant` | Shows the board in Home Assistant through MQTT discovery (switches, lights, sensors) and finds Home Assistant on your network |

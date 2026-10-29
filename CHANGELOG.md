@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **A flow that runs by itself**: `FlowHost serve` (and `FlowSupervisor` in `CodeBridge.Flow`) runs a flow again and again and connects again when the board goes away, with a growing wait; `--service` makes it a Windows service. See [docs/headless.md](docs/headless.md).
+- **.NET IoT drivers on a board** (proof of concept, `CodeBridge.IotBindings`, [docs/iot-bindings.md](docs/iot-bindings.md)): `BridgeI2cDevice` lets the drivers of `Iot.Device.Bindings` that take an `I2cDevice` run on a board over USB or Wi-Fi, and 25 are flow blocks: SHT3x, SHT4x, AHT20, MCP9808, LM75, MLX90614, BMP280, BME280 (with altitude), SCD4x, MAX44009, HMC5883L, VL53L0X, VL53L1X, ADS1115, MPR121, three clocks (DS3231, DS1307, PCF8563), PCA9685, a 4-digit display (HT16K33) and a PCF8574 expander, plus three generic blocks (I2C scan, read register, write register) for any chip. `ModuleBlocks.Register` lets a package add blocks, and the simulator accepts virtual I2C chips (`AddI2cDevice`).
+- **Flow editor in a browser** (proof of concept, `codebridge-web`): a local web server with a block toolbox, canvas, properties, validation, save and a live run on the board or the simulator, for people who do not use Visual Studio. It listens on `127.0.0.1` only and every call needs a random key. See [docs/web-editor.md](docs/web-editor.md).
+
+### Fixed
+- The ESP32 firmware pins its PlatformIO platform (`espressif32 @ 6.10.0`, Arduino-ESP32 2.0.17): an unpinned build picked up Arduino core 3, whose `ledc` and watchdog APIs differ, and stopped compiling.
+- A serial response no longer completes on the thread that reads the port: code that waited for a board command from inside a continuation of another command (for example a synchronous driver called right after `ConnectAsync`) used to freeze until the command timed out.
+
 ## [0.7.0] - 2026-10-17
 
 Plug and play for the WinForms apps: a new project runs the moment it is started, and the flow it runs is a `.cbflow` file you edit in Visual Studio.

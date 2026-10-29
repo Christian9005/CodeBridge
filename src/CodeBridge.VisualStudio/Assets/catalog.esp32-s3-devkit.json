@@ -483,6 +483,69 @@
       ]
     },
     {
+      "type": "iot.pca9685",
+      "displayName": "PWM Driver (PCA9685)",
+      "category": "Actuators",
+      "description": "Sets the duty cycle (0 to 100 %) of one of the 16 PWM channels of a PCA9685 over I2C: servos, LEDs and motors beyond the pins of the board.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "duty",
+          "direction": "input",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "done",
+          "direction": "output",
+          "valueKind": "trigger",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 64,
+          "options": [
+            {
+              "label": "Default (0x40)",
+              "value": 64,
+              "description": "I2C address 0x40."
+            }
+          ]
+        },
+        {
+          "name": "channel",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 0
+        },
+        {
+          "name": "duty",
+          "valueKind": "number",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 7.5
+        },
+        {
+          "name": "frequencyHz",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": true,
+          "defaultValue": 50
+        }
+      ]
+    },
+    {
       "type": "servo.write",
       "displayName": "Servo Write",
       "category": "Actuators",
@@ -3198,6 +3261,384 @@
       ]
     },
     {
+      "type": "iot.pcf8574-read",
+      "displayName": "Expander Read (PCF8574)",
+      "category": "Modules",
+      "description": "Reads the 8 pins of a PCF8574 I/O expander over I2C as one number (0 to 255, one bit per pin). A pin must have been written as 1 to be read as an input.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "value",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 32,
+          "options": [
+            {
+              "label": "A0-A2 to GND (0x20)",
+              "value": 32,
+              "description": "I2C address 0x20."
+            },
+            {
+              "label": "A0 to VCC (0x21)",
+              "value": 33,
+              "description": "I2C address 0x21."
+            },
+            {
+              "label": "A1 to VCC (0x22)",
+              "value": 34,
+              "description": "I2C address 0x22."
+            },
+            {
+              "label": "A0 and A1 to VCC (0x23)",
+              "value": 35,
+              "description": "I2C address 0x23."
+            },
+            {
+              "label": "A2 to VCC (0x24)",
+              "value": 36,
+              "description": "I2C address 0x24."
+            },
+            {
+              "label": "PCF8574A: all to GND (0x38)",
+              "value": 56,
+              "description": "I2C address 0x38."
+            },
+            {
+              "label": "PCF8574A: A0 to VCC (0x39)",
+              "value": 57,
+              "description": "I2C address 0x39."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "iot.pcf8574-write",
+      "displayName": "Expander Write (PCF8574)",
+      "category": "Modules",
+      "description": "Sets the 8 pins of a PCF8574 I/O expander over I2C with one number (0 to 255, one bit per pin). Adds relays and LEDs without using the board\u0027s own pins.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "value",
+          "direction": "input",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "done",
+          "direction": "output",
+          "valueKind": "trigger",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 32,
+          "options": [
+            {
+              "label": "A0-A2 to GND (0x20)",
+              "value": 32,
+              "description": "I2C address 0x20."
+            },
+            {
+              "label": "A0 to VCC (0x21)",
+              "value": 33,
+              "description": "I2C address 0x21."
+            },
+            {
+              "label": "A1 to VCC (0x22)",
+              "value": 34,
+              "description": "I2C address 0x22."
+            },
+            {
+              "label": "A0 and A1 to VCC (0x23)",
+              "value": 35,
+              "description": "I2C address 0x23."
+            },
+            {
+              "label": "A2 to VCC (0x24)",
+              "value": 36,
+              "description": "I2C address 0x24."
+            },
+            {
+              "label": "PCF8574A: all to GND (0x38)",
+              "value": 56,
+              "description": "I2C address 0x38."
+            },
+            {
+              "label": "PCF8574A: A0 to VCC (0x39)",
+              "value": 57,
+              "description": "I2C address 0x39."
+            }
+          ]
+        },
+        {
+          "name": "value",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 255
+        }
+      ]
+    },
+    {
+      "type": "iot.i2c-read",
+      "displayName": "I2C Read Register",
+      "category": "Modules",
+      "description": "Reads 1 to 4 bytes from a register of any I2C chip and gives them as one number. For a chip that has no block yet: the registers are in its datasheet.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "value",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "hex",
+          "direction": "output",
+          "valueKind": "string",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 64
+        },
+        {
+          "name": "register",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 0
+        },
+        {
+          "name": "length",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 1,
+          "options": [
+            {
+              "label": "1 byte",
+              "value": 1,
+              "description": "8 bits."
+            },
+            {
+              "label": "2 bytes",
+              "value": 2,
+              "description": "16 bits."
+            },
+            {
+              "label": "3 bytes",
+              "value": 3,
+              "description": "24 bits."
+            },
+            {
+              "label": "4 bytes",
+              "value": 4,
+              "description": "32 bits."
+            }
+          ]
+        },
+        {
+          "name": "bigEndian",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": true,
+          "options": [
+            {
+              "label": "Most significant byte first",
+              "value": true,
+              "description": "The usual order in datasheets."
+            },
+            {
+              "label": "Least significant byte first",
+              "value": false,
+              "description": "Little endian."
+            }
+          ]
+        },
+        {
+          "name": "signed",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": true,
+          "defaultValue": false,
+          "options": [
+            {
+              "label": "Yes",
+              "value": true,
+              "description": "On."
+            },
+            {
+              "label": "No",
+              "value": false,
+              "description": "Off."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "iot.i2c-scan",
+      "displayName": "I2C Scan",
+      "category": "Modules",
+      "description": "Lists the chips that answer on the I2C bus, as addresses like 0x44, 0x76. The quickest way to see whether a sensor is wired and which address it has.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "devices",
+          "direction": "output",
+          "valueKind": "string",
+          "required": false
+        },
+        {
+          "name": "count",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": []
+    },
+    {
+      "type": "iot.i2c-write",
+      "displayName": "I2C Write Register",
+      "category": "Modules",
+      "description": "Writes a number (1 to 4 bytes) to a register of any I2C chip: set a mode, start a measurement, change a setting. The registers are in the chip\u0027s datasheet.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "value",
+          "direction": "input",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "done",
+          "direction": "output",
+          "valueKind": "trigger",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 64
+        },
+        {
+          "name": "register",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 0
+        },
+        {
+          "name": "value",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 0
+        },
+        {
+          "name": "length",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 1,
+          "options": [
+            {
+              "label": "1 byte",
+              "value": 1,
+              "description": "8 bits."
+            },
+            {
+              "label": "2 bytes",
+              "value": 2,
+              "description": "16 bits."
+            },
+            {
+              "label": "3 bytes",
+              "value": 3,
+              "description": "24 bits."
+            },
+            {
+              "label": "4 bytes",
+              "value": 4,
+              "description": "32 bits."
+            }
+          ]
+        },
+        {
+          "name": "bigEndian",
+          "valueKind": "boolean",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": true,
+          "options": [
+            {
+              "label": "Most significant byte first",
+              "value": true,
+              "description": "The usual order in datasheets."
+            },
+            {
+              "label": "Least significant byte first",
+              "value": false,
+              "description": "Little endian."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "type": "module.lcd",
       "displayName": "LCD Text (I2C)",
       "category": "Modules",
@@ -3529,6 +3970,77 @@
           "required": false,
           "isAdvanced": true,
           "defaultValue": 64
+        }
+      ]
+    },
+    {
+      "type": "iot.ht16k33-7seg",
+      "displayName": "Number Display (HT16K33)",
+      "category": "Modules",
+      "description": "Shows a number on a 4-digit 7-segment display driven by an HT16K33 over I2C (the Adafruit and many clone backpacks).",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "value",
+          "direction": "input",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "done",
+          "direction": "output",
+          "valueKind": "trigger",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 112,
+          "options": [
+            {
+              "label": "Default (0x70)",
+              "value": 112,
+              "description": "I2C address 0x70."
+            },
+            {
+              "label": "A0 bridged (0x71)",
+              "value": 113,
+              "description": "I2C address 0x71."
+            },
+            {
+              "label": "A1 bridged (0x72)",
+              "value": 114,
+              "description": "I2C address 0x72."
+            },
+            {
+              "label": "A0 and A1 bridged (0x73)",
+              "value": 115,
+              "description": "I2C address 0x73."
+            }
+          ]
+        },
+        {
+          "name": "value",
+          "valueKind": "number",
+          "required": false,
+          "isAdvanced": false,
+          "defaultValue": 0
+        },
+        {
+          "name": "brightness",
+          "valueKind": "integer",
+          "required": false,
+          "isAdvanced": true,
+          "defaultValue": 8
         }
       ]
     },
@@ -5096,6 +5608,92 @@
       ]
     },
     {
+      "type": "iot.ads1115",
+      "displayName": "Analog 16-bit (ADS1115)",
+      "category": "Sensors",
+      "description": "Reads one of the four inputs of an ADS1115 converter over I2C: a precise voltage (0 to 4.096 V) and the raw 16-bit value. Adds analog inputs that are not tied to Wi-Fi.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "voltage",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "raw",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 72,
+          "options": [
+            {
+              "label": "ADDR to GND (0x48)",
+              "value": 72,
+              "description": "I2C address 0x48."
+            },
+            {
+              "label": "ADDR to VCC (0x49)",
+              "value": 73,
+              "description": "I2C address 0x49."
+            },
+            {
+              "label": "ADDR to SDA (0x4A)",
+              "value": 74,
+              "description": "I2C address 0x4A."
+            },
+            {
+              "label": "ADDR to SCL (0x4B)",
+              "value": 75,
+              "description": "I2C address 0x4B."
+            }
+          ]
+        },
+        {
+          "name": "channel",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 0,
+          "options": [
+            {
+              "label": "A0",
+              "value": 0,
+              "description": "Input A0 against ground."
+            },
+            {
+              "label": "A1",
+              "value": 1,
+              "description": "Input A1 against ground."
+            },
+            {
+              "label": "A2",
+              "value": 2,
+              "description": "Input A2 against ground."
+            },
+            {
+              "label": "A3",
+              "value": 3,
+              "description": "Input A3 against ground."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "type": "sensor.analog-percent",
       "displayName": "Analog Sensor (%)",
       "category": "Sensors",
@@ -5437,6 +6035,120 @@
       ]
     },
     {
+      "type": "iot.ds1307",
+      "displayName": "Clock (DS1307)",
+      "category": "Sensors",
+      "description": "Reads a DS1307 real-time clock over I2C: the date and time as text (yyyy-MM-dd HH:mm:ss). It keeps time with a coin cell when the board is off.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "time",
+          "direction": "output",
+          "valueKind": "string",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 104,
+          "options": [
+            {
+              "label": "Default (0x68)",
+              "value": 104,
+              "description": "I2C address 0x68."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "iot.ds3231",
+      "displayName": "Clock (DS3231)",
+      "category": "Sensors",
+      "description": "Reads a DS3231 real-time clock over I2C: the date and time as text (yyyy-MM-dd HH:mm:ss), and the chip\u0027s own temperature. It keeps time with a coin cell when the board is off.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "time",
+          "direction": "output",
+          "valueKind": "string",
+          "required": false
+        },
+        {
+          "name": "temperature",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 104,
+          "options": [
+            {
+              "label": "Default (0x68)",
+              "value": 104,
+              "description": "I2C address 0x68."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "iot.pcf8563",
+      "displayName": "Clock (PCF8563)",
+      "category": "Sensors",
+      "description": "Reads a PCF8563 real-time clock over I2C: the date and time as text (yyyy-MM-dd HH:mm:ss). It keeps time with a coin cell when the board is off.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "time",
+          "direction": "output",
+          "valueKind": "string",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 81,
+          "options": [
+            {
+              "label": "Default (0x51)",
+              "value": 81,
+              "description": "I2C address 0x51."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "type": "sensor.color",
       "displayName": "Colour (TCS34725)",
       "category": "Sensors",
@@ -5474,6 +6186,108 @@
           "required": false,
           "isAdvanced": true,
           "defaultValue": 50
+        }
+      ]
+    },
+    {
+      "type": "iot.hmc5883l",
+      "displayName": "Compass (HMC5883L)",
+      "category": "Sensors",
+      "description": "Reads a magnetic compass (HMC5883L or its clone QMC5883L\u0027s older sibling) over I2C: the heading in degrees (0 = north) and the field on each axis.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "heading",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "x",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "y",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "z",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 30,
+          "options": [
+            {
+              "label": "Default (0x1E)",
+              "value": 30,
+              "description": "I2C address 0x1E."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "iot.scd4x",
+      "displayName": "CO\u2082 (SCD4x)",
+      "category": "Sensors",
+      "description": "Measures carbon dioxide (ppm) with an SCD40 or SCD41 over I2C, and the temperature (\u00B0C) and humidity (%) beside it. Good for telling when a room needs fresh air.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "co2",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "temperature",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "humidity",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 98,
+          "options": [
+            {
+              "label": "Default (0x62)",
+              "value": 98,
+              "description": "I2C address 0x62."
+            }
+          ]
         }
       ]
     },
@@ -6009,6 +6823,132 @@
       ]
     },
     {
+      "type": "iot.mlx90614",
+      "displayName": "Infrared Temp (MLX90614)",
+      "category": "Sensors",
+      "description": "Measures the temperature of an object without touching it (MLX90614), and of the air around the sensor, in \u00B0C.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "object",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "ambient",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 90,
+          "options": [
+            {
+              "label": "Default (0x5A)",
+              "value": 90,
+              "description": "I2C address 0x5A."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "iot.vl53l0x",
+      "displayName": "Laser Distance (VL53L0X)",
+      "category": "Sensors",
+      "description": "Measures distance with a VL53L0X time-of-flight laser over I2C, up to about 2 m. Output in centimetres and millimetres.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "distance",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "millimetres",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 41,
+          "options": [
+            {
+              "label": "Default (0x29)",
+              "value": 41,
+              "description": "I2C address 0x29."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "iot.vl53l1x",
+      "displayName": "Laser Distance 4 m (VL53L1X)",
+      "category": "Sensors",
+      "description": "Measures distance with a VL53L1X time-of-flight laser over I2C, up to about 4 m. Output in centimetres and millimetres.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "distance",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "millimetres",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 41,
+          "options": [
+            {
+              "label": "Default (0x29)",
+              "value": 41,
+              "description": "I2C address 0x29."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "type": "sensor.bh1750",
       "displayName": "Light (BH1750)",
       "category": "Sensors",
@@ -6044,6 +6984,47 @@
               "label": "ADDR to VCC (0x5C)",
               "value": 92,
               "description": "I2C address 0x5C."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "iot.max44009",
+      "displayName": "Light (MAX44009)",
+      "category": "Sensors",
+      "description": "Measures the ambient light with a MAX44009 over I2C, in lux, from moonlight to full sun.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "lux",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 74,
+          "options": [
+            {
+              "label": "A0 to GND (0x4A)",
+              "value": 74,
+              "description": "I2C address 0x4A."
+            },
+            {
+              "label": "A0 to VCC (0x4B)",
+              "value": 75,
+              "description": "I2C address 0x4B."
             }
           ]
         }
@@ -6360,6 +7341,258 @@
       ]
     },
     {
+      "type": "iot.mcp9808",
+      "displayName": "Precision Temp (MCP9808)",
+      "category": "Sensors",
+      "description": "Reads an MCP9808 over I2C: temperature in \u00B0C, accurate to half a degree over a wide range.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "temperature",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 24,
+          "options": [
+            {
+              "label": "A0-A2 to GND (0x18)",
+              "value": 24,
+              "description": "I2C address 0x18."
+            },
+            {
+              "label": "A0 to VCC (0x19)",
+              "value": 25,
+              "description": "I2C address 0x19."
+            },
+            {
+              "label": "A1 to VCC (0x1A)",
+              "value": 26,
+              "description": "I2C address 0x1A."
+            },
+            {
+              "label": "A0 and A1 to VCC (0x1B)",
+              "value": 27,
+              "description": "I2C address 0x1B."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "iot.bmp280",
+      "displayName": "Pressure (BMP280)",
+      "category": "Sensors",
+      "description": "Reads a BMP280 over I2C: air pressure (hPa), temperature (\u00B0C) and the altitude that pressure means (m, from sea-level pressure).",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "pressure",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "temperature",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "altitude",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 118,
+          "options": [
+            {
+              "label": "SDO to GND (0x76)",
+              "value": 118,
+              "description": "I2C address 0x76."
+            },
+            {
+              "label": "SDO to VCC (0x77)",
+              "value": 119,
+              "description": "I2C address 0x77."
+            }
+          ]
+        },
+        {
+          "name": "seaLevelHpa",
+          "valueKind": "number",
+          "required": false,
+          "isAdvanced": true,
+          "defaultValue": 1013.25
+        }
+      ]
+    },
+    {
+      "type": "iot.aht20",
+      "displayName": "Temp \u002B Humidity (AHT20)",
+      "category": "Sensors",
+      "description": "Reads an AHT20 (also sold as AHT21) over I2C: temperature (\u00B0C) and relative humidity (%). Small, cheap and good enough for a room.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "temperature",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "humidity",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 56,
+          "options": [
+            {
+              "label": "Default (0x38)",
+              "value": 56,
+              "description": "I2C address 0x38."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "iot.sht3x",
+      "displayName": "Temp \u002B Humidity (SHT3x)",
+      "category": "Sensors",
+      "description": "Reads an SHT30/SHT31/SHT35 over I2C: temperature (\u00B0C) and relative humidity (%). More accurate than a DHT22.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "temperature",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "humidity",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 68,
+          "options": [
+            {
+              "label": "ADDR to GND (0x44)",
+              "value": 68,
+              "description": "I2C address 0x44."
+            },
+            {
+              "label": "ADDR to VCC (0x45)",
+              "value": 69,
+              "description": "I2C address 0x45."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "iot.sht4x",
+      "displayName": "Temp \u002B Humidity (SHT4x)",
+      "category": "Sensors",
+      "description": "Reads an SHT40, SHT41 or SHT45 over I2C: temperature (\u00B0C) and relative humidity (%), in one measurement.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "temperature",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "humidity",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 68,
+          "options": [
+            {
+              "label": "SHT40-A / SHT41 / SHT45 (0x44)",
+              "value": 68,
+              "description": "I2C address 0x44."
+            },
+            {
+              "label": "SHT40-B (0x45)",
+              "value": 69,
+              "description": "I2C address 0x45."
+            },
+            {
+              "label": "SHT40-C (0x46)",
+              "value": 70,
+              "description": "I2C address 0x46."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "type": "sensor.ds18b20",
       "displayName": "Temperature (DS18B20)",
       "category": "Sensors",
@@ -6536,6 +7769,119 @@
       ]
     },
     {
+      "type": "iot.lm75",
+      "displayName": "Temperature (LM75)",
+      "category": "Sensors",
+      "description": "Reads an LM75 (or compatible: TMP75, PCT2075) temperature sensor over I2C, in \u00B0C. Eight can share the two wires.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "temperature",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 72,
+          "options": [
+            {
+              "label": "A0-A2 to GND (0x48)",
+              "value": 72,
+              "description": "I2C address 0x48."
+            },
+            {
+              "label": "A0 to VCC (0x49)",
+              "value": 73,
+              "description": "I2C address 0x49."
+            },
+            {
+              "label": "A1 to VCC (0x4A)",
+              "value": 74,
+              "description": "I2C address 0x4A."
+            },
+            {
+              "label": "A0 and A1 to VCC (0x4B)",
+              "value": 75,
+              "description": "I2C address 0x4B."
+            },
+            {
+              "label": "A2 to VCC (0x4C)",
+              "value": 76,
+              "description": "I2C address 0x4C."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "iot.mpr121",
+      "displayName": "Touch Keys (MPR121)",
+      "category": "Sensors",
+      "description": "Reads a 12-key capacitive touch sensor (MPR121) over I2C: which keys are touched, as one number (bit 0 is key 0), and whether any is.",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "keys",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "touched",
+          "direction": "output",
+          "valueKind": "boolean",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 90,
+          "options": [
+            {
+              "label": "ADDR to GND (0x5A)",
+              "value": 90,
+              "description": "I2C address 0x5A."
+            },
+            {
+              "label": "ADDR to VCC (0x5B)",
+              "value": 91,
+              "description": "I2C address 0x5B."
+            },
+            {
+              "label": "ADDR to SDA (0x5C)",
+              "value": 92,
+              "description": "I2C address 0x5C."
+            },
+            {
+              "label": "ADDR to SCL (0x5D)",
+              "value": 93,
+              "description": "I2C address 0x5D."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "type": "sensor.bme280",
       "displayName": "Weather (BME280)",
       "category": "Sensors",
@@ -6585,6 +7931,72 @@
               "description": "I2C address 0x77."
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "iot.bme280",
+      "displayName": "Weather \u002B Altitude (BME280)",
+      "category": "Sensors",
+      "description": "Reads a BME280 over I2C with the .NET IoT driver: temperature (\u00B0C), humidity (%), pressure (hPa) and the altitude that pressure means (m, from sea-level pressure).",
+      "ports": [
+        {
+          "name": "trigger",
+          "direction": "input",
+          "valueKind": "trigger",
+          "required": false
+        },
+        {
+          "name": "temperature",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "humidity",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "pressure",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        },
+        {
+          "name": "altitude",
+          "direction": "output",
+          "valueKind": "number",
+          "required": false
+        }
+      ],
+      "properties": [
+        {
+          "name": "address",
+          "valueKind": "integer",
+          "required": true,
+          "isAdvanced": false,
+          "defaultValue": 118,
+          "options": [
+            {
+              "label": "SDO to GND (0x76)",
+              "value": 118,
+              "description": "I2C address 0x76."
+            },
+            {
+              "label": "SDO to VCC (0x77)",
+              "value": 119,
+              "description": "I2C address 0x77."
+            }
+          ]
+        },
+        {
+          "name": "seaLevelHpa",
+          "valueKind": "number",
+          "required": false,
+          "isAdvanced": true,
+          "defaultValue": 1013.25
         }
       ]
     }
