@@ -9,9 +9,21 @@
 [![Visual Studio 2022+](https://img.shields.io/badge/Visual%20Studio-2022%20%7C%202026-5C2D91?logo=visual-studio&logoColor=white)](https://marketplace.visualstudio.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Control ESP32 and Arduino Uno boards from .NET: in C#, or with a visual flow editor inside Visual Studio.**
+**Control ESP32 and Arduino boards from .NET: in C#, or with a visual flow editor inside Visual Studio.**
 CodeBridge ships a bridge firmware for the board and a .NET SDK that talks to it over USB serial or Wi-Fi, so you write
-C# instead of embedded C/C++.
+C# instead of embedded C/C++, and change the logic without reflashing.
+
+<p align="center">
+  <img src="docs/media/greenhouse-flow.png" alt="A smart greenhouse flow running on a real ESP32 in the Visual Studio editor" width="900" />
+</p>
+
+**See what it can do:** [build a smart greenhouse](docs/greenhouse.md) that reads the air and the soil, runs a fan, waters the plants
+and shows it all on a display. It runs on the simulator before you buy a single part, and the same file runs on a real ESP32.
+
+- **Local and safe.** No cloud, no account. Wi-Fi needs a pairing token, the mesh signs every frame.
+- **Change it live.** The flow runs from your PC: edit, press Run, see it on the board. Export it to C# when you outgrow the blocks.
+- **Many boards, many sensors.** ESP32, S3, C3, S2, XIAO, Arduino Uno, Nano and Mega; 65 blocks, plus generic I2C blocks that reach any chip.
+- **Fits your stack.** ASP.NET Core, Blazor, MAUI, Windows services, Home Assistant, and an MCP server for AI assistants.
 
 ## Two ways to use it
 
@@ -19,6 +31,8 @@ C# instead of embedded C/C++.
 |---|---|---|
 | New to microcontrollers / prefer visual tools | **CodeBridge Visual Studio Tools** (VSIX) | [Getting started](docs/getting-started.md) |
 | A .NET developer who wants the SDK directly | **NuGet packages** | [SDK quick start](#sdk-quick-start) |
+| Not on Windows, or no Visual Studio | **The browser editor** (`codebridge-web`) | [Web editor](docs/web-editor.md) |
+| Curious, with no board yet | **The simulator** | [The greenhouse in 2 minutes](docs/greenhouse.md#1-try-it-with-no-hardware) |
 
 ## NuGet packages
 
@@ -79,15 +93,18 @@ See the [API reference](docs/api-reference.md).
 
 | Board | Status |
 |---|---|
-| **ESP32 DevKit (esp32dev)** | Supported and tested on hardware: GPIO, ADC, PWM, I2C, SPI, 1-Wire, interrupts, sensors, displays, Wi-Fi, one-click firmware |
-| **ESP32-S3 DevKit**, **ESP32-C3 DevKit** | Firmware builds in CI and one-click flashing is wired up; pin maps follow the Espressif DevKit pinouts. Not yet verified on hardware: please report what you find |
+| **ESP32 DevKit (esp32dev)** | Supported and tested on hardware: GPIO, ADC, PWM, I2C, SPI, 1-Wire, interrupts, sensors, displays, Wi-Fi, ESP-NOW mesh gateway, one-click firmware |
+| **XIAO ESP32-S3** | Its own firmware build (native USB); flashed and used on hardware, including as an ESP-NOW mesh node |
+| **ESP32-S3 DevKit**, **ESP32-C3 DevKit**, **ESP32-S2 Mini** | Firmware builds in CI and one-click flashing is wired up; pin maps follow the official pinouts. Not yet verified on hardware: please report what you find |
 | **Arduino Uno R3** | Basic: digital/analog I/O, PWM, servo via the bridge sketch. Flashing needs [`arduino-cli`](https://arduino.github.io/arduino-cli/) |
 | **Arduino Nano**, **Arduino Mega 2560** | Same sketch (it builds in CI for both); Nano comes in two bootloader flavours (pick "old bootloader" for most clones). Not yet verified on hardware |
 | Any board, no hardware | The built-in **simulator** (`.Simulator()`, or *Simulator* in the editor's Port list) runs flows, tests and demos without a cable |
 | STM32, PIC | Planned; `ToSTM32()` exists in the builder but there is no driver yet and building throws `NotSupportedException` |
 
 Drivers included for ESP32: DHT11/22, DS18B20, BME280, BH1750, MPU6050, TCS34725, INA219, HC-SR04, PIR, gas sensors,
-relays, buzzers, servos, DC/stepper motors, RGB LED, WS2812B NeoPixel, SSD1306 OLED, HD44780 I2C LCD, MQTT, OTA.
+relays, buzzers, servos, DC/stepper motors, RGB LED, WS2812B NeoPixel, SSD1306 OLED, HD44780 I2C LCD, MQTT, OTA. All of them are
+blocks in the flow editor, and [`CodeBridge.IotBindings`](docs/iot-bindings.md) adds 25 more from the .NET IoT drivers (SHT3x/4x, BMP280,
+SCD4x CO₂, laser distance, clocks, expanders, displays) plus generic I2C blocks for any chip.
 
 ## Use it from your app
 
@@ -105,12 +122,28 @@ relays, buzzers, servos, DC/stepper motors, RGB LED, WS2812B NeoPixel, SSD1306 O
 Samples: [`Integration.Blazor`](samples/Integration.Blazor), [`Integration.HomeAssistant`](samples/Integration.HomeAssistant),
 [`Integration.Maui`](samples/Integration.Maui) (Android and Windows), plus console, web API and Windows service.
 
+## Documentation
+
+| Guide | |
+|---|---|
+| [Getting started](docs/getting-started.md) | Install, flash the firmware, first flow, Wi-Fi |
+| [Examples](docs/examples.md) | The ready-made flows and samples |
+| [Smart greenhouse](docs/greenhouse.md) | A complete project, from the simulator to a greenhouse that runs by itself |
+| [.NET IoT drivers on a board](docs/iot-bindings.md) | The I2C blocks, and how to add a chip in twenty lines |
+| [A flow that runs by itself](docs/headless.md) | `FlowHost serve` and Windows services |
+| [Web editor](docs/web-editor.md) | The flow editor in a browser |
+| [Many boards: fleets and the ESP-NOW mesh](docs/mesh.md) | Gateways, nodes and `DeviceFleet` |
+| [Home Assistant](docs/home-assistant.md) | The board in Home Assistant through MQTT |
+| [AI assistants (MCP)](docs/mcp.md) | Design and test flows with an assistant |
+| [API reference](docs/api-reference.md) | The SDK |
+
 ## Architecture
 
 ```
-Visual Studio        .cbflow editor | WinForms Toolbox | Setup window
-SDK (NuGet)          Flow -> Core <- Transport <- ESP32        (Designer.WinForms ties them together)
-Board firmware       esp32-bridge (PlatformIO) | arduino-uno-bridge
+Editors              Visual Studio (.cbflow editor, WinForms Toolbox) | browser (codebridge-web) | AI assistant (MCP)
+Hosts                FlowHost (run, serve) | your app: Hosting, DeviceFleet, Blazor, MAUI, Home Assistant
+SDK (NuGet)          Flow -> Core <- Transport <- ESP32 <- IotBindings     (Designer.WinForms ties them together)
+Board firmware       esp32-bridge (PlatformIO, USB / Wi-Fi / ESP-NOW mesh) | arduino-uno-bridge
 ```
 
 ## Security

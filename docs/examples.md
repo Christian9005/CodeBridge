@@ -13,6 +13,12 @@ Hover any block in the Toolbox or on the canvas for a short explanation, a loopi
 | 4 | **Servo sweep** | Servo Write and timing | Servo signal on GPIO 13, servo power from an external 5 V supply sharing GND with the board |
 | 5 | **Button controls LED** | Pin Mode (input with pull-down), Digital Read, Digital Write; use **Loop** | Push button between 3V3 and GPIO 4, LED on GPIO 2 |
 
+## A complete project: the smart greenhouse
+
+[`samples/SmartGreenhouse`](../samples/SmartGreenhouse) puts the sensor and module blocks together: a BME280 and a soil probe, two relays for a fan
+and a pump, and an LCD. It runs on the simulator as it is. The [step-by-step guide](greenhouse.md) covers the parts, the wiring, tuning,
+leaving it running day and night, Home Assistant and growing it to several beds.
+
 ## How to run an example
 
 1. Pick the board and port in the toolbar, press **Upload Firmware** once, then **Connect** to check.
@@ -35,5 +41,6 @@ The same board works from any .NET 8 program. Each of these is a small, compiled
 | `Integration.Console` | A console tool that reads a sensor every second |
 | `Integration.Api` | An ASP.NET minimal API: `POST /led/on`, `GET /sensor/34` |
 | `Integration.WindowsService` | A Windows service that logs a reading to CSV every minute and reconnects by itself |
+| `SmartGreenhouse` | The greenhouse flow of the [guide](greenhouse.md), to open in the editor or run with `FlowHost serve` |
 
 Add the SDK to your own project with `dotnet add package CodeBridge.ESP32`.
