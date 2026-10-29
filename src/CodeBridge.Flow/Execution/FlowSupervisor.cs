@@ -47,6 +47,12 @@ public sealed class FlowSupervisorOptions
 
     /// <summary>A pass that fails is logged and the next one runs; this many failures in a row mean the board is lost and the connection is rebuilt.</summary>
     public int FailuresBeforeReconnect { get; init; } = 3;
+
+    /// <summary>Called as each block of the flow starts and finishes (a live view of the flow, like the editor's).</summary>
+    public FlowExecutionEventHandler? NodeEvents { get; init; }
+
+    /// <summary>Pause after each block event, to follow a flow by eye. Zero for a service.</summary>
+    public TimeSpan TraceDelay { get; init; }
 }
 
 /// <summary>
@@ -104,7 +110,7 @@ public sealed class FlowSupervisor
                 {
                     try
                     {
-                        await runtime.ExecuteAsync(_document, new FlowExecutionContext { Board = board }, ct);
+                        await runtime.ExecuteAsync(_document, new FlowExecutionContext { Board = board, EventHandler = _options.NodeEvents, TraceDelay = _options.TraceDelay }, ct);
                         failures = 0;
                         iteration++;
                         Raise(FlowSupervisorEventKind.Iteration, $"Pass {iteration} finished.", iteration: iteration);

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Proof of concept: the flow editor in a browser, served by a small local web server. It runs where .NET runs (Windows, Linux, macOS, a Raspberry Pi),
+    so people who do not use Visual Studio can still design, validate and run a .cbflow.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>codebridge-web</AssemblyName>
+    <RootNamespace>CodeBridge.WebEditor</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- the page is served from next to the executable, wherever it is started from -->
+  <ItemGroup>
+    <Content Update="wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CodeBridge.WebEditor.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CodeBridge.Flow\CodeBridge.Flow.csproj" />
+    <ProjectReference Include="..\CodeBridge.ESP32\CodeBridge.ESP32.csproj" />
+    <ProjectReference Include="..\CodeBridge.Transport\CodeBridge.Transport.csproj" />
+    <ProjectReference Include="..\CodeBridge.IotBindings\CodeBridge.IotBindings.csproj" />
+  </ItemGroup>
+
+</Project>
