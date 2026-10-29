@@ -72,7 +72,7 @@ To add the starter form (and its flow) to a project you already have, select the
 ## Use the `.cbflow` editor (Visual Studio)
 
 1. **Add > New Item > CodeBridge Visual Flow** (or double-click any `.cbflow` file).
-2. In the toolbar pick the **Board** (ESP32 DevKit or Arduino Uno) and the **Port** (the list refreshes when you open it; you can also type a Wi-Fi IP address).
+2. In the toolbar pick the **Board** (ESP32 DevKit, S3, C3, S2 Mini, XIAO ESP32-S3, Arduino Uno, Nano or Mega) and the **Port** (the list refreshes when you open it; it also lists the boards it finds on Wi-Fi, and *Simulator* for no hardware).
 3. Click **Upload Firmware** once per board (installs the CodeBridge bridge firmware), then **Connect** to test: the status bar shows the firmware version.
 4. Build the flow: drag blocks from the Toolbox (or double-click the canvas to search), drag from a port to another port to connect.
 5. Press **Run**. Each block shows RUN / OK / FAIL while it executes and debug output appears in the **CodeBridge Output** panel. **Loop** repeats the flow until you press **Stop**.
@@ -84,6 +84,22 @@ New to this? Open **Tools > CodeBridge Tour** for a guided story, or add one of 
 Shortcuts: `Ctrl+Z / Ctrl+Y` undo/redo, `Ctrl+C / X / V / D` copy, cut, paste, duplicate, `Del` delete, `Ctrl+A` select all, `Ctrl+Space` quick-add, `Ctrl+0` reset zoom, mouse wheel zoom, middle button or `Space`+drag to pan, `Alt` while dragging disables grid snapping.
 
 The toolbar talks to the board through `CodeBridge.FlowHost`, a helper bundled in the extension; it needs the .NET 8 (or newer) Desktop Runtime, which Visual Studio installs with the .NET desktop workload.
+
+## No Visual Studio? Use the browser editor
+
+`codebridge-web` is the same flow editor in a browser, on Windows, Linux or macOS. From a checkout of this repository:
+
+```bash
+dotnet run --project src/CodeBridge.WebEditor -- --flow my-flow.cbflow --port simulator
+```
+
+Open the address it prints (it ends with a key). Use `--port COM3` or `--port /dev/ttyUSB0` for a real board. See [Web editor](web-editor.md).
+
+## Keep a flow running
+
+A flow that has to work day and night (a greenhouse, an alarm, a logger) runs with `FlowHost serve`: it reconnects by itself when the board is
+unplugged or loses Wi-Fi, and can be a Windows service. See [A flow that runs by itself](headless.md), and the [smart greenhouse](greenhouse.md) for a
+complete project.
 
 ## Use the visual designer (WinForms)
 
@@ -120,5 +136,7 @@ await board.DisposeAsync();
 
 ## Next Steps
 
+- Build the [smart greenhouse](greenhouse.md): a complete project that shows most of CodeBridge in one flow.
+- Add sensors with the [.NET IoT blocks](iot-bindings.md), or reach boards without cables through the [ESP-NOW mesh](mesh.md).
 - Explore the [API Reference](api-reference.md) to see what other hardware features you can control.
 - Check out the `samples/` directory for full working examples of WiFi and Serial communication.
