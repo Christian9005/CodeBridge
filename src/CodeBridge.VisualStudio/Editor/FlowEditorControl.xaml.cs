@@ -188,7 +188,7 @@ namespace CodeBridge.VisualStudio.Editor
                 var y = Canvas.GetTop(node);
                 minX = Math.Min(minX, x);
                 minY = Math.Min(minY, y);
-                maxX = Math.Max(maxX, x + FlowNodeControl.NodeWidth);
+                maxX = Math.Max(maxX, x + node.BlockWidth);
                 maxY = Math.Max(maxY, y + Math.Max(node.ActualHeight, 100));
             }
 
@@ -463,7 +463,7 @@ namespace CodeBridge.VisualStudio.Editor
                 return;
 
             var hit = _nodeControlMap.Values
-                .Where(n => rect.IntersectsWith(new Rect(Canvas.GetLeft(n), Canvas.GetTop(n), FlowNodeControl.NodeWidth, Math.Max(n.ActualHeight, 60))))
+                .Where(n => rect.IntersectsWith(new Rect(Canvas.GetLeft(n), Canvas.GetTop(n), n.BlockWidth, Math.Max(n.ActualHeight, 60))))
                 .ToList();
 
             var next = _rubberAdditive ? _selection.Union(hit).ToList() : hit;
@@ -718,6 +718,8 @@ namespace CodeBridge.VisualStudio.Editor
                 DepthOf(node.Id);
 
             const double left = 60, top = 60, columnGap = 70, rowGap = 28;
+            // every column is as wide as the widest block, so a long title never runs into the next column
+            var columnWidth = _nodeControlMap.Values.Select(n => n.BlockWidth).DefaultIfEmpty(FlowNodeControl.NodeWidth).Max();
             var placedY = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
             foreach (var layer in _document.Nodes.GroupBy(n => depth[n.Id]).OrderBy(g => g.Key))
             {
@@ -739,7 +741,7 @@ namespace CodeBridge.VisualStudio.Editor
                         .Where(c => string.Equals(c.ToNodeId, node.Id, StringComparison.OrdinalIgnoreCase) && placedY.ContainsKey(c.FromNodeId))
                         .Select(c => placedY[c.FromNodeId]).DefaultIfEmpty(cursor).Average();
                     var y = Math.Max(cursor, wanted);
-                    var x = left + layer.Key * (FlowNodeControl.NodeWidth + columnGap);
+                    var x = left + layer.Key * (columnWidth + columnGap);
 
                     Canvas.SetLeft(control, x);
                     Canvas.SetTop(control, y);

@@ -65,7 +65,7 @@ if (-not $pio) { try { $pio = (pio --version 2>$null) } catch { } }
 Step 'Build' 'Solution (Release)' { dotnet build CodeBridge.slnx -c Release --nologo -v q 2>&1 | Select-Object -Last 5 }
 
 # ------------------------------------------------------------------ 2. tests
-foreach ($project in 'CodeBridge.VisualStudio.Tests', 'CodeBridge.Blazor.Tests', 'CodeBridge.HomeAssistant.Tests', 'CodeBridge.Mcp.Tests') {
+foreach ($project in 'CodeBridge.VisualStudio.Tests', 'CodeBridge.Blazor.Tests', 'CodeBridge.HomeAssistant.Tests', 'CodeBridge.Mcp.Tests', 'CodeBridge.IotBindings.Tests', 'CodeBridge.WebEditor.Tests') {
     Step 'Tests' $project { dotnet test "tests/$project" -c Release --nologo 2>&1 | Select-Object -Last 6 }
 }
 Step 'Tests' 'CodeBridge.Core.Tests' {

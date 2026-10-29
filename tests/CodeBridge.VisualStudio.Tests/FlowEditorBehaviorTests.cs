@@ -260,4 +260,37 @@ public sealed class FlowEditorBehaviorTests
             Assert.NotNull(control.TryConnect("tm", "tick", "tm", "trigger"));
         });
     }
+    [Fact]
+    public void A_block_is_as_wide_as_its_title_and_its_outputs_move_with_its_right_edge()
+    {
+        RunSta(() =>
+        {
+            var control = new FlowEditorControl();
+            control.LoadDocument(TwoNodeDocument());
+
+            var shortTitle = control.AddBlock("logic.constant-number", new Point(0, 200));
+            var longTitle = control.AddBlock("iot.vl53l1x", new Point(0, 400));   // "Laser Distance 4 m (VL53L1X)"
+
+            Assert.Equal(FlowNodeControl.NodeWidth, shortTitle.BlockWidth);
+            Assert.True(longTitle.BlockWidth > FlowNodeControl.NodeWidth, $"{longTitle.TitleText.Text} is {longTitle.BlockWidth} wide.");
+            Assert.True(longTitle.BlockWidth <= FlowNodeControl.MaxNodeWidth);
+            Assert.Equal(longTitle.BlockWidth, longTitle.Width);
+
+            var output = longTitle.GetPortPosition("distance", FlowPortDirection.Output);
+            Assert.Equal(System.Windows.Controls.Canvas.GetLeft(longTitle) + longTitle.BlockWidth, output.X);
+        });
+    }
+
+    [Fact]
+    public void A_title_never_makes_a_block_wider_than_the_limit()
+    {
+        RunSta(() =>
+        {
+            var typeface = new System.Windows.Media.Typeface("Segoe UI");
+
+            Assert.Equal(FlowNodeControl.NodeWidth, FlowNodeControl.WidthFor("Map", typeface, 11));
+            Assert.Equal(FlowNodeControl.MaxNodeWidth, FlowNodeControl.WidthFor(new string('W', 200), typeface, 11));
+            Assert.True(FlowNodeControl.WidthFor("Weather + Altitude (BME280)", typeface, 11) > FlowNodeControl.NodeWidth);
+        });
+    }
 }

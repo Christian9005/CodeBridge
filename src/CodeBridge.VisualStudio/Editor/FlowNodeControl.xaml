@@ -31,16 +31,21 @@
                     CornerRadius="3,3,0,0"
                     BorderThickness="0,0,0,1"
                     BorderBrush="{StaticResource VsNodeBorder}">
-                <Grid>
-                    <StackPanel Orientation="Horizontal" Margin="10,0,0,0" VerticalAlignment="Center">
-                        <Ellipse x:Name="CategoryIndicator" Width="8" Height="8" Fill="#007acc" Margin="0,0,8,0" />
-                        <TextBlock x:Name="TitleText" Text="Node"
-                                   Foreground="{StaticResource VsNodeText}"
-                                   VerticalAlignment="Center"
-                                   FontWeight="SemiBold"
-                                   FontSize="11" />
-                    </StackPanel>
-                    <Border x:Name="BadgeBorder" Background="#00d88f" CornerRadius="3" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0" Visibility="Collapsed" Padding="4,1">
+                <!-- dot, title and status badge in their own columns: the node is as wide as its title, and the badge never covers it -->
+                <Grid Margin="10,0,8,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Ellipse x:Name="CategoryIndicator" Width="8" Height="8" Fill="#007acc" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="TitleText" Grid.Column="1" Text="Node"
+                               Foreground="{StaticResource VsNodeText}"
+                               VerticalAlignment="Center"
+                               FontWeight="SemiBold"
+                               FontSize="11"
+                               TextTrimming="CharacterEllipsis" />
+                    <Border x:Name="BadgeBorder" Grid.Column="2" Background="#00d88f" CornerRadius="3" VerticalAlignment="Center" Margin="6,0,0,0" Visibility="Collapsed" Padding="4,1">
                         <TextBlock x:Name="BadgeText" Text="OK" Foreground="White" FontSize="9" FontWeight="Bold"/>
                     </Border>
                 </Grid>
