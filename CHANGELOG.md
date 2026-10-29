@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Flow editor in a browser** (proof of concept, `codebridge-web`): a local web server with a block toolbox, canvas, properties, validation, save and a live run on the board or the simulator, for people who do not use Visual Studio. It listens on `127.0.0.1` only and every call needs a random key. See [docs/web-editor.md](docs/web-editor.md).
 
 ### Fixed
+- The ESP32 firmware pins its PlatformIO platform (`espressif32 @ 6.10.0`, Arduino-ESP32 2.0.17): an unpinned build picked up Arduino core 3, whose `ledc` and watchdog APIs differ, and stopped compiling.
 - A serial response no longer completes on the thread that reads the port: code that waited for a board command from inside a continuation of another command (for example a synchronous driver called right after `ConnectAsync`) used to freeze until the command timed out.
 
 ## [0.7.0] - 2026-10-17
