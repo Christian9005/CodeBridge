@@ -117,3 +117,39 @@ foreach (var warning in result.Warnings) Console.WriteLine(warning);   // blocks
 ```
 
 The generated class exposes `Task RunAsync(IBoard board, CancellationToken ct)`. A flow with validation errors throws `InvalidOperationException` listing them.
+
+## `FlowSupervisor` (CodeBridge.Flow)
+
+Keeps a flow running by itself: it connects, runs the flow again and again, rides out a failed pass, and when the board goes away it releases it and
+connects again with a growing pause. `FlowHost serve` is this class behind a command line. Details in [A flow that runs by itself](headless.md).
+
+```csharp
+var supervisor = new FlowSupervisor(document, BuiltInBlockCatalog.Create(profile),
+    connect: async ct => { var board = new ESP32Board(new SerialTransport("COM3"), profile.MaxPin); await board.ConnectAsync(ct); return board; },
+    release: board => { board.Dispose(); return Task.CompletedTask; },
+    options: new FlowSupervisorOptions { Interval = TimeSpan.FromSeconds(5) },
+    onEvent: e => Console.WriteLine($"{e.Kind}: {e.Message}"));
+
+await supervisor.RunAsync(stoppingToken);   // returns when cancelled; never throws because of the board
+```
+
+`FlowSupervisorOptions`: `Interval`, `InitialBackoff`, `MaxBackoff`, `FailuresBeforeReconnect`, `NodeEvents` (each block as it runs) and `TraceDelay`.
+
+## `DeviceFleet` (CodeBridge.Hosting)
+
+Any number of named boards behind one object: USB, Wi-Fi, or nodes of an ESP-NOW mesh reached through a gateway. `services.AddCodeBridgeFleet(...)`
+registers it; `fleet["garage"].Board` is that device's `BoardService` (state, reconnection, every board call); `ForEachAsync` runs the same work on every device, and `DiscoverAsync` finds Wi-Fi boards and the
+nodes every gateway hears. See [Many boards: fleets and the ESP-NOW mesh](mesh.md).
+
+## `BridgeI2cDevice` and `IotBindingBlocks` (CodeBridge.IotBindings)
+
+`BridgeI2cDevice` is a `System.Device.I2c.I2cDevice` whose bus is a CodeBridge board, so the drivers of the .NET IoT bindings run on it:
+
+```csharp
+using var sensor = new Iot.Device.Sht3x.Sht3x(new BridgeI2cDevice(board.I2C, 0x44), Iot.Device.Sht3x.Resolution.High);
+Console.WriteLine(sensor.Temperature.DegreesCelsius);
+```
+
+`IotBindingBlocks.Register()` adds their flow blocks (call it once at start-up). To add blocks from your own package, describe each one as a
+`ModuleBlock` and call `ModuleBlocks.Register(block)`. To test a driver without hardware, give the simulator a chip:
+`simulatedTransport.AddI2cDevice(0x44, myChip)` with any `ISimulatedI2cDevice`. See [.NET IoT drivers on a board](iot-bindings.md).

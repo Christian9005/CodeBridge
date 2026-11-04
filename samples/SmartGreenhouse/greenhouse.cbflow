@@ -1,0 +1,227 @@
+{
+  "Id": "9f3c2a51-6f0e-4b7a-9a52-1d6c2b8e4a10",
+  "Name": "Smart Greenhouse",
+  "BoardId": "esp32-devkit",
+  "Version": 1,
+  "Nodes": [
+    {
+      "Id": "start",
+      "Type": "flow.manual-trigger",
+      "Position": {
+        "X": 40,
+        "Y": 300
+      },
+      "Parameters": {}
+    },
+    {
+      "Id": "air",
+      "Type": "sensor.bme280",
+      "Position": {
+        "X": 280,
+        "Y": 80
+      },
+      "Parameters": {
+        "address": 118
+      }
+    },
+    {
+      "Id": "soil",
+      "Type": "sensor.analog-percent",
+      "Position": {
+        "X": 280,
+        "Y": 420
+      },
+      "Parameters": {
+        "pin": 34,
+        "invert": true
+      }
+    },
+    {
+      "Id": "hot",
+      "Type": "logic.threshold",
+      "Position": {
+        "X": 560,
+        "Y": 40
+      },
+      "Parameters": {
+        "limit": 28.0,
+        "mode": "above"
+      }
+    },
+    {
+      "Id": "dry",
+      "Type": "logic.threshold",
+      "Position": {
+        "X": 560,
+        "Y": 460
+      },
+      "Parameters": {
+        "limit": 35.0,
+        "mode": "below"
+      }
+    },
+    {
+      "Id": "fan",
+      "Type": "module.relay",
+      "Position": {
+        "X": 860,
+        "Y": 40
+      },
+      "Parameters": {
+        "pin": 27,
+        "state": true,
+        "activeLow": true
+      }
+    },
+    {
+      "Id": "pump",
+      "Type": "module.relay",
+      "Position": {
+        "X": 860,
+        "Y": 460
+      },
+      "Parameters": {
+        "pin": 26,
+        "state": true,
+        "activeLow": true
+      }
+    },
+    {
+      "Id": "lcdAir",
+      "Type": "module.lcd",
+      "Position": {
+        "X": 860,
+        "Y": 200
+      },
+      "Parameters": {
+        "address": 39,
+        "text": "Air {value} C",
+        "row": 0
+      }
+    },
+    {
+      "Id": "lcdSoil",
+      "Type": "module.lcd",
+      "Position": {
+        "X": 860,
+        "Y": 320
+      },
+      "Parameters": {
+        "address": 39,
+        "text": "Soil {value} %",
+        "row": 1
+      }
+    },
+    {
+      "Id": "logHumidity",
+      "Type": "debug.log",
+      "Position": {
+        "X": 560,
+        "Y": 250
+      },
+      "Parameters": {
+        "label": "humidity"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "start-trigger-air-trigger",
+      "FromNodeId": "start",
+      "FromPort": "trigger",
+      "ToNodeId": "air",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "start-trigger-soil-trigger",
+      "FromNodeId": "start",
+      "FromPort": "trigger",
+      "ToNodeId": "soil",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "air-temperature-hot-value",
+      "FromNodeId": "air",
+      "FromPort": "temperature",
+      "ToNodeId": "hot",
+      "ToPort": "value"
+    },
+    {
+      "Id": "soil-percent-dry-value",
+      "FromNodeId": "soil",
+      "FromPort": "percent",
+      "ToNodeId": "dry",
+      "ToPort": "value"
+    },
+    {
+      "Id": "start-trigger-fan-trigger",
+      "FromNodeId": "start",
+      "FromPort": "trigger",
+      "ToNodeId": "fan",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "hot-result-fan-state",
+      "FromNodeId": "hot",
+      "FromPort": "result",
+      "ToNodeId": "fan",
+      "ToPort": "state"
+    },
+    {
+      "Id": "start-trigger-pump-trigger",
+      "FromNodeId": "start",
+      "FromPort": "trigger",
+      "ToNodeId": "pump",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "dry-result-pump-state",
+      "FromNodeId": "dry",
+      "FromPort": "result",
+      "ToNodeId": "pump",
+      "ToPort": "state"
+    },
+    {
+      "Id": "start-trigger-lcdAir-trigger",
+      "FromNodeId": "start",
+      "FromPort": "trigger",
+      "ToNodeId": "lcdAir",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "air-temperature-lcdAir-value",
+      "FromNodeId": "air",
+      "FromPort": "temperature",
+      "ToNodeId": "lcdAir",
+      "ToPort": "value"
+    },
+    {
+      "Id": "start-trigger-lcdSoil-trigger",
+      "FromNodeId": "start",
+      "FromPort": "trigger",
+      "ToNodeId": "lcdSoil",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "soil-percent-lcdSoil-value",
+      "FromNodeId": "soil",
+      "FromPort": "percent",
+      "ToNodeId": "lcdSoil",
+      "ToPort": "value"
+    },
+    {
+      "Id": "start-trigger-logHumidity-trigger",
+      "FromNodeId": "start",
+      "FromPort": "trigger",
+      "ToNodeId": "logHumidity",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "air-humidity-logHumidity-value",
+      "FromNodeId": "air",
+      "FromPort": "humidity",
+      "ToNodeId": "logHumidity",
+      "ToPort": "value"
+    }
+  ]
+}
