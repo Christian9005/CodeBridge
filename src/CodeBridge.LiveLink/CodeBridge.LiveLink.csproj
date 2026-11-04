@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Proof of concept: a live link between a game engine (Unity first) and a board. The engine sends joint angles over a local WebSocket; the link
+    moves the servos within safe limits and speeds, and streams back where each joint is and what the feedback sensors read.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>codebridge-livelink</AssemblyName>
+    <RootNamespace>CodeBridge.LiveLink</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CodeBridge.LiveLink.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CodeBridge.Flow\CodeBridge.Flow.csproj" />
+    <ProjectReference Include="..\CodeBridge.ESP32\CodeBridge.ESP32.csproj" />
+    <ProjectReference Include="..\CodeBridge.Transport\CodeBridge.Transport.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,10 @@
+{
+  "name": "CodeBridge.LiveLink",
+  "rootNamespace": "CodeBridge.LiveLink",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [ "WebGL" ],
+  "allowUnsafeCode": false,
+  "autoReferenced": true,
+  "noEngineReferences": false
+}
