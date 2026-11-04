@@ -57,7 +57,7 @@ for your Windows user. From code, see `Esp32WifiProvisioner` in the [API referen
 
 The easiest way to get started is by using the Visual Studio Extension.
 
-1. Install **CodeBridge Visual Studio Tools** from *Extensions > Manage Extensions* (or double-click the `.vsix` from the GitHub release).
+1. Download `CodeBridge.VisualStudio.vsix` from the [latest GitHub release](https://github.com/Christian9005/CodeBridge/releases/latest) and double-click it (with Visual Studio closed). It is not on the Visual Studio Marketplace yet.
 2. Restart Visual Studio.
 3. Click **Create a new project**.
 4. Search for "CodeBridge" and select the **CodeBridge WinForms App** template.

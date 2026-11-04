@@ -25,7 +25,12 @@ Where CodeBridge stands, what is verified, and what is still missing before it c
 ## Still missing
 
 **To publish**
-- Marketplace publisher and NuGet API key in the repository secrets (see [publishing](publishing.md)); code signing for the VSIX.
+- The NuGet packages are published (0.7.0: Abstractions, Transport, ESP32, Flow, Designer.WinForms, Hosting, Blazor, HomeAssistant, PlatformIO and the
+  `CodeBridge.Mcp` tool); `CodeBridge.IotBindings` and the browser editor are not yet.
+- The extension is on the GitHub releases only: it needs a Marketplace publisher and token in the repository secrets (see [publishing](publishing.md)),
+  and code signing.
+- A name that stands out on the Marketplace: several unrelated extensions are already called "CodeBridge" (one of them an MCP tool), and on NuGet the id
+  `CodeBridge.Core` belongs to another project. The display name should say what it is, for example "CodeBridge for .NET hardware (ESP32, Arduino)".
 - Screenshots and a short video for the Marketplace page and the README.
 - Third-party notices for the bundled tools and packages, and a privacy note (CodeBridge sends nothing anywhere; say so).
 
@@ -43,6 +48,6 @@ Where CodeBridge stands, what is verified, and what is still missing before it c
 
 ## Next
 
-1. Publish (the first group above) with the greenhouse as the front page.
+1. Put the extension on the Marketplace (the first group above) with the greenhouse and a short video as the front page.
 2. A hardware matrix: one afternoon per board, results in the README table.
 3. Flow-to-firmware, which is the one thing competitors such as ESPHome do that CodeBridge does not.

@@ -10,7 +10,7 @@ damaging the board or silently not working. The assistant reads it first, so it 
 ## Install
 
 ```bash
-dotnet tool install -g CodeBridge.Mcp        # once the package is published
+dotnet tool install -g CodeBridge.Mcp
 ```
 
 From a checkout of this repository you can run it without installing: `dotnet run --project src/CodeBridge.Mcp`.
