@@ -1,0 +1,15 @@
+{
+  "name": "com.codebridge.livelink",
+  "version": "0.1.0",
+  "displayName": "CodeBridge Live Link",
+  "description": "Drive the servos of an ESP32 or Arduino from a Unity scene, and see the board's feedback in the scene. Talks to codebridge-livelink over a local WebSocket: the link keeps every joint inside its limits and speed, and stops the arm when Unity goes away.",
+  "unity": "2021.3",
+  "author": { "name": "CodeBridge" },
+  "samples": [
+    {
+      "displayName": "Robot arm",
+      "description": "A three-joint arm built from primitives, with sliders, a ghost that shows where the real servos are, and a stop key.",
+      "path": "Samples~/RobotArm"
+    }
+  ]
+}

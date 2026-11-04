@@ -115,6 +115,7 @@ SCD4x CO₂, laser distance, clocks, expanders, displays) plus generic I2C block
 | `FlowSupervisor` (in `CodeBridge.Flow`) and `FlowHost serve` | A flow that keeps running by itself (Windows service, container, headless PC): it reconnects when the board goes away. See [docs/headless.md](docs/headless.md) |
 | `CodeBridge.IotBindings` | The .NET IoT device drivers (`Iot.Device.Bindings`) on a board over its I2C bus, and 25 of them as flow blocks (weather, air quality, light, distance, clocks, a display, I/O expanders) plus three generic blocks (I2C scan, read and write register) for any chip. See [docs/iot-bindings.md](docs/iot-bindings.md). Proof of concept, not on NuGet yet: build it from source |
 | `codebridge-web` (`CodeBridge.WebEditor`) | The flow editor in a browser, served from your own computer: design, validate, save and run a `.cbflow` on Windows, Linux or macOS without Visual Studio. See [docs/web-editor.md](docs/web-editor.md). Proof of concept, run it from source |
+| `codebridge-livelink` and the Unity package `com.codebridge.livelink` | Drive real servos from a Unity scene (a robot arm built in 3D moves on the desk) and see where they are in the scene, with limits, speed and stop enforced by the link. See [docs/unity.md](docs/unity.md). Proof of concept |
 | `CodeBridge.Blazor` | `<BoardStatus/>`, `<PinToggle/>`, `<PwmSlider/>`, `<AnalogGauge/>`, `<SensorChart/>` components for a live dashboard |
 | `CodeBridge.Mcp` | An [MCP server](docs/mcp.md) so an AI assistant can read the board manifest, design and test flows on the simulator and export C# (hardware is opt-in and confirmed per action) |
 | `CodeBridge.HomeAssistant` | Shows the board in Home Assistant through MQTT discovery (switches, lights, sensors) and finds Home Assistant on your network |
@@ -132,6 +133,7 @@ Samples: [`Integration.Blazor`](samples/Integration.Blazor), [`Integration.HomeA
 | [.NET IoT drivers on a board](docs/iot-bindings.md) | The I2C blocks, and how to add a chip in twenty lines |
 | [A flow that runs by itself](docs/headless.md) | `FlowHost serve` and Windows services |
 | [Web editor](docs/web-editor.md) | The flow editor in a browser |
+| [Unity: a robot arm in 3D and on the desk](docs/unity.md) | The live link between a Unity scene and real servos |
 | [Many boards: fleets and the ESP-NOW mesh](docs/mesh.md) | Gateways, nodes and `DeviceFleet` |
 | [Home Assistant](docs/home-assistant.md) | The board in Home Assistant through MQTT |
 | [AI assistants (MCP)](docs/mcp.md) | Design and test flows with an assistant |
@@ -140,7 +142,7 @@ Samples: [`Integration.Blazor`](samples/Integration.Blazor), [`Integration.HomeA
 ## Architecture
 
 ```
-Editors              Visual Studio (.cbflow editor, WinForms Toolbox) | browser (codebridge-web) | AI assistant (MCP)
+Editors              Visual Studio (.cbflow editor, WinForms Toolbox) | browser (codebridge-web) | AI assistant (MCP) | Unity (live link)
 Hosts                FlowHost (run, serve) | your app: Hosting, DeviceFleet, Blazor, MAUI, Home Assistant
 SDK (NuGet)          Flow -> Core <- Transport <- ESP32 <- IotBindings     (Designer.WinForms ties them together)
 Board firmware       esp32-bridge (PlatformIO, USB / Wi-Fi / ESP-NOW mesh) | arduino-uno-bridge
