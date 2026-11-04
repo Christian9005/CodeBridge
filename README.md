@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/Christian9005/CodeBridge/actions/workflows/ci.yml/badge.svg)](https://github.com/Christian9005/CodeBridge/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/vpre/CodeBridge.ESP32?label=NuGet&logo=nuget)](https://www.nuget.org/packages/CodeBridge.ESP32)
-[![Visual Studio 2022+](https://img.shields.io/badge/Visual%20Studio-2022%20%7C%202026-5C2D91?logo=visual-studio&logoColor=white)](https://github.com/Christian9005/CodeBridge/releases/latest)
+[![Visual Studio 2022+](https://img.shields.io/badge/Visual%20Studio-2022%20%7C%202026-5C2D91?logo=visual-studio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=ChristianAlbarracin.CodeBridgeVisualStudioTools)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **Control ESP32 and Arduino boards from .NET: in C#, or with a visual flow editor inside Visual Studio.**
