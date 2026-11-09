@@ -20,6 +20,17 @@ namespace CodeBridge.Core.Tests.Flow;
 /// Whatever the bytes are, the SDK must answer in one of three ways: a document, a clear refusal (a JSON or invalid-operation error), or a list of validation
 /// errors. It must never crash with an internal error, hang, or turn text of the file into code that runs when the exported project is built.
 /// </summary>
+/// <summary>
+/// These tests compile C# with Roslyn and run thousands of flows. Run next to the rest of the suite they take the thread pool away from tests that depend on
+/// timers (the supervisor's), so xUnit runs this collection alone.
+/// </summary>
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class HeavyFlowTests
+{
+    public const string Name = "Heavy flow tests";
+}
+
+[Collection(HeavyFlowTests.Name)]
 public class CbflowHostileFileTests
 {
     private static readonly TimeSpan Patience = TimeSpan.FromSeconds(20);

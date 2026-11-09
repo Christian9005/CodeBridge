@@ -18,6 +18,7 @@ namespace CodeBridge.Core.Tests.Flow;
 /// Files that real versions of CodeBridge and its editors wrote, and files people write by hand (tests/golden/cbflow). This version must read every one of them,
 /// validate it, run it and export it to C#: people have files like these on their disks, and an upgrade must not strand them.
 /// </summary>
+[Collection(HeavyFlowTests.Name)]
 public class CbflowGoldenTests
 {
     public static IEnumerable<object[]> AllFlows() => GoldenFlows.All().Select(f => new object[] { f.File });
