@@ -1,0 +1,3 @@
+# Golden files are kept byte for byte as a release or an editor wrote them: no line-ending conversion (one of them is saved by Notepad, with a BOM and CRLF).
+tests/golden/cbflow/released/** -text
+tests/golden/cbflow/variants/** -text

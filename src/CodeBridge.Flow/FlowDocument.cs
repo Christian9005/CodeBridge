@@ -9,8 +9,13 @@ public sealed class FlowDocument
     public string Name { get; set; } = "Untitled Flow";
     public string BoardId { get; set; } = BuiltInBoardProfiles.Default.Id;
     public int Version { get; set; } = 1;
-    public List<FlowNode> Nodes { get; init; } = [];
-    public List<FlowConnection> Connections { get; init; } = [];
+
+    // A file can say "Nodes": null. That is an empty list, never a null that fails later in some other part of the SDK.
+    private List<FlowNode> _nodes = [];
+    private List<FlowConnection> _connections = [];
+
+    public List<FlowNode> Nodes { get => _nodes; init => _nodes = value ?? []; }
+    public List<FlowConnection> Connections { get => _connections; init => _connections = value ?? []; }
 }
 
 public sealed class FlowNode
@@ -18,7 +23,10 @@ public sealed class FlowNode
     public string Id { get; init; } = Guid.NewGuid().ToString("N");
     public required string Type { get; init; }
     public FlowPosition Position { get; set; } = new(0, 0);
-    public Dictionary<string, object?> Parameters { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+
+    private Dictionary<string, object?> _parameters = new(StringComparer.OrdinalIgnoreCase);
+
+    public Dictionary<string, object?> Parameters { get => _parameters; init => _parameters = value ?? new(StringComparer.OrdinalIgnoreCase); }
 }
 
 public sealed class FlowConnection

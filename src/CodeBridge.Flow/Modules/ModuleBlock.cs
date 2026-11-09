@@ -159,7 +159,6 @@ public sealed class ModuleCode
 
     public static string Literal(bool value) => value ? "true" : "false";
 
-    public static string Literal(string value) =>
-        "\"" + value.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "\\r").Replace("\n", "\\n") + "\"";
+    public static string Literal(string value) => CodeBridge.Flow.CodeGeneration.CSharpText.Literal(value);
 }
 

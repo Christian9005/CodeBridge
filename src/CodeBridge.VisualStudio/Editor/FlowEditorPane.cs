@@ -150,6 +150,12 @@ namespace CodeBridge.VisualStudio.Editor
                         {
                             throw new InvalidDataException("Parsed FlowDocument is null.");
                         }
+                        var problem = FlowDocumentChecks.Problem(doc);
+                        if (problem != null)
+                        {
+                            throw new InvalidDataException(problem);
+                        }
+
                         _document = doc;
                     }
                 }
@@ -160,21 +166,20 @@ namespace CodeBridge.VisualStudio.Editor
             }
             catch (Exception ex)
             {
-                _loadFailed = true;
-                VsShellUtilities.ShowMessageBox(
-                    this,
-                    $"Failed to load CodeBridge Flow file '{Path.GetFileName(pszFilename)}':\n\n{ex.Message}\n\nThe file will not be overwritten.",
-                    "CodeBridge Flow Editor Error",
-                    OLEMSGICON.OLEMSGICON_CRITICAL,
-                    OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-
-                return VSConstants.E_FAIL;
+                return FailLoad(pszFilename, ex.Message);
             }
 
             if (_document != null)
             {
-                _editorControl.LoadDocument(_document);
+                try
+                {
+                    _editorControl.LoadDocument(_document);
+                }
+                catch (Exception ex)
+                {
+                    // whatever is wrong with the file, the exception must not travel up into Visual Studio
+                    return FailLoad(pszFilename, ex.Message);
+                }
             }
             IsDirtyProperty = false;
             
@@ -185,6 +190,20 @@ namespace CodeBridge.VisualStudio.Editor
             }
 
             return VSConstants.S_OK;
+        }
+
+        private int FailLoad(string pszFilename, string reason)
+        {
+            _loadFailed = true;
+            VsShellUtilities.ShowMessageBox(
+                this,
+                $"Failed to load CodeBridge Flow file '{Path.GetFileName(pszFilename)}':\n\n{reason}\n\nThe file will not be overwritten.",
+                "CodeBridge Flow Editor Error",
+                OLEMSGICON.OLEMSGICON_CRITICAL,
+                OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+
+            return VSConstants.E_FAIL;
         }
 
         public int Save(string pszFilename, int fRemember, uint nFormatIndex)

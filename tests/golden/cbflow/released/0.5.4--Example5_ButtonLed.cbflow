@@ -1,0 +1,82 @@
+{
+  "Id": "caf8e310-ae5d-4594-880f-b338818bdd5b",
+  "Name": "Example5_ButtonLed",
+  "BoardId": "esp32-devkit",
+  "Version": 1,
+  "Nodes": [
+    {
+      "Id": "start",
+      "Type": "flow.manual-trigger",
+      "Position": {
+        "X": 60,
+        "Y": 60
+      },
+      "Parameters": {}
+    },
+    {
+      "Id": "mode",
+      "Type": "gpio.pin-mode",
+      "Position": {
+        "X": 298,
+        "Y": 60
+      },
+      "Parameters": {
+        "pin": 4,
+        "mode": "InputPullDown"
+      }
+    },
+    {
+      "Id": "button",
+      "Type": "gpio.digital-read",
+      "Position": {
+        "X": 536,
+        "Y": 60
+      },
+      "Parameters": {
+        "pin": 4
+      }
+    },
+    {
+      "Id": "led",
+      "Type": "gpio.digital-write",
+      "Position": {
+        "X": 774,
+        "Y": 60
+      },
+      "Parameters": {
+        "pin": 2,
+        "value": false
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "conn-1",
+      "FromNodeId": "start",
+      "FromPort": "trigger",
+      "ToNodeId": "mode",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "conn-2",
+      "FromNodeId": "mode",
+      "FromPort": "done",
+      "ToNodeId": "button",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "conn-3",
+      "FromNodeId": "button",
+      "FromPort": "value",
+      "ToNodeId": "led",
+      "ToPort": "value"
+    },
+    {
+      "Id": "conn-4",
+      "FromNodeId": "mode",
+      "FromPort": "done",
+      "ToNodeId": "led",
+      "ToPort": "trigger"
+    }
+  ]
+}

@@ -30,7 +30,16 @@ public sealed class FlowBlockCatalog
         throw new KeyNotFoundException($"Block type '{type}' is not registered.");
     }
 
-    public bool TryGet(string type, out FlowBlockDefinition definition) =>
-        _blocks.TryGetValue(type, out definition!);
+    public bool TryGet(string? type, out FlowBlockDefinition definition)
+    {
+        // a file can say "Type": null; that is an unknown block, not a reason to throw
+        if (type is null)
+        {
+            definition = null!;
+            return false;
+        }
+
+        return _blocks.TryGetValue(type, out definition!);
+    }
 }
 

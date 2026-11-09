@@ -1,0 +1,124 @@
+{
+  "Id": "1ba9400e-b077-4728-a735-55358029a5a8",
+  "Name": "Example3_NightLight",
+  "BoardId": "esp32-devkit",
+  "Version": 1,
+  "Nodes": [
+    {
+      "Id": "start",
+      "Type": "flow.manual-trigger",
+      "Position": {
+        "X": 60,
+        "Y": 170
+      },
+      "Parameters": {}
+    },
+    {
+      "Id": "read",
+      "Type": "gpio.analog-read",
+      "Position": {
+        "X": 298,
+        "Y": 60
+      },
+      "Parameters": {
+        "pin": 34
+      }
+    },
+    {
+      "Id": "limit",
+      "Type": "logic.constant-number",
+      "Position": {
+        "X": 298,
+        "Y": 280
+      },
+      "Parameters": {
+        "value": 2000.0
+      }
+    },
+    {
+      "Id": "dark",
+      "Type": "logic.compare",
+      "Position": {
+        "X": 536,
+        "Y": 170
+      },
+      "Parameters": {
+        "operator": "<"
+      }
+    },
+    {
+      "Id": "led",
+      "Type": "gpio.digital-write",
+      "Position": {
+        "X": 774,
+        "Y": 170
+      },
+      "Parameters": {
+        "pin": 2,
+        "value": false
+      }
+    },
+    {
+      "Id": "log",
+      "Type": "debug.log",
+      "Position": {
+        "X": 774,
+        "Y": 390
+      },
+      "Parameters": {
+        "label": "light"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "conn-1",
+      "FromNodeId": "start",
+      "FromPort": "trigger",
+      "ToNodeId": "read",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "conn-2",
+      "FromNodeId": "read",
+      "FromPort": "value",
+      "ToNodeId": "dark",
+      "ToPort": "left"
+    },
+    {
+      "Id": "conn-3",
+      "FromNodeId": "limit",
+      "FromPort": "value",
+      "ToNodeId": "dark",
+      "ToPort": "right"
+    },
+    {
+      "Id": "conn-4",
+      "FromNodeId": "dark",
+      "FromPort": "result",
+      "ToNodeId": "led",
+      "ToPort": "value"
+    },
+    {
+      "Id": "conn-5",
+      "FromNodeId": "start",
+      "FromPort": "trigger",
+      "ToNodeId": "led",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "conn-6",
+      "FromNodeId": "read",
+      "FromPort": "value",
+      "ToNodeId": "log",
+      "ToPort": "value"
+    },
+    {
+      "Id": "conn-7",
+      "FromNodeId": "start",
+      "FromPort": "trigger",
+      "ToNodeId": "log",
+      "ToPort": "trigger"
+    }
+  ]
+}

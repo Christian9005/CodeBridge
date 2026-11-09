@@ -1,0 +1,205 @@
+[
+  {
+    "file": "released/0.5.4--BlinkFlow.cbflow",
+    "origin": "The item template of 0.5.4, unchanged in 0.6.0 and 0.7.0",
+    "name": "BlinkFlow",
+    "board": "esp32-devkit",
+    "nodes": 5,
+    "connections": 4,
+    "valid": true,
+    "runs": true,
+    "commands": [
+      "PM:2:1",
+      "DW:2:1",
+      "DW:2:0"
+    ]
+  },
+  {
+    "file": "released/0.5.4--Example1_Blink.cbflow",
+    "origin": "Example 1 of 0.5.4, unchanged since",
+    "name": "Example1_Blink",
+    "board": "esp32-devkit",
+    "nodes": 2,
+    "connections": 1,
+    "valid": true,
+    "runs": true,
+    "commands": [
+      "PM:2:1",
+      "DW:2:1",
+      "DW:2:0"
+    ]
+  },
+  {
+    "file": "released/0.5.4--Example2_BlinkPattern.cbflow",
+    "origin": "Example 2 of 0.5.4, unchanged since",
+    "name": "Example2_BlinkPattern",
+    "board": "esp32-devkit",
+    "nodes": 6,
+    "connections": 5,
+    "valid": true,
+    "runs": true,
+    "commands": [
+      "PM:2:1",
+      "DW:2:1",
+      "DW:2:0",
+      "DW:2:1",
+      "DW:2:0",
+      "DW:2:1",
+      "DW:2:0"
+    ]
+  },
+  {
+    "file": "released/0.5.4--Example3_NightLight.cbflow",
+    "origin": "Example 3 of 0.5.4, unchanged since (its analog read has no 'samples', a property added later)",
+    "name": "Example3_NightLight",
+    "board": "esp32-devkit",
+    "nodes": 6,
+    "connections": 7,
+    "valid": true,
+    "runs": true,
+    "commands": [
+      "AR:34",
+      "PM:2:1",
+      "DW:2:"
+    ]
+  },
+  {
+    "file": "released/0.5.4--Example4_ServoSweep.cbflow",
+    "origin": "Example 4 of 0.5.4, unchanged since",
+    "name": "Example4_ServoSweep",
+    "board": "esp32-devkit",
+    "nodes": 6,
+    "connections": 5,
+    "valid": true,
+    "runs": true,
+    "commands": [
+      "SA:13:500:2500",
+      "SV:13:0",
+      "SV:13:180",
+      "SV:13:90"
+    ]
+  },
+  {
+    "file": "released/0.5.4--Example5_ButtonLed.cbflow",
+    "origin": "Example 5 of 0.5.4, unchanged since",
+    "name": "Example5_ButtonLed",
+    "board": "esp32-devkit",
+    "nodes": 4,
+    "connections": 4,
+    "valid": true,
+    "runs": true,
+    "commands": [
+      "PM:4:3",
+      "DR:4",
+      "PM:2:1",
+      "DW:2:"
+    ]
+  },
+  {
+    "file": "released/0.8--SmartGreenhouse.cbflow",
+    "origin": "samples/SmartGreenhouse of the next release: sensor, module and logic blocks, a board with I2C",
+    "name": "Smart Greenhouse",
+    "board": "esp32-devkit",
+    "nodes": 10,
+    "connections": 14,
+    "valid": true,
+    "runs": true,
+    "commands": [
+      "BMI:118",
+      "BMR",
+      "AR:34",
+      "LT:0:0:Air",
+      "LT:1:0:Soil",
+      "DW:27:",
+      "DW:26:"
+    ]
+  },
+  {
+    "file": "variants/web-editor--camelCase.cbflow",
+    "origin": "Example 3 as the browser editor writes it: camelCase names, whole numbers without a decimal point",
+    "name": "WebEditor_NightLight",
+    "board": "esp32-devkit",
+    "nodes": 6,
+    "connections": 7,
+    "valid": true,
+    "runs": true,
+    "commands": [
+      "AR:34",
+      "PM:2:1",
+      "DW:2:"
+    ]
+  },
+  {
+    "file": "variants/notepad--bom-crlf.cbflow",
+    "origin": "Example 3 saved by an editor on Windows: UTF-8 with a byte order mark and CRLF line ends",
+    "name": "Example3_NightLight",
+    "board": "esp32-devkit",
+    "nodes": 6,
+    "connections": 7,
+    "valid": true,
+    "runs": true,
+    "commands": [
+      "AR:34",
+      "PM:2:1",
+      "DW:2:"
+    ]
+  },
+  {
+    "file": "variants/hand-written--minimal.cbflow",
+    "origin": "Written by hand or by a script: no document id, no version, no positions",
+    "name": "Minimal",
+    "board": "esp32-devkit",
+    "nodes": 2,
+    "connections": 1,
+    "valid": true,
+    "runs": true,
+    "commands": [
+      "PM:2:1",
+      "DW:2:1"
+    ]
+  },
+  {
+    "file": "variants/hand-edited--numbers-as-text.cbflow",
+    "origin": "Example 3 with every number written as text (\"34\"), as someone editing the JSON might",
+    "name": "TextNumbers",
+    "board": "esp32-devkit",
+    "nodes": 6,
+    "connections": 7,
+    "valid": true,
+    "runs": true,
+    "commands": [
+      "AR:34",
+      "PM:2:1",
+      "DW:2:"
+    ]
+  },
+  {
+    "file": "variants/hand-edited--pins-as-decimals.cbflow",
+    "origin": "Example 3 with whole numbers written with a decimal point (34.0), as a script or another tool might",
+    "name": "DecimalPins",
+    "board": "esp32-devkit",
+    "nodes": 6,
+    "connections": 7,
+    "valid": true,
+    "runs": true,
+    "commands": [
+      "AR:34",
+      "PM:2:1",
+      "DW:2:"
+    ]
+  },
+  {
+    "file": "variants/future--unknown-fields-and-block.cbflow",
+    "origin": "A file from a newer version: fields this version does not know and a block it does not have",
+    "name": "FromTheFuture",
+    "board": "esp32-devkit",
+    "nodes": 7,
+    "connections": 7,
+    "valid": false,
+    "runs": false,
+    "commands": [],
+    "validationContains": [
+      "Unknown block type 'future.quantum-gate'"
+    ]
+  }
+]

@@ -1,0 +1,27 @@
+{
+  "Name": "Minimal",
+  "BoardId": "esp32-devkit",
+  "Nodes": [
+    {
+      "Id": "a",
+      "Type": "flow.manual-trigger"
+    },
+    {
+      "Id": "b",
+      "Type": "gpio.digital-write",
+      "Parameters": {
+        "pin": 2,
+        "value": true
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "c",
+      "FromNodeId": "a",
+      "FromPort": "trigger",
+      "ToNodeId": "b",
+      "ToPort": "trigger"
+    }
+  ]
+}

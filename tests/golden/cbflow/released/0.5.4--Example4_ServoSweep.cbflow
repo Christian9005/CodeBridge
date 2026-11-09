@@ -1,0 +1,112 @@
+{
+  "Id": "ae863d4b-ee50-4423-8b55-2e0068f1c34e",
+  "Name": "Example4_ServoSweep",
+  "BoardId": "esp32-devkit",
+  "Version": 1,
+  "Nodes": [
+    {
+      "Id": "start",
+      "Type": "flow.manual-trigger",
+      "Position": {
+        "X": 60,
+        "Y": 60
+      },
+      "Parameters": {}
+    },
+    {
+      "Id": "s0",
+      "Type": "servo.write",
+      "Position": {
+        "X": 298,
+        "Y": 60
+      },
+      "Parameters": {
+        "pin": 13,
+        "angle": 0.0
+      }
+    },
+    {
+      "Id": "w1",
+      "Type": "core.timer",
+      "Position": {
+        "X": 536,
+        "Y": 60
+      },
+      "Parameters": {
+        "intervalMs": 700
+      }
+    },
+    {
+      "Id": "s180",
+      "Type": "servo.write",
+      "Position": {
+        "X": 774,
+        "Y": 60
+      },
+      "Parameters": {
+        "pin": 13,
+        "angle": 180.0
+      }
+    },
+    {
+      "Id": "w2",
+      "Type": "core.timer",
+      "Position": {
+        "X": 1012,
+        "Y": 60
+      },
+      "Parameters": {
+        "intervalMs": 700
+      }
+    },
+    {
+      "Id": "s90",
+      "Type": "servo.write",
+      "Position": {
+        "X": 1250,
+        "Y": 60
+      },
+      "Parameters": {
+        "pin": 13,
+        "angle": 90.0
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "conn-1",
+      "FromNodeId": "start",
+      "FromPort": "trigger",
+      "ToNodeId": "s0",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "conn-2",
+      "FromNodeId": "s0",
+      "FromPort": "done",
+      "ToNodeId": "w1",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "conn-3",
+      "FromNodeId": "w1",
+      "FromPort": "tick",
+      "ToNodeId": "s180",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "conn-4",
+      "FromNodeId": "s180",
+      "FromPort": "done",
+      "ToNodeId": "w2",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "conn-5",
+      "FromNodeId": "w2",
+      "FromPort": "tick",
+      "ToNodeId": "s90",
+      "ToPort": "trigger"
+    }
+  ]
+}

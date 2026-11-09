@@ -12,31 +12,49 @@ namespace CodeBridge.Flow
     // Document model. Mirrors CodeBridge.Flow (net8) which cannot be referenced from a net472 VSIX;
     // the JSON produced here is the same .cbflow format the SDK and the FlowHost read.
 
+    // A file can say null for anything ("Nodes": null, "Type": null). The model turns that into an empty value, so the rest of the editor never meets a
+    // null reference; what is genuinely wrong with a file is reported by FlowDocumentChecks.
     public sealed class FlowDocument
     {
-        public string Id { get; init; } = Guid.NewGuid().ToString();
-        public string Name { get; set; } = "NewFlow";
-        public string BoardId { get; set; } = "esp32-devkit";
+        private string _id = Guid.NewGuid().ToString();
+        private string _name = "NewFlow";
+        private string _boardId = "esp32-devkit";
+        private List<FlowNode> _nodes = new List<FlowNode>();
+        private List<FlowConnection> _connections = new List<FlowConnection>();
+
+        public string Id { get => _id; init => _id = value ?? Guid.NewGuid().ToString(); }
+        public string Name { get => _name; set => _name = value ?? "NewFlow"; }
+        public string BoardId { get => _boardId; set => _boardId = value ?? "esp32-devkit"; }
         public int Version { get; set; } = 1;
-        public List<FlowNode> Nodes { get; init; } = new List<FlowNode>();
-        public List<FlowConnection> Connections { get; init; } = new List<FlowConnection>();
+        public List<FlowNode> Nodes { get => _nodes; init => _nodes = value ?? new List<FlowNode>(); }
+        public List<FlowConnection> Connections { get => _connections; init => _connections = value ?? new List<FlowConnection>(); }
     }
 
     public sealed class FlowNode
     {
-        public string Id { get; init; } = "node-" + Guid.NewGuid().ToString().Substring(0, 8);
-        public string Type { get; set; } = string.Empty;
+        private string _id = "node-" + Guid.NewGuid().ToString().Substring(0, 8);
+        private string _type = string.Empty;
+        private Dictionary<string, object> _parameters = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
+        public string Id { get => _id; init => _id = value ?? string.Empty; }
+        public string Type { get => _type; set => _type = value ?? string.Empty; }
         public FlowPosition Position { get; set; }
-        public Dictionary<string, object> Parameters { get; init; } = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, object> Parameters { get => _parameters; init => _parameters = value ?? new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase); }
     }
 
     public sealed class FlowConnection
     {
-        public string Id { get; init; } = "conn-" + Guid.NewGuid().ToString().Substring(0, 8);
-        public string FromNodeId { get; init; } = string.Empty;
-        public string FromPort { get; init; } = string.Empty;
-        public string ToNodeId { get; init; } = string.Empty;
-        public string ToPort { get; init; } = string.Empty;
+        private string _id = "conn-" + Guid.NewGuid().ToString().Substring(0, 8);
+        private string _fromNodeId = string.Empty;
+        private string _fromPort = string.Empty;
+        private string _toNodeId = string.Empty;
+        private string _toPort = string.Empty;
+
+        public string Id { get => _id; init => _id = value ?? string.Empty; }
+        public string FromNodeId { get => _fromNodeId; init => _fromNodeId = value ?? string.Empty; }
+        public string FromPort { get => _fromPort; init => _fromPort = value ?? string.Empty; }
+        public string ToNodeId { get => _toNodeId; init => _toNodeId = value ?? string.Empty; }
+        public string ToPort { get => _toPort; init => _toPort = value ?? string.Empty; }
     }
 
     public struct FlowPosition
