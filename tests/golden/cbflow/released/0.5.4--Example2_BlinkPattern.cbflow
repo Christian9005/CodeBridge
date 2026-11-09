@@ -1,0 +1,112 @@
+{
+  "Id": "64596c18-3b5f-4f8c-b898-d89257783a97",
+  "Name": "Example2_BlinkPattern",
+  "BoardId": "esp32-devkit",
+  "Version": 1,
+  "Nodes": [
+    {
+      "Id": "start",
+      "Type": "flow.manual-trigger",
+      "Position": {
+        "X": 60,
+        "Y": 60
+      },
+      "Parameters": {}
+    },
+    {
+      "Id": "b1",
+      "Type": "gpio.blink-led",
+      "Position": {
+        "X": 298,
+        "Y": 60
+      },
+      "Parameters": {
+        "pin": 2,
+        "durationMs": 200
+      }
+    },
+    {
+      "Id": "p1",
+      "Type": "core.timer",
+      "Position": {
+        "X": 536,
+        "Y": 60
+      },
+      "Parameters": {
+        "intervalMs": 200
+      }
+    },
+    {
+      "Id": "b2",
+      "Type": "gpio.blink-led",
+      "Position": {
+        "X": 774,
+        "Y": 60
+      },
+      "Parameters": {
+        "pin": 2,
+        "durationMs": 200
+      }
+    },
+    {
+      "Id": "p2",
+      "Type": "core.timer",
+      "Position": {
+        "X": 1012,
+        "Y": 60
+      },
+      "Parameters": {
+        "intervalMs": 200
+      }
+    },
+    {
+      "Id": "b3",
+      "Type": "gpio.blink-led",
+      "Position": {
+        "X": 1250,
+        "Y": 60
+      },
+      "Parameters": {
+        "pin": 2,
+        "durationMs": 700
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "conn-1",
+      "FromNodeId": "start",
+      "FromPort": "trigger",
+      "ToNodeId": "b1",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "conn-2",
+      "FromNodeId": "b1",
+      "FromPort": "done",
+      "ToNodeId": "p1",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "conn-3",
+      "FromNodeId": "p1",
+      "FromPort": "tick",
+      "ToNodeId": "b2",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "conn-4",
+      "FromNodeId": "b2",
+      "FromPort": "done",
+      "ToNodeId": "p2",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "conn-5",
+      "FromNodeId": "p2",
+      "FromPort": "tick",
+      "ToNodeId": "b3",
+      "ToPort": "trigger"
+    }
+  ]
+}

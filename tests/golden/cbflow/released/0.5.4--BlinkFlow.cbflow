@@ -1,0 +1,67 @@
+{
+  "Id": "00000000-0000-0000-0000-000000000000",
+  "Name": "BlinkFlow",
+  "BoardId": "esp32-devkit",
+  "Version": 1,
+  "Nodes": [
+    {
+      "Id": "node-1",
+      "Type": "flow.manual-trigger",
+      "Position": { "X": 80, "Y": 120 }
+    },
+    {
+      "Id": "node-2",
+      "Type": "gpio.digital-write",
+      "Position": { "X": 340, "Y": 120 },
+      "Parameters": { "pin": 2, "value": true }
+    },
+    {
+      "Id": "node-3",
+      "Type": "core.timer",
+      "Position": { "X": 600, "Y": 120 },
+      "Parameters": { "intervalMs": 1000 }
+    },
+    {
+      "Id": "node-4",
+      "Type": "gpio.digital-write",
+      "Position": { "X": 860, "Y": 120 },
+      "Parameters": { "pin": 2, "value": false }
+    },
+    {
+      "Id": "node-5",
+      "Type": "core.timer",
+      "Position": { "X": 1120, "Y": 120 },
+      "Parameters": { "intervalMs": 1000 }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "conn-1",
+      "FromNodeId": "node-1",
+      "FromPort": "trigger",
+      "ToNodeId": "node-2",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "conn-2",
+      "FromNodeId": "node-2",
+      "FromPort": "done",
+      "ToNodeId": "node-3",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "conn-3",
+      "FromNodeId": "node-3",
+      "FromPort": "tick",
+      "ToNodeId": "node-4",
+      "ToPort": "trigger"
+    },
+    {
+      "Id": "conn-4",
+      "FromNodeId": "node-4",
+      "FromPort": "done",
+      "ToNodeId": "node-5",
+      "ToPort": "trigger"
+    }
+  ]
+}

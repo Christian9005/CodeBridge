@@ -1,0 +1,38 @@
+{
+  "Id": "2e31e1dd-1fb6-45aa-8a5f-c54803fce08e",
+  "Name": "Example1_Blink",
+  "BoardId": "esp32-devkit",
+  "Version": 1,
+  "Nodes": [
+    {
+      "Id": "start",
+      "Type": "flow.manual-trigger",
+      "Position": {
+        "X": 60,
+        "Y": 60
+      },
+      "Parameters": {}
+    },
+    {
+      "Id": "blink",
+      "Type": "gpio.blink-led",
+      "Position": {
+        "X": 298,
+        "Y": 60
+      },
+      "Parameters": {
+        "pin": 2,
+        "durationMs": 500
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "Id": "conn-1",
+      "FromNodeId": "start",
+      "FromPort": "trigger",
+      "ToNodeId": "blink",
+      "ToPort": "trigger"
+    }
+  ]
+}

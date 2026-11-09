@@ -1,0 +1,124 @@
+{
+  "id": "1ba9400e-b077-4728-a735-55358029a5a8",
+  "name": "WebEditor_NightLight",
+  "boardId": "esp32-devkit",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "start",
+      "type": "flow.manual-trigger",
+      "position": {
+        "x": 60,
+        "y": 170
+      },
+      "parameters": {}
+    },
+    {
+      "id": "read",
+      "type": "gpio.analog-read",
+      "position": {
+        "x": 298,
+        "y": 60
+      },
+      "parameters": {
+        "pin": 34
+      }
+    },
+    {
+      "id": "limit",
+      "type": "logic.constant-number",
+      "position": {
+        "x": 298,
+        "y": 280
+      },
+      "parameters": {
+        "value": 2000
+      }
+    },
+    {
+      "id": "dark",
+      "type": "logic.compare",
+      "position": {
+        "x": 536,
+        "y": 170
+      },
+      "parameters": {
+        "operator": "<"
+      }
+    },
+    {
+      "id": "led",
+      "type": "gpio.digital-write",
+      "position": {
+        "x": 774,
+        "y": 170
+      },
+      "parameters": {
+        "pin": 2,
+        "value": false
+      }
+    },
+    {
+      "id": "log",
+      "type": "debug.log",
+      "position": {
+        "x": 774,
+        "y": 390
+      },
+      "parameters": {
+        "label": "light"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn-1",
+      "fromNodeId": "start",
+      "fromPort": "trigger",
+      "toNodeId": "read",
+      "toPort": "trigger"
+    },
+    {
+      "id": "conn-2",
+      "fromNodeId": "read",
+      "fromPort": "value",
+      "toNodeId": "dark",
+      "toPort": "left"
+    },
+    {
+      "id": "conn-3",
+      "fromNodeId": "limit",
+      "fromPort": "value",
+      "toNodeId": "dark",
+      "toPort": "right"
+    },
+    {
+      "id": "conn-4",
+      "fromNodeId": "dark",
+      "fromPort": "result",
+      "toNodeId": "led",
+      "toPort": "value"
+    },
+    {
+      "id": "conn-5",
+      "fromNodeId": "start",
+      "fromPort": "trigger",
+      "toNodeId": "led",
+      "toPort": "trigger"
+    },
+    {
+      "id": "conn-6",
+      "fromNodeId": "read",
+      "fromPort": "value",
+      "toNodeId": "log",
+      "toPort": "value"
+    },
+    {
+      "id": "conn-7",
+      "fromNodeId": "start",
+      "fromPort": "trigger",
+      "toNodeId": "log",
+      "toPort": "trigger"
+    }
+  ]
+}

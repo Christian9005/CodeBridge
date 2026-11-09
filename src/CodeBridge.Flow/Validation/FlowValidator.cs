@@ -15,15 +15,170 @@ public sealed class FlowValidator
         ArgumentNullException.ThrowIfNull(catalog);
 
         var issues = new List<FlowValidationIssue>();
+
+        // A file can hold a null where a block should be, a block without id, the same id twice, a wire missing a piece. Each is reported and set aside, so
+        // every check below works on a document where those things cannot happen.
+        document = CheckStructure(document, issues);
+
+        // A parameter that is not the kind of value its property needs (text where a pin number goes) is reported by name and set aside, so the checks
+        // below see the default and never trip over it.
+        document = CheckParameterKinds(document, catalog, issues, out var setAside);
         var board = ResolveBoard(document, issues);
         var nodesById = BuildNodeIndex(document, issues);
-        ValidateNodes(document, catalog, board, issues);
+        ValidateNodes(document, catalog, board, setAside, issues);
         ValidatePinConflicts(document, catalog, board, issues);
         ValidateConnections(document, catalog, nodesById, issues);
         ValidateRequiredInputs(document, catalog, issues);
         ValidateCycles(document, nodesById, issues);
 
         return new FlowValidationResult(issues);
+    }
+
+    private static FlowDocument CheckStructure(FlowDocument document, List<FlowValidationIssue> issues)
+    {
+        var changed = false;
+        var nodes = new List<FlowNode>();
+        var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var position = 0;
+        foreach (var node in document.Nodes)
+        {
+            position++;
+            if (node is null)
+            {
+                issues.Add(new FlowValidationIssue(FlowValidationSeverity.Error, $"Block {position} of the file is empty."));
+                changed = true;
+            }
+            else if (string.IsNullOrWhiteSpace(node.Id))
+            {
+                issues.Add(new FlowValidationIssue(FlowValidationSeverity.Error, "Node id is required."));
+                changed = true;
+            }
+            else if (!ids.Add(node.Id))
+            {
+                issues.Add(new FlowValidationIssue(FlowValidationSeverity.Error, $"Duplicate node id '{node.Id}'.", node.Id));
+                changed = true;
+            }
+            else if (node.Type is null || node.Parameters is null)
+            {
+                nodes.Add(new FlowNode
+                {
+                    Id = node.Id,
+                    Type = node.Type ?? string.Empty,
+                    Position = node.Position,
+                    Parameters = node.Parameters ?? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+                });
+                changed = true;
+            }
+            else
+            {
+                nodes.Add(node);
+            }
+        }
+
+        var wires = new List<FlowConnection>();
+        position = 0;
+        foreach (var wire in document.Connections)
+        {
+            position++;
+            if (wire is null)
+            {
+                issues.Add(new FlowValidationIssue(FlowValidationSeverity.Error, $"Wire {position} of the file is empty."));
+                changed = true;
+            }
+            else if (string.IsNullOrWhiteSpace(wire.Id) || wire.FromNodeId is null || wire.FromPort is null || wire.ToNodeId is null || wire.ToPort is null)
+            {
+                issues.Add(new FlowValidationIssue(
+                    FlowValidationSeverity.Error,
+                    $"Wire {position} of the file is missing its id, its source or its target (block and port).",
+                    ConnectionId: wire.Id));
+                changed = true;
+            }
+            else
+            {
+                wires.Add(wire);
+            }
+        }
+
+        if (!changed)
+            return document;
+
+        return new FlowDocument
+        {
+            Id = document.Id,
+            Name = document.Name,
+            BoardId = document.BoardId,
+            Version = document.Version,
+            Nodes = nodes,
+            Connections = wires
+        };
+    }
+
+    private static FlowDocument CheckParameterKinds(FlowDocument document, FlowBlockCatalog catalog, List<FlowValidationIssue> issues, out HashSet<(string NodeId, string Property)> setAside)
+    {
+        setAside = new HashSet<(string, string)>();
+        Dictionary<FlowNode, FlowNode>? replacements = null;
+        foreach (var node in document.Nodes)
+        {
+            if (!catalog.TryGet(node.Type, out var definition))
+                continue;
+
+            List<string>? bad = null;
+            foreach (var (name, value) in node.Parameters)
+            {
+                var property = definition.FindProperty(name);
+                if (property is null || value is null)
+                    continue;
+
+                try
+                {
+                    switch (property.ValueKind)
+                    {
+                        case FlowValueKind.Integer:
+                            FlowValueConverter.ConvertTo<int>(value, name);
+                            break;
+                        case FlowValueKind.Number:
+                            FlowValueConverter.ConvertTo<double>(value, name);
+                            break;
+                        case FlowValueKind.Boolean:
+                            FlowValueConverter.ConvertTo<bool>(value, name);
+                            break;
+                    }
+                }
+                catch (InvalidOperationException ex)
+                {
+                    (bad ??= []).Add(name);
+                    issues.Add(new FlowValidationIssue(FlowValidationSeverity.Error, $"Block '{definition.DisplayName}': {ex.Message}", node.Id));
+                }
+            }
+
+            if (bad is null)
+                continue;
+
+            foreach (var name in bad)
+                setAside.Add((node.Id, name));
+
+            var clean = new FlowNode { Id = node.Id, Type = node.Type, Position = node.Position };
+            foreach (var (name, value) in node.Parameters)
+            {
+                if (!bad.Contains(name))
+                    clean.Parameters[name] = value;
+            }
+
+            (replacements ??= new Dictionary<FlowNode, FlowNode>())[node] = clean;
+        }
+
+        if (replacements is null)
+            return document;
+
+        return new FlowDocument
+        {
+            Id = document.Id,
+            Name = document.Name,
+            BoardId = document.BoardId,
+            Version = document.Version,
+            Nodes = document.Nodes.Select(n => replacements.TryGetValue(n, out var clean) ? clean : n).ToList(),
+            Connections = document.Connections
+        };
     }
 
     private static Dictionary<string, FlowNode> BuildNodeIndex(
@@ -56,6 +211,7 @@ public sealed class FlowValidator
         FlowDocument document,
         FlowBlockCatalog catalog,
         BoardProfile board,
+        HashSet<(string NodeId, string Property)> setAside,
         List<FlowValidationIssue> issues)
     {
         foreach (var node in document.Nodes)
@@ -72,7 +228,7 @@ public sealed class FlowValidator
             foreach (var property in definition.Properties)
             {
                 var hasValue = node.Parameters.ContainsKey(property.Name) || property.DefaultValue is not null;
-                if (property.Required && !hasValue)
+                if (property.Required && !hasValue && !setAside.Contains((node.Id, property.Name)))
                 {
                     issues.Add(new FlowValidationIssue(
                         FlowValidationSeverity.Error,
