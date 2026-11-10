@@ -59,6 +59,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/CodeBridge.Core.Tests/CodeBridge.Core.Tests.csproj" />
     <Project Path="tests/CodeBridge.IotBindings.Tests/CodeBridge.IotBindings.Tests.csproj" />
+    <Project Path="tests/CodeBridge.Matrix.Tests/CodeBridge.Matrix.Tests.csproj" />
     <Project Path="tests/CodeBridge.WebEditor.Tests/CodeBridge.WebEditor.Tests.csproj" />
     <Project Path="tests/CodeBridge.LiveLink.Tests/CodeBridge.LiveLink.Tests.csproj" />
     <Project Path="tests/CodeBridge.Designer.WinForms.Tests/CodeBridge.Designer.WinForms.Tests.csproj" />

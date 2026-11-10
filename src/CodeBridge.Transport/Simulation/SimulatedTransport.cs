@@ -189,6 +189,9 @@ public sealed class SimulatedTransport : ITransport
         var name = colon < 0 ? line : line[..colon];
         var args = colon < 0 ? Array.Empty<string>() : line[(colon + 1)..].Split(':');
 
+        if (PinFields.TryGetValue(name, out var pinFields) && !PinFieldsAreUsable(name, args, pinFields))
+            return "ERR:Invalid pin";
+
         switch (name)
         {
             case "PING": return "OK:PONG";
@@ -317,7 +320,47 @@ public sealed class SimulatedTransport : ITransport
     private bool TryPin(string[] args, int index, out int pin)
     {
         pin = index < args.Length && int.TryParse(args[index], NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : -1;
-        return pin >= 0 && pin <= _options.MaxPin;
+        return pin >= 0 && pin <= _options.MaxPin && !IsFlashPin(pin);
+    }
+
+    /// <summary>
+    /// The pins wired to the flash chip: the firmware refuses them (isValidGpio in main.cpp) because driving one resets the board. Which pins they are depends on the chip,
+    /// and the simulator knows the chip by its name (ESP32-SIM, ESP32S3-SIM, ESP32C3-SIM, ESP32S2-SIM; an Arduino has none).
+    /// </summary>
+    private bool IsFlashPin(int pin)
+    {
+        var chip = _options.ChipName.ToLowerInvariant();
+        if (chip.Contains("esp32s2") || chip.Contains("esp32s3"))
+            return pin >= 26 && pin <= 32;
+        if (chip.Contains("esp32c3"))
+            return pin >= 12 && pin <= 17;
+
+        return chip.StartsWith("esp32", StringComparison.Ordinal) && pin >= 6 && pin <= 11;
+    }
+
+    /// <summary>
+    /// The commands that drive pins, and how many of their first fields are pins. The firmware requires those fields to be whole numbers (numericFields) on the chip and
+    /// not the flash pins (isValidGpio). A motor's enable pin may be -1, meaning there is none.
+    /// </summary>
+    private static readonly Dictionary<string, int> PinFields = new()
+    {
+        ["PM"] = 1, ["DW"] = 1, ["DR"] = 1, ["AR"] = 1, ["PW"] = 1, ["SA"] = 1, ["TN"] = 1, ["NI"] = 1, ["DHTR"] = 1,
+        ["ST"] = 1, ["SW"] = 1, ["SR"] = 1, ["OWS"] = 1, ["OWR"] = 1, ["OWW"] = 1, ["OWT"] = 1, ["USR"] = 2, ["MI"] = 3, ["STI"] = 4
+    };
+
+    private bool PinFieldsAreUsable(string name, string[] args, int count)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            if (i >= args.Length || !int.TryParse(args[i], NumberStyles.Integer, CultureInfo.InvariantCulture, out var pin))
+                return false;
+
+            var noPin = name == "MI" && i == 2 && pin < 0;
+            if (!noPin && (pin < 0 || pin > _options.MaxPin || IsFlashPin(pin)))
+                return false;
+        }
+
+        return true;
     }
 
     private static byte[] HexBytes(string? hex) => string.IsNullOrEmpty(hex) ? [] : Convert.FromHexString(hex);

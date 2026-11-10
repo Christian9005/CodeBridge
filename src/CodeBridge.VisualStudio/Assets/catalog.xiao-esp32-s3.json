@@ -416,7 +416,7 @@
           "valueKind": "integer",
           "required": true,
           "isAdvanced": false,
-          "defaultValue": 13,
+          "defaultValue": 1,
           "options": [
             {
               "label": "D0",

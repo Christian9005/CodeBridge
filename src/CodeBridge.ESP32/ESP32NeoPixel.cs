@@ -35,7 +35,7 @@ public class ESP32NeoPixel : ILedStrip
         ObjectDisposedException.ThrowIf(_disposed, this);
 
         var response = await _transport.SendCommandAsync(
-            BridgeProtocol.BuildCommand(BridgeProtocol.CMD_NEO_INIT, LedCount, Pin), ct);
+            BridgeProtocol.BuildCommand(BridgeProtocol.CMD_NEO_INIT, Pin, LedCount), ct);   // NI:pin:count, the order the firmware reads
 
         var (success, error) = BridgeProtocol.ParseResponse(response);
         if (!success)
@@ -117,15 +117,26 @@ public class ESP32NeoPixel : ILedStrip
         if (startIndex + colors.Length > LedCount)
             throw new ArgumentException("Color array exceeds strip length.");
 
-        // Build hex string: RRGGBBRRGGBB...
-        var hexColors = string.Concat(colors.Select(c => $"{c.R:X2}{c.G:X2}{c.B:X2}"));
+        // NR:start:r1:g1:b1:r2:g2:b2:..., the format the firmware reads (it used to be sent as NR:start:count:RRGGBB..., which the firmware read as
+        // colours of 'count' and of a hex string turned into a number). A pixel takes up to 12 characters and the firmware's line holds 512, so a long range goes in several commands.
+        const int pixelsPerCommand = 32;
+        for (var offset = 0; offset < colors.Length; offset += pixelsPerCommand)
+        {
+            var arguments = new List<object> { startIndex + offset };
+            foreach (var (r, g, b) in colors.Skip(offset).Take(pixelsPerCommand))
+            {
+                arguments.Add((int)r);
+                arguments.Add((int)g);
+                arguments.Add((int)b);
+            }
 
-        var response = await _transport.SendCommandAsync(
-            BridgeProtocol.BuildCommand(BridgeProtocol.CMD_NEO_RANGE, startIndex, colors.Length, hexColors), ct);
+            var response = await _transport.SendCommandAsync(
+                BridgeProtocol.BuildCommand(BridgeProtocol.CMD_NEO_RANGE, arguments.ToArray()), ct);
 
-        var (success, error) = BridgeProtocol.ParseResponse(response);
-        if (!success)
-            throw new InvalidOperationException($"NeoPixel set range failed: {error}");
+            var (success, error) = BridgeProtocol.ParseResponse(response);
+            if (!success)
+                throw new InvalidOperationException($"NeoPixel set range failed: {error}");
+        }
     }
 
     public void Dispose()

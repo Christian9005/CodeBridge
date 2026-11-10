@@ -396,7 +396,7 @@
           "valueKind": "integer",
           "required": true,
           "isAdvanced": false,
-          "defaultValue": 13,
+          "defaultValue": 0,
           "options": [
             {
               "label": "GPIO 0 - ADC1",
