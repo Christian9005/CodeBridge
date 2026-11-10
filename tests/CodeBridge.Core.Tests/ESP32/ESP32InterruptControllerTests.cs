@@ -131,13 +131,13 @@ public class ESP32InterruptControllerTests
     // ── Dispose ──────────────────────────────────────────────
 
     [Fact]
-    public void Dispose_Prevents_Further_Use()
+    public async Task Dispose_Prevents_Further_Use()
     {
         var transport = new MockTransport();
         var ctrl = new ESP32InterruptController(transport);
         ctrl.Dispose();
 
-        Assert.ThrowsAsync<ObjectDisposedException>(
+        await Assert.ThrowsAsync<ObjectDisposedException>(
             () => ctrl.AttachInterruptAsync(4, InterruptEdge.Rising));
     }
 }

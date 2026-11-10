@@ -215,12 +215,12 @@ public class ESP32Ina219SensorTests
     // ── Dispose ──────────────────────────────────────────────
 
     [Fact]
-    public void Dispose_Prevents_Further_Use()
+    public async Task Dispose_Prevents_Further_Use()
     {
         var transport = new MockTransport();
         var sensor = new ESP32Ina219Sensor(transport);
         sensor.Dispose();
 
-        Assert.ThrowsAsync<ObjectDisposedException>(() => sensor.ReadAllAsync());
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => sensor.ReadAllAsync());
     }
 }

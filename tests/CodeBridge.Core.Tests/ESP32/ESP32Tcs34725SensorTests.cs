@@ -193,12 +193,12 @@ public class ESP32Tcs34725SensorTests
     // ── Dispose ──────────────────────────────────────────────
 
     [Fact]
-    public void Dispose_Prevents_Further_Use()
+    public async Task Dispose_Prevents_Further_Use()
     {
         var transport = new MockTransport();
         var sensor = new ESP32Tcs34725Sensor(transport);
         sensor.Dispose();
 
-        Assert.ThrowsAsync<ObjectDisposedException>(() => sensor.ReadColorAsync());
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => sensor.ReadColorAsync());
     }
 }

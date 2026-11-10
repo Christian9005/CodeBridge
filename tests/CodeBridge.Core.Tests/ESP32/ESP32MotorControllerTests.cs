@@ -117,12 +117,12 @@ public class ESP32MotorControllerTests
     // ── Dispose ──────────────────────────────────────────────
 
     [Fact]
-    public void Dispose_Prevents_Further_Operations()
+    public async Task Dispose_Prevents_Further_Operations()
     {
         var transport = new MockTransport();
         var motor = new ESP32MotorController(transport, 27, 26);
         motor.Dispose();
 
-        Assert.ThrowsAsync<ObjectDisposedException>(() => motor.SetSpeedAsync(50));
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => motor.SetSpeedAsync(50));
     }
 }

@@ -120,12 +120,12 @@ public class ESP32RelayTests
     // ── Dispose ──────────────────────────────────────────────
 
     [Fact]
-    public void Dispose_Prevents_Further_Operations()
+    public async Task Dispose_Prevents_Further_Operations()
     {
         var transport = new MockTransport();
         var relay = new ESP32Relay(transport, 4);
         relay.Dispose();
 
-        Assert.ThrowsAsync<ObjectDisposedException>(() => relay.OnAsync());
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => relay.OnAsync());
     }
 }

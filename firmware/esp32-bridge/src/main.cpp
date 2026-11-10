@@ -411,6 +411,23 @@ String bytesToHexString(const uint8_t* data, int len);
 int findServo(int pin);
 void ensureOneWire(int pin);
 
+// Pins wired to the flash chip (and to PSRAM on some boards): driving one from a command resets the board, so no command accepts them.
+static bool isReservedPin(int pin) {
+#if defined(CONFIG_IDF_TARGET_ESP32)
+  return pin >= 6 && pin <= 11;
+#elif defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3)
+  return pin >= 26 && pin <= 32;
+#elif defined(CONFIG_IDF_TARGET_ESP32C3)
+  return pin >= 12 && pin <= 17;
+#else
+  return false;
+#endif
+}
+
+static bool isValidGpio(int pin) {
+  return pin >= 0 && pin < SOC_GPIO_PIN_COUNT && !isReservedPin(pin);
+}
+
 void loadWifiConfig();
 void saveWifiConfig();
 void connectWifi();
@@ -1535,7 +1552,7 @@ void handlePinMode(const char* params) {
   int pin = getNextParam(ptr);
   int mode = getNextParam(ptr);
 
-  if (pin < 0 || pin >= SOC_GPIO_PIN_COUNT) { sendError("Invalid pin"); return; }
+  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
 
   switch (mode) {
     case 0: pinMode(pin, INPUT); break;
@@ -1553,7 +1570,7 @@ void handleDigitalWrite(const char* params) {
   int pin = getNextParam(ptr);
   int value = getNextParam(ptr);
 
-  if (pin < 0 || pin >= SOC_GPIO_PIN_COUNT) { sendError("Invalid pin"); return; }
+  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
 
   digitalWrite(pin, value ? HIGH : LOW);
   sendOK();
@@ -1563,7 +1580,7 @@ void handleDigitalRead(const char* params) {
   const char* ptr = params;
   int pin = getNextParam(ptr);
 
-  if (pin < 0 || pin >= SOC_GPIO_PIN_COUNT) { sendError("Invalid pin"); return; }
+  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
 
   int value = digitalRead(pin);
   char buf[4];
@@ -1575,7 +1592,7 @@ void handleAnalogRead(const char* params) {
   const char* ptr = params;
   int pin = getNextParam(ptr);
 
-  if (pin < 0 || pin >= SOC_GPIO_PIN_COUNT) { sendError("Invalid pin"); return; }
+  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
 
   int value = analogRead(pin);
   char buf[8];
@@ -1589,7 +1606,7 @@ void handlePwmWrite(const char* params) {
   int duty = getNextParam(ptr);
   int freq = getNextParam(ptr);
 
-  if (pin < 0 || pin >= SOC_GPIO_PIN_COUNT) { sendError("Invalid pin"); return; }
+  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
   if (duty < 0 || duty > 255) { sendError("Invalid duty"); return; }
   if (freq <= 0) freq = 5000;
 
@@ -1913,7 +1930,9 @@ void handleSpiTransfer(const char* params) {
   String hexData = getNextParamStr(ptr);
 
   int len = hexData.length() / 2;
+  if (!isValidGpio(csPin)) { sendError("Invalid pin"); return; }
   if (len == 0) { sendError("No data"); return; }
+  if (len > 256) { sendError("Invalid length"); return; }
 
   uint8_t* txBuf = new uint8_t[len];
   uint8_t* rxBuf = new uint8_t[len];
@@ -1940,7 +1959,9 @@ void handleSpiWrite(const char* params) {
   String hexData = getNextParamStr(ptr);
 
   int len = hexData.length() / 2;
+  if (!isValidGpio(csPin)) { sendError("Invalid pin"); return; }
   if (len == 0) { sendError("No data"); return; }
+  if (len > 256) { sendError("Invalid length"); return; }
 
   uint8_t* buf = new uint8_t[len];
   hexStringToBytes(hexData.c_str(), buf, len);
@@ -1961,6 +1982,7 @@ void handleSpiRead(const char* params) {
   int csPin = getNextParam(ptr);
   int len = getNextParam(ptr);
 
+  if (!isValidGpio(csPin)) { sendError("Invalid pin"); return; }
   if (len <= 0 || len > 256) { sendError("Invalid length"); return; }
 
   uint8_t* buf = new uint8_t[len];
@@ -1998,6 +2020,7 @@ void handleOwScan(const char* params) {
   const char* ptr = params;
   int pin = getNextParam(ptr);
 
+  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
   ensureOneWire(pin);
 
   uint8_t addr[8];
@@ -2024,6 +2047,9 @@ void handleOwRead(const char* params) {
   String addrHex = getNextParamStr(ptr);
   int len = getNextParam(ptr);
 
+  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (len < 1 || len > 64) { sendError("Invalid length"); return; }
+  if (addrHex.length() != 16) { sendError("Invalid address"); return; }
   ensureOneWire(pin);
 
   uint8_t addr[8];
@@ -2050,6 +2076,9 @@ void handleOwWrite(const char* params) {
   String addrHex = getNextParamStr(ptr);
   String dataHex = getNextParamStr(ptr);
 
+  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (addrHex.length() != 16) { sendError("Invalid address"); return; }
+  if (dataHex.length() < 2 || dataHex.length() > 256) { sendError("Invalid data length"); return; }
   ensureOneWire(pin);
 
   uint8_t addr[8];
@@ -2074,6 +2103,7 @@ void handleOwTemp(const char* params) {
   int pin = getNextParam(ptr);
   String addrHex = getNextParamStr(ptr);
 
+  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
   ensureOneWire(pin);
   dallasSensors->requestTemperatures();
 
@@ -2113,13 +2143,17 @@ void handleServoAttach(const char* params) {
   int minUs = getNextParam(ptr);
   int maxUs = getNextParam(ptr);
 
+  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
   if (minUs <= 0) minUs = 500;
   if (maxUs <= 0) maxUs = 2500;
 
   int idx = findServo(pin);
   if (idx < 0) {
-    if (servoCount >= MAX_SERVOS) { sendError("Max servos reached"); return; }
-    idx = servoCount++;
+    for (int i = 0; i < MAX_SERVOS; i++) {
+      if (!servoActive[i]) { idx = i; break; }   // a slot freed by a detach is used again
+    }
+    if (idx < 0) { sendError("Max servos reached"); return; }
+    if (idx >= servoCount) servoCount = idx + 1;
     servoPins[idx] = pin;
     servoActive[idx] = true;
   }
@@ -2186,6 +2220,7 @@ void handleNeoInit(const char* params) {
   int pin = getNextParam(ptr);
   int count = getNextParam(ptr);
 
+  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
   if (count <= 0 || count > 1000) { sendError("Invalid LED count"); return; }
 
   if (neoStrip) delete neoStrip;
@@ -2280,7 +2315,9 @@ void handleTone(const char* params) {
   int freq = getNextParam(ptr);
   int durationMs = getNextParam(ptr);
 
-  if (freq <= 0) { sendError("Invalid frequency"); return; }
+  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (freq <= 0 || freq > 312500) { sendError("Invalid frequency"); return; }
+  if (durationMs > 60000) { sendError("Duration too long (max 60000 ms)"); return; }
 
   int ch = findOrCreatePwmChannel(pin);
   if (ch < 0) { sendError("No PWM channels"); return; }
@@ -2300,9 +2337,12 @@ void handleNoTone(const char* params) {
   const char* ptr = params;
   int pin = getNextParam(ptr);
 
-  int ch = findOrCreatePwmChannel(pin);
-  if (ch >= 0) {
-    ledcWrite(ch, 0);
+  // Only a pin that is playing a tone has a channel; asking to silence any other pin must not use one up.
+  for (int i = 0; i < MAX_PWM_CHANNELS; i++) {
+    if (pwmChannels[i].active && pwmChannels[i].pin == pin) {
+      ledcWrite(pwmChannels[i].channel, 0);
+      break;
+    }
   }
   sendOK();
 }
@@ -2320,6 +2360,8 @@ void handleDhtRead(const char* params) {
   const char* ptr = params;
   int pin = getNextParam(ptr);
   int type = getNextParam(ptr); // 11=DHT11, 22=DHT22
+
+  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
 
   // DHT read bit-bang
   uint8_t data[5] = {0};
@@ -2383,6 +2425,8 @@ void handleUltrasonicRead(const char* params) {
   int trigPin = getNextParam(ptr);
   int echoPin = getNextParam(ptr);
 
+  if (!isValidGpio(trigPin) || !isValidGpio(echoPin)) { sendError("Invalid pin"); return; }
+
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
 
@@ -2419,21 +2463,34 @@ void handleMotorInit(const char* params) {
   int in2 = getNextParam(ptr);
   int enPin = getNextParam(ptr);
 
-  if (motorCount >= MAX_MOTORS) { sendError("Max motors reached"); return; }
+  if (!isValidGpio(in1) || !isValidGpio(in2) || (enPin >= 0 && !isValidGpio(enPin))) { sendError("Invalid pin"); return; }
 
+  // Starting a motor that is already set up (a client that connected again) reuses its slot instead of using a new one.
+  int idx = -1;
+  for (int i = 0; i < motorCount; i++) {
+    if (motors[i].active && motors[i].in1 == in1) { idx = i; break; }
+  }
+  if (idx < 0) {
+    if (motorCount >= MAX_MOTORS) { sendError("Max motors reached"); return; }
+    idx = motorCount;
+  }
+
+  int ch = -1;
+  if (enPin >= 0) {
+    ch = findOrCreatePwmChannel(enPin);
+    if (ch < 0) { sendError("No PWM channels"); return; }
+  }
+
+  if (idx == motorCount) motorCount++;
   pinMode(in1, OUTPUT);
   pinMode(in2, OUTPUT);
-
-  int idx = motorCount++;
   motors[idx].in1 = in1;
   motors[idx].in2 = in2;
   motors[idx].enPin = enPin;
+  motors[idx].pwmChannel = ch;
   motors[idx].active = true;
 
-  if (enPin >= 0) {
-    int ch = findOrCreatePwmChannel(enPin);
-    if (ch < 0) { sendError("No PWM channels"); return; }
-    motors[idx].pwmChannel = ch;
+  if (ch >= 0) {
     ledcSetup(ch, 5000, 8);
     ledcAttachPin(enPin, ch);
     ledcWrite(ch, 0);
@@ -2505,6 +2562,11 @@ static const uint8_t STEPPER_SEQ[8][4] = {
   {0,0,1,0}, {0,0,1,1}, {0,0,0,1}, {1,0,0,1}
 };
 
+static const int STEPPER_MAX_STEPS_PER_REV = 100000;
+static const int STEPPER_MAX_RPM = 1000;
+static const int STEPPER_MAX_STEPS = 100000;
+static const uint64_t STEPPER_MAX_MOVE_US = 60000000ULL;   // one move may take 60 seconds at most
+
 int findStepper(int p1) {
   for (int i = 0; i < stepperCount; i++) {
     if (steppers[i].active && steppers[i].pins[0] == p1) return i;
@@ -2521,10 +2583,17 @@ void handleStepperInit(const char* params) {
   int p4 = getNextParam(ptr);
   int stepsPerRev = getNextParam(ptr);
 
-  if (stepperCount >= MAX_STEPPERS) { sendError("Max steppers reached"); return; }
+  if (!isValidGpio(p1) || !isValidGpio(p2) || !isValidGpio(p3) || !isValidGpio(p4)) { sendError("Invalid pin"); return; }
   if (stepsPerRev <= 0) stepsPerRev = 2048; // Default for 28BYJ-48
+  if (stepsPerRev > STEPPER_MAX_STEPS_PER_REV) { sendError("Invalid steps per revolution"); return; }
 
-  int idx = stepperCount++;
+  // Starting a stepper that is already set up (a client that connected again) reuses its slot instead of using a new one.
+  int idx = findStepper(p1);
+  if (idx < 0) {
+    if (stepperCount >= MAX_STEPPERS) { sendError("Max steppers reached"); return; }
+    idx = stepperCount++;
+  }
+
   steppers[idx].pins[0] = p1;
   steppers[idx].pins[1] = p2;
   steppers[idx].pins[2] = p3;
@@ -2550,14 +2619,21 @@ void handleStepperStep(const char* params) {
   if (idx < 0) { sendError("Stepper not initialized"); return; }
 
   if (speedRpm <= 0) speedRpm = 10;
+  if (speedRpm > STEPPER_MAX_RPM) speedRpm = STEPPER_MAX_RPM;
+  if (steps > STEPPER_MAX_STEPS || steps < -STEPPER_MAX_STEPS) { sendError("Too many steps"); return; }
 
   // Calculate delay between steps in microseconds
-  // delay = 60,000,000 / (stepsPerRev * rpm)
-  unsigned long stepDelayUs = 60000000UL / ((unsigned long)steppers[idx].stepsPerRev * speedRpm);
+  // delay = 60,000,000 / (stepsPerRev * rpm). 64 bits: the product of two large numbers must not wrap around to zero.
+  uint64_t stepsPerMinute = (uint64_t)steppers[idx].stepsPerRev * (uint64_t)speedRpm;
+  unsigned long stepDelayUs = (unsigned long)(60000000ULL / stepsPerMinute);
   if (stepDelayUs < 800) stepDelayUs = 800; // Min ~800µs per step
 
   int direction = steps > 0 ? 1 : -1;
-  int totalSteps = abs(steps);
+  int totalSteps = steps > 0 ? steps : -steps;
+
+  // The move blocks the board (and every client) until it ends, so it may not last for hours.
+  if ((uint64_t)totalSteps * stepDelayUs > STEPPER_MAX_MOVE_US) { sendError("Move takes too long"); return; }
+
   int seqIdx = 0;
 
   for (int s = 0; s < totalSteps; s++) {
@@ -2566,6 +2642,7 @@ void handleStepperStep(const char* params) {
     }
     seqIdx = (seqIdx + direction + 8) % 8;
     delayMicroseconds(stepDelayUs);
+    if ((s & 0xFF) == 0xFF) yield();
   }
 
   // Release coils to save power
@@ -2990,7 +3067,7 @@ void handleSampleConfig(const char* params) {
   int backpressure = getNextParam(ptr);
   int batchSize = getNextParam(ptr);
 
-  if (pin < 0 || pin >= SOC_GPIO_PIN_COUNT) { sendError("Invalid pin"); return; }
+  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
   if (mode < 0 || mode > 2) { sendError("Invalid sampling mode"); return; }
   if (sampleRateHz <= 0 || sampleRateHz > 10000) { sendError("Sample rate 1-10000 Hz"); return; }
   if (capacity <= 0 || capacity > MAX_SAMPLE_BUFFER_CAPACITY) { sendError("Buffer capacity 1-4096"); return; }
@@ -3145,7 +3222,7 @@ void handleInterruptAttach(const char* params) {
   int pin = getNextParam(ptr);
   int edge = getNextParam(ptr); // 1=RISING, 2=FALLING, 3=CHANGE
 
-  if (pin < 0 || pin >= SOC_GPIO_PIN_COUNT) { sendError("Invalid pin"); return; }
+  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
   if (edge < 1 || edge > 3) { sendError("Invalid edge (1=RISING,2=FALLING,3=CHANGE)"); return; }
 
   // Check if already attached
@@ -3271,7 +3348,7 @@ void handleDeepSleepPin(const char* params) {
   int pin = getNextParam(ptr);
   int level = getNextParam(ptr); // 0=LOW, 1=HIGH
 
-  if (pin < 0 || pin >= SOC_GPIO_PIN_COUNT) { sendError("Invalid pin"); return; }
+  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
 
   // Only RTC GPIOs can wake (ESP32: 0,2,4,12-15,25-27,32-39; ESP32-C3: 0-5)
   uint64_t mask = 1ULL << pin;

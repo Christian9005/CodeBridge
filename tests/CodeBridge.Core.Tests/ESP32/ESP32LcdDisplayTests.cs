@@ -143,12 +143,12 @@ public class ESP32LcdDisplayTests
     // ── Dispose ──────────────────────────────────────────────
 
     [Fact]
-    public void Dispose_Prevents_Further_Operations()
+    public async Task Dispose_Prevents_Further_Operations()
     {
         var transport = new MockTransport();
         var lcd = new ESP32LcdDisplay(transport);
         lcd.Dispose();
 
-        Assert.ThrowsAsync<ObjectDisposedException>(() => lcd.ClearAsync());
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => lcd.ClearAsync());
     }
 }

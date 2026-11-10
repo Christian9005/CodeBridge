@@ -79,13 +79,13 @@ public class ESP32BuzzerTests
     // ── Dispose ──────────────────────────────────────────────
 
     [Fact]
-    public void Dispose_Prevents_Further_Operations()
+    public async Task Dispose_Prevents_Further_Operations()
     {
         var transport = new MockTransport();
         var buzzer = new ESP32Buzzer(transport, 25);
         buzzer.Dispose();
 
-        Assert.ThrowsAsync<ObjectDisposedException>(
+        await Assert.ThrowsAsync<ObjectDisposedException>(
             () => buzzer.ToneAsync(440, TimeSpan.FromSeconds(1)));
     }
 }

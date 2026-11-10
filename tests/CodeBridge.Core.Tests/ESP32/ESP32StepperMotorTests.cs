@@ -107,12 +107,12 @@ public class ESP32StepperMotorTests
     // ── Dispose ──────────────────────────────────────────────
 
     [Fact]
-    public void Dispose_Prevents_Further_Operations()
+    public async Task Dispose_Prevents_Further_Operations()
     {
         var transport = new MockTransport();
         var stepper = new ESP32StepperMotor(transport, 19, 18, 5, 17);
         stepper.Dispose();
 
-        Assert.ThrowsAsync<ObjectDisposedException>(() => stepper.StepAsync(100));
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => stepper.StepAsync(100));
     }
 }
