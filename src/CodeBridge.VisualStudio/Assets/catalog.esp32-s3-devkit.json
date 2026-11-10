@@ -576,7 +576,7 @@
           "valueKind": "integer",
           "required": true,
           "isAdvanced": false,
-          "defaultValue": 13,
+          "defaultValue": 4,
           "options": [
             {
               "label": "GPIO 4 - ADC1",

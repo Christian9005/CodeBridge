@@ -57,6 +57,13 @@ public static class BuiltInBlockCatalog
         new("Pause", nameof(BackpressurePolicy.Pause), "Ask the producer to slow down when possible.")
     ];
 
+    /// <summary>13 where the board offers it (the ESP32 DevKit, the pin the examples use); otherwise the first pin the board recommends for servos, so a new Servo Write block is valid on every board.</summary>
+    private static object DefaultServoPin(BoardProfile board)
+    {
+        var offered = board.ServoPinOptions;
+        return offered.Any(option => Equals(option.Value, 13)) || offered.Count == 0 ? 13 : offered[0].Value;
+    }
+
     public static FlowBlockCatalog Create(BoardProfile? boardProfile = null)
     {
         var board = boardProfile ?? BuiltInBoardProfiles.Default;
@@ -268,7 +275,7 @@ public static class BuiltInBlockCatalog
                     new FlowPropertyDefinition("analog", FlowValueKind.Boolean, DefaultValue: false, Options: BooleanOptions),
                     new FlowPropertyDefinition("mode", FlowValueKind.String, DefaultValue: nameof(SamplingMode.Polling), Options: SamplingModeOptions),
                     new FlowPropertyDefinition("sampleRateHz", FlowValueKind.Integer, DefaultValue: 1000, IsAdvanced: true),
-                    new FlowPropertyDefinition("bufferCapacity", FlowValueKind.Integer, DefaultValue: 4096, IsAdvanced: true),
+                    new FlowPropertyDefinition("bufferCapacity", FlowValueKind.Integer, DefaultValue: Math.Min(4096, board.Runtime.MaxBufferCapacity), IsAdvanced: true),
                     new FlowPropertyDefinition("backpressure", FlowValueKind.String, DefaultValue: nameof(BackpressurePolicy.DropOldest), Options: BackpressureOptions, IsAdvanced: true),
                     new FlowPropertyDefinition("batchSize", FlowValueKind.Integer, DefaultValue: 32, IsAdvanced: true)
                 ]
@@ -329,7 +336,7 @@ public static class BuiltInBlockCatalog
                 ],
                 Properties =
                 [
-                    new FlowPropertyDefinition("pin", FlowValueKind.Integer, Required: true, DefaultValue: 13, Options: board.ServoPinOptions),
+                    new FlowPropertyDefinition("pin", FlowValueKind.Integer, Required: true, DefaultValue: DefaultServoPin(board), Options: board.ServoPinOptions),
                     new FlowPropertyDefinition("angle", FlowValueKind.Number, DefaultValue: 90),
                     new FlowPropertyDefinition("minPulseUs", FlowValueKind.Integer, DefaultValue: 500, IsAdvanced: true),
                     new FlowPropertyDefinition("maxPulseUs", FlowValueKind.Integer, DefaultValue: 2500, IsAdvanced: true)

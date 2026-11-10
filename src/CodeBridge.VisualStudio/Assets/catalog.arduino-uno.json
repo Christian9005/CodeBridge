@@ -252,7 +252,7 @@
           "valueKind": "integer",
           "required": false,
           "isAdvanced": true,
-          "defaultValue": 4096
+          "defaultValue": 512
         },
         {
           "name": "backpressure",
@@ -323,7 +323,7 @@
           "valueKind": "integer",
           "required": true,
           "isAdvanced": false,
-          "defaultValue": 13,
+          "defaultValue": 9,
           "options": [
             {
               "label": "D9 - Servo / PWM",

@@ -106,6 +106,29 @@ public class ESP32SpiControllerTests
     }
 
     [Fact]
+    public async Task SetClockSpeedAsync_Does_Not_Change_The_Mode()
+    {
+        // the firmware sets the mode for any value from 0 to 3, so a 0 here would undo a mode chosen before: -1 means "leave it"
+        var transport = CreateTransport("OK");
+        var spi = new ESP32SpiController(transport);
+
+        await spi.SetClockSpeedAsync(4000000);
+
+        Assert.Equal("SC:4000000:-1\n", transport.LastCommand);
+    }
+
+    [Fact]
+    public async Task SetModeAsync_Does_Not_Change_The_Speed()
+    {
+        var transport = CreateTransport("OK");
+        var spi = new ESP32SpiController(transport);
+
+        await spi.SetModeAsync(3);
+
+        Assert.Equal("SC:0:3\n", transport.LastCommand);   // the firmware ignores a speed of 0 or less
+    }
+
+    [Fact]
     public async Task SetModeAsync_Sends_SC_Command()
     {
         var transport = CreateTransport("OK");

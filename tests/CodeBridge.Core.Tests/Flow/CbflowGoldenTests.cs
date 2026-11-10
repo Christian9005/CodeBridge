@@ -317,7 +317,11 @@ public class CbflowGoldenTests
 
                 if (!now.ValueKind.ToString().Equals(old.Kind, StringComparison.OrdinalIgnoreCase))
                     problems.Add($"{oldBlock.Name}: property {old.Name} was {old.Kind}, now {now.ValueKind}");
-                if (Norm(now.DefaultValue) != old.Default)
+                // A default that the board did not offer among its own choices (Servo Write's pin 13 on an Uno) never made a valid flow: changing it breaks no file.
+                var oldDefaultWasOffered = old.Choices.Count == 0 || old.Default is null || old.Choices.Contains(old.Default);
+                // Likewise a buffer bigger than the board allows (Sample Channel's 4096 samples on an Uno, which holds 512): the flow was refused, so it is now the most the board takes.
+                var oldBufferWasTooBig = old.Name == "bufferCapacity" && int.TryParse(old.Default, out var oldBuffer) && oldBuffer > profile.Runtime.MaxBufferCapacity;
+                if (oldDefaultWasOffered && !oldBufferWasTooBig && Norm(now.DefaultValue) != old.Default)
                     problems.Add($"{oldBlock.Name}: property {old.Name} default was {old.Default}, now {Norm(now.DefaultValue)}: a file that does not set it changes meaning");
 
                 var nowChoices = (now.Options ?? []).Select(o => Norm(o.Value)).ToHashSet();

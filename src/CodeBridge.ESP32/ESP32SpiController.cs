@@ -74,7 +74,7 @@ public class ESP32SpiController : ISpiController
         ObjectDisposedException.ThrowIf(_disposed, this);
 
         var response = await _transport.SendCommandAsync(
-            BridgeProtocol.BuildCommand(BridgeProtocol.CMD_SPI_CONFIG, speedHz, 0), ct);
+            BridgeProtocol.BuildCommand(BridgeProtocol.CMD_SPI_CONFIG, speedHz, -1), ct);   // -1: leave the mode as it is (the firmware sets the mode for 0 to 3, and 0 is a mode)
 
         var (success, error) = BridgeProtocol.ParseResponse(response);
         if (!success)
