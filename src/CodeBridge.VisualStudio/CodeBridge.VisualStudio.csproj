@@ -46,6 +46,10 @@
     <VSCTCompile Include="Commands\CodeBridgeCommands.vsct">
       <ResourceName>CodeBridgeCommands.CTMENU</ResourceName>
     </VSCTCompile>
+    <!-- Visual Studio reads the texts it asks the package for by number (the 110 of [ProvideEditorFactory]) from a resource called "VSPackage". -->
+    <EmbeddedResource Update="VSPackage.resx">
+      <ManifestResourceName>VSPackage</ManifestResourceName>
+    </EmbeddedResource>
     <None Update="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
