@@ -40,7 +40,7 @@
 #include <Update.h>
 #include <PubSubClient.h>
 
-#define FIRMWARE_VERSION "0.9.1"
+#define FIRMWARE_VERSION "0.9.2"
 #define MAX_CMD_LENGTH 512
 #define SERIAL_BAUD 115200
 #define TCP_PORT 8080
@@ -426,6 +426,22 @@ static bool isReservedPin(int pin) {
 
 static bool isValidGpio(int pin) {
   return pin >= 0 && pin < SOC_GPIO_PIN_COUNT && !isReservedPin(pin);
+}
+
+// The protocol reads a field that is empty or not a number as 0 (getNextParam uses atoi). For a command that drives a pin that would mean GPIO0, a pin the
+// chip reads when it starts, so "DW" or "DW:abc:1" would pull it low. A command that drives pins requires its first `count` fields to be whole numbers.
+static bool numericFields(const char* params, int count) {
+  const char* p = params;
+  for (int i = 0; i < count; i++) {
+    const char* q = p;
+    if (*q == '-') q++;
+    if (*q < '0' || *q > '9') return false;
+    while (*q >= '0' && *q <= '9') q++;
+    if (i == count - 1) return *q == ':' || *q == '\0';
+    if (*q != ':') return false;
+    p = q + 1;
+  }
+  return true;
 }
 
 void loadWifiConfig();
@@ -1552,7 +1568,7 @@ void handlePinMode(const char* params) {
   int pin = getNextParam(ptr);
   int mode = getNextParam(ptr);
 
-  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(pin)) { sendError("Invalid pin"); return; }
 
   switch (mode) {
     case 0: pinMode(pin, INPUT); break;
@@ -1570,7 +1586,7 @@ void handleDigitalWrite(const char* params) {
   int pin = getNextParam(ptr);
   int value = getNextParam(ptr);
 
-  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(pin)) { sendError("Invalid pin"); return; }
 
   digitalWrite(pin, value ? HIGH : LOW);
   sendOK();
@@ -1580,7 +1596,7 @@ void handleDigitalRead(const char* params) {
   const char* ptr = params;
   int pin = getNextParam(ptr);
 
-  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(pin)) { sendError("Invalid pin"); return; }
 
   int value = digitalRead(pin);
   char buf[4];
@@ -1592,7 +1608,7 @@ void handleAnalogRead(const char* params) {
   const char* ptr = params;
   int pin = getNextParam(ptr);
 
-  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(pin)) { sendError("Invalid pin"); return; }
 
   int value = analogRead(pin);
   char buf[8];
@@ -1606,7 +1622,7 @@ void handlePwmWrite(const char* params) {
   int duty = getNextParam(ptr);
   int freq = getNextParam(ptr);
 
-  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(pin)) { sendError("Invalid pin"); return; }
   if (duty < 0 || duty > 255) { sendError("Invalid duty"); return; }
   if (freq <= 0) freq = 5000;
 
@@ -1930,7 +1946,7 @@ void handleSpiTransfer(const char* params) {
   String hexData = getNextParamStr(ptr);
 
   int len = hexData.length() / 2;
-  if (!isValidGpio(csPin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(csPin)) { sendError("Invalid pin"); return; }
   if (len == 0) { sendError("No data"); return; }
   if (len > 256) { sendError("Invalid length"); return; }
 
@@ -1959,7 +1975,7 @@ void handleSpiWrite(const char* params) {
   String hexData = getNextParamStr(ptr);
 
   int len = hexData.length() / 2;
-  if (!isValidGpio(csPin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(csPin)) { sendError("Invalid pin"); return; }
   if (len == 0) { sendError("No data"); return; }
   if (len > 256) { sendError("Invalid length"); return; }
 
@@ -1982,7 +1998,7 @@ void handleSpiRead(const char* params) {
   int csPin = getNextParam(ptr);
   int len = getNextParam(ptr);
 
-  if (!isValidGpio(csPin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(csPin)) { sendError("Invalid pin"); return; }
   if (len <= 0 || len > 256) { sendError("Invalid length"); return; }
 
   uint8_t* buf = new uint8_t[len];
@@ -2020,7 +2036,7 @@ void handleOwScan(const char* params) {
   const char* ptr = params;
   int pin = getNextParam(ptr);
 
-  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(pin)) { sendError("Invalid pin"); return; }
   ensureOneWire(pin);
 
   uint8_t addr[8];
@@ -2047,7 +2063,7 @@ void handleOwRead(const char* params) {
   String addrHex = getNextParamStr(ptr);
   int len = getNextParam(ptr);
 
-  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(pin)) { sendError("Invalid pin"); return; }
   if (len < 1 || len > 64) { sendError("Invalid length"); return; }
   if (addrHex.length() != 16) { sendError("Invalid address"); return; }
   ensureOneWire(pin);
@@ -2076,7 +2092,7 @@ void handleOwWrite(const char* params) {
   String addrHex = getNextParamStr(ptr);
   String dataHex = getNextParamStr(ptr);
 
-  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(pin)) { sendError("Invalid pin"); return; }
   if (addrHex.length() != 16) { sendError("Invalid address"); return; }
   if (dataHex.length() < 2 || dataHex.length() > 256) { sendError("Invalid data length"); return; }
   ensureOneWire(pin);
@@ -2103,7 +2119,7 @@ void handleOwTemp(const char* params) {
   int pin = getNextParam(ptr);
   String addrHex = getNextParamStr(ptr);
 
-  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(pin)) { sendError("Invalid pin"); return; }
   ensureOneWire(pin);
   dallasSensors->requestTemperatures();
 
@@ -2143,7 +2159,7 @@ void handleServoAttach(const char* params) {
   int minUs = getNextParam(ptr);
   int maxUs = getNextParam(ptr);
 
-  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(pin)) { sendError("Invalid pin"); return; }
   if (minUs <= 0) minUs = 500;
   if (maxUs <= 0) maxUs = 2500;
 
@@ -2220,7 +2236,7 @@ void handleNeoInit(const char* params) {
   int pin = getNextParam(ptr);
   int count = getNextParam(ptr);
 
-  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(pin)) { sendError("Invalid pin"); return; }
   if (count <= 0 || count > 1000) { sendError("Invalid LED count"); return; }
 
   if (neoStrip) delete neoStrip;
@@ -2315,7 +2331,7 @@ void handleTone(const char* params) {
   int freq = getNextParam(ptr);
   int durationMs = getNextParam(ptr);
 
-  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(pin)) { sendError("Invalid pin"); return; }
   if (freq <= 0 || freq > 312500) { sendError("Invalid frequency"); return; }
   if (durationMs > 60000) { sendError("Duration too long (max 60000 ms)"); return; }
 
@@ -2361,7 +2377,7 @@ void handleDhtRead(const char* params) {
   int pin = getNextParam(ptr);
   int type = getNextParam(ptr); // 11=DHT11, 22=DHT22
 
-  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(pin)) { sendError("Invalid pin"); return; }
 
   // DHT read bit-bang
   uint8_t data[5] = {0};
@@ -2425,7 +2441,7 @@ void handleUltrasonicRead(const char* params) {
   int trigPin = getNextParam(ptr);
   int echoPin = getNextParam(ptr);
 
-  if (!isValidGpio(trigPin) || !isValidGpio(echoPin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 2) || !isValidGpio(trigPin) || !isValidGpio(echoPin)) { sendError("Invalid pin"); return; }
 
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
@@ -2463,7 +2479,7 @@ void handleMotorInit(const char* params) {
   int in2 = getNextParam(ptr);
   int enPin = getNextParam(ptr);
 
-  if (!isValidGpio(in1) || !isValidGpio(in2) || (enPin >= 0 && !isValidGpio(enPin))) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 3) || !isValidGpio(in1) || !isValidGpio(in2) || (enPin >= 0 && !isValidGpio(enPin))) { sendError("Invalid pin"); return; }
 
   // Starting a motor that is already set up (a client that connected again) reuses its slot instead of using a new one.
   int idx = -1;
@@ -2583,7 +2599,7 @@ void handleStepperInit(const char* params) {
   int p4 = getNextParam(ptr);
   int stepsPerRev = getNextParam(ptr);
 
-  if (!isValidGpio(p1) || !isValidGpio(p2) || !isValidGpio(p3) || !isValidGpio(p4)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 4) || !isValidGpio(p1) || !isValidGpio(p2) || !isValidGpio(p3) || !isValidGpio(p4)) { sendError("Invalid pin"); return; }
   if (stepsPerRev <= 0) stepsPerRev = 2048; // Default for 28BYJ-48
   if (stepsPerRev > STEPPER_MAX_STEPS_PER_REV) { sendError("Invalid steps per revolution"); return; }
 
@@ -3067,7 +3083,7 @@ void handleSampleConfig(const char* params) {
   int backpressure = getNextParam(ptr);
   int batchSize = getNextParam(ptr);
 
-  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(pin)) { sendError("Invalid pin"); return; }
   if (mode < 0 || mode > 2) { sendError("Invalid sampling mode"); return; }
   if (sampleRateHz <= 0 || sampleRateHz > 10000) { sendError("Sample rate 1-10000 Hz"); return; }
   if (capacity <= 0 || capacity > MAX_SAMPLE_BUFFER_CAPACITY) { sendError("Buffer capacity 1-4096"); return; }
@@ -3222,7 +3238,7 @@ void handleInterruptAttach(const char* params) {
   int pin = getNextParam(ptr);
   int edge = getNextParam(ptr); // 1=RISING, 2=FALLING, 3=CHANGE
 
-  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(pin)) { sendError("Invalid pin"); return; }
   if (edge < 1 || edge > 3) { sendError("Invalid edge (1=RISING,2=FALLING,3=CHANGE)"); return; }
 
   // Check if already attached
@@ -3348,7 +3364,7 @@ void handleDeepSleepPin(const char* params) {
   int pin = getNextParam(ptr);
   int level = getNextParam(ptr); // 0=LOW, 1=HIGH
 
-  if (!isValidGpio(pin)) { sendError("Invalid pin"); return; }
+  if (!numericFields(params, 1) || !isValidGpio(pin)) { sendError("Invalid pin"); return; }
 
   // Only RTC GPIOs can wake (ESP32: 0,2,4,12-15,25-27,32-39; ESP32-C3: 0-5)
   uint64_t mask = 1ULL << pin;
