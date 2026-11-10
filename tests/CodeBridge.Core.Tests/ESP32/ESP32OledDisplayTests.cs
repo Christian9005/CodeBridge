@@ -167,12 +167,12 @@ public class ESP32OledDisplayTests
     // ── Dispose ──────────────────────────────────────────────
 
     [Fact]
-    public void Dispose_Prevents_Further_Operations()
+    public async Task Dispose_Prevents_Further_Operations()
     {
         var transport = new MockTransport();
         var oled = new ESP32OledDisplay(transport);
         oled.Dispose();
 
-        Assert.ThrowsAsync<ObjectDisposedException>(() => oled.ClearAsync());
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => oled.ClearAsync());
     }
 }

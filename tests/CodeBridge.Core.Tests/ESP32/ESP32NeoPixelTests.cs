@@ -152,12 +152,12 @@ public class ESP32NeoPixelTests
     // ── Dispose ──────────────────────────────────────────────
 
     [Fact]
-    public void Dispose_Prevents_Further_Operations()
+    public async Task Dispose_Prevents_Further_Operations()
     {
         var transport = new MockTransport();
         var neo = new ESP32NeoPixel(transport, 16, 8);
         neo.Dispose();
 
-        Assert.ThrowsAsync<ObjectDisposedException>(() => neo.SetPixelAsync(0, 0, 0, 0));
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => neo.SetPixelAsync(0, 0, 0, 0));
     }
 }

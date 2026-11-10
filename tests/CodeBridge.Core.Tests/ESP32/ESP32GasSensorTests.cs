@@ -170,12 +170,12 @@ public class ESP32GasSensorTests
     // ── Dispose ──────────────────────────────────────────────
 
     [Fact]
-    public void Dispose_Prevents_Further_Use()
+    public async Task Dispose_Prevents_Further_Use()
     {
         var transport = new MockTransport();
         var gas = new ESP32GasSensor(transport, 34);
         gas.Dispose();
 
-        Assert.ThrowsAsync<ObjectDisposedException>(() => gas.ReadRawAsync());
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => gas.ReadRawAsync());
     }
 }

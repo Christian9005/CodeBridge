@@ -130,12 +130,12 @@ public class ESP32RgbLedTests
     // ── Dispose ──────────────────────────────────────────────
 
     [Fact]
-    public void Dispose_Prevents_Further_Use()
+    public async Task Dispose_Prevents_Further_Use()
     {
         var transport = new MockTransport();
         var led = new ESP32RgbLed(transport, 25, 26, 27);
         led.Dispose();
 
-        Assert.ThrowsAsync<ObjectDisposedException>(() => led.SetColorAsync(255, 0, 0));
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => led.SetColorAsync(255, 0, 0));
     }
 }

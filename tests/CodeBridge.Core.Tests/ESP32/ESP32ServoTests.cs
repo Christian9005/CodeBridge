@@ -122,12 +122,12 @@ public class ESP32ServoTests
     // ── Dispose ──────────────────────────────────────────────
 
     [Fact]
-    public void Dispose_Prevents_Further_Operations()
+    public async Task Dispose_Prevents_Further_Operations()
     {
         var transport = new MockTransport();
         var servo = new ESP32Servo(transport, 13);
         servo.Dispose();
 
-        Assert.ThrowsAsync<ObjectDisposedException>(() => servo.SetAngleAsync(90));
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => servo.SetAngleAsync(90));
     }
 }

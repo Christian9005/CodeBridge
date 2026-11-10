@@ -142,12 +142,12 @@ public class ESP32DhtSensorTests
     // ── Dispose ──────────────────────────────────────────────
 
     [Fact]
-    public void Dispose_Prevents_Further_Operations()
+    public async Task Dispose_Prevents_Further_Operations()
     {
         var transport = new MockTransport();
         var dht = new ESP32DhtSensor(transport, 4);
         dht.Dispose();
 
-        Assert.ThrowsAsync<ObjectDisposedException>(() => dht.ReadAsync());
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => dht.ReadAsync());
     }
 }

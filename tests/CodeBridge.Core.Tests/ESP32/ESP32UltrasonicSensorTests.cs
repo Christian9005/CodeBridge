@@ -83,12 +83,12 @@ public class ESP32UltrasonicSensorTests
     // ── Dispose ──────────────────────────────────────────────
 
     [Fact]
-    public void Dispose_Prevents_Further_Operations()
+    public async Task Dispose_Prevents_Further_Operations()
     {
         var transport = new MockTransport();
         var sensor = new ESP32UltrasonicSensor(transport, 5, 18);
         sensor.Dispose();
 
-        Assert.ThrowsAsync<ObjectDisposedException>(() => sensor.ReadAsync());
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => sensor.ReadAsync());
     }
 }
