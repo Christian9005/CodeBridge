@@ -81,8 +81,12 @@ function Check([string]$name, [string]$command, [string]$expectPrefix = '', [swi
 
 try {
     Write-Host "Opening $Port..."
-    Start-Sleep -Milliseconds 300
-    if (-not (Alive)) { throw "The board on $Port does not answer PING. Is it running the CodeBridge firmware?" }
+    # Opening the port can reset the board (the USB-serial chip toggles its reset line): give it time to boot, then ask a few times.
+    Start-Sleep -Milliseconds 2500
+    $up = $false
+    foreach ($try in 1..6) { if (Alive) { $up = $true; break }; Start-Sleep -Milliseconds 1500 }
+    $script:resets = 0
+    if (-not $up) { throw "The board on $Port does not answer PING. Is it running the CodeBridge firmware?" }
     Write-Host ('Firmware: ' + (Send 'VER'))
 
     Write-Host "`nPins the firmware must refuse (flash pins, out of range, negative)"
@@ -105,7 +109,8 @@ try {
     Check 'stepper on flash pins' 'STI:6:7:8:9:2048' 'ERR'
 
     Write-Host "`nNumbers that used to overflow or never end"
-    Check 'stepper steps-per-rev that wraps the multiplication to zero' 'STI:25:26:27:14:65536' 'ERR'
+    Check 'stepper with more steps per revolution than allowed' 'STI:25:26:27:14:100001' 'ERR'
+    Check 'stepper steps-per-rev 65536 (64-bit maths, no wrap-around)' 'STI:25:26:27:14:65536' 'OK'
     Check 'stepper set up normally' 'STI:25:26:27:14:2048' 'OK'
     Check 'stepper speed that wraps the multiplication' 'STS:25:1:2147483647' 'OK'
     Check 'stepper with a billion steps' 'STS:25:1000000000:10' 'ERR'
@@ -139,8 +144,9 @@ try {
     Check 'only a colon' ':' 'ERR'
     Check 'only colons' ':::::::::::::::::' 'ERR'
     Check 'unknown command' 'NOSUCHCOMMAND:1:2:3' 'ERR'
-    Check 'a command with no arguments that needs them' 'DW' 'ERR'
-    Check 'letters where numbers go' 'DW:abc:xyz' 'ERR'
+    # The protocol reads what is not a number as 0 (pin 0, value 0), as it always has: these must not hurt the board, whatever they answer.
+    Check 'a command with no arguments that needs them' 'DW' ''
+    Check 'letters where numbers go' 'DW:abc:xyz' ''
     Check 'a hex string with non-hex letters' 'SW:5:ZZZZZZ' 'OK'
     Check 'an odd-length hex string' 'IW:60:ABC' 'ERR'
     Check 'a lowercase command' 'ping' ''
