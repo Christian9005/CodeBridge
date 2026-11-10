@@ -40,7 +40,7 @@
 #include <Update.h>
 #include <PubSubClient.h>
 
-#define FIRMWARE_VERSION "0.9.1"
+#define FIRMWARE_VERSION "0.9.2"
 #define MAX_CMD_LENGTH 512
 #define SERIAL_BAUD 115200
 #define TCP_PORT 8080

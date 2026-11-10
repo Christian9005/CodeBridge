@@ -110,7 +110,7 @@ dotnet test tests/CodeBridge.Matrix.Tests --filter HardwareMatrixTests
 
 It runs every block the board offers through the flow runtime and, after each one, sends `PING`: a block that hangs or resets the board fails the test. Without `CODEBRIDGE_HARDWARE_PORT` the test is skipped, so the build does not need a board. Unplug anything that must not move first: the blocks drive their default pins (a servo on GPIO 13, a stepper, a relay, a tone).
 
-**Last run: ESP32 DevKit (CP210x, firmware 0.9.1), nothing wired to it, 65 blocks.** None hung or reset the board. 33 ran to the end and 32 stopped with a clear message because the part they read is not there.
+**Last run: ESP32 DevKit (CP210x, firmware 0.9.2, the one released with 0.8.0), nothing wired to it, 65 blocks.** None hung or reset the board. 33 ran to the end and 32 stopped with a clear message because the part they read is not there.
 
 Ran to the end: `acquisition.interrupt-input`, `acquisition.sample-channel`, `core.timer`, `dashboard.stream`, `debug.log`, `flow.manual-trigger`, `gpio.analog-read`, `gpio.blink-led`, `gpio.digital-read`, `gpio.digital-write`, `gpio.pin-mode`, `gpio.pwm-write`, `gpio.set-output`, `iot.i2c-scan`, `logic.compare`, `logic.constant-boolean`, `logic.constant-number`, `logic.gate`, `logic.threshold`, `math.calc`, `math.map`, `module.buzzer`, `module.dc-motor`, `module.lcd`, `module.neopixel`, `module.oled`, `module.relay`, `module.rgb-led`, `module.stepper`, `sensor.analog-percent`, `sensor.button`, `sensor.pir`, `servo.write`.
 

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-09
+
+The flow editor gets a live link to Unity, a headless mode that keeps a flow running by itself, a browser editor and 25 more blocks for .NET IoT chips (all proofs of concept), and the whole thing is checked much harder: golden files of every earlier release, damaged and hostile files, every block on every board, and a real ESP32 on the bench. That checking found bugs that are fixed here, including a way for text in a `.cbflow` to become code in the exported C#, and commands that could reset the board. The firmware is 0.9.2: **flash it again** (Upload Firmware in the editor) to get the fixes.
+
 ### Added
 - **Every block on every board** ([docs/block-board-matrix.md](docs/block-board-matrix.md), `tests/CodeBridge.Matrix.Tests`): the 65 blocks of the ESP32 boards and the 24 of the Arduinos, on all nine boards, are dropped into a flow with what the editor fills in, validated, run on the virtual board of that board (a bus with nothing wired to it) and exported to C# that is compiled; the table of the document is written from the result and the build fails if it is out of date or any cell is broken. `HardwareMatrixTests` runs the blocks on a real board when `CODEBRIDGE_HARDWARE_PORT` is set and checks that the board answers `PING` after each: on an ESP32 DevKit with nothing wired, 33 blocks ran to the end and 32 stopped with a clear message because their sensor is not there.
 - **Unity live link** (proof of concept, [docs/unity.md](docs/unity.md)): `codebridge-livelink` lets a Unity scene drive real servos over a local WebSocket and streams back where each joint is and what feedback sensors read. The link enforces each joint's limits and speed, stops on request and when Unity goes away, checks every pin against the board, and accepts only local, keyed, non-browser connections, one engine at a time. The Unity package `com.codebridge.livelink` has `LiveLinkConnection`, `ServoJoint` and a robot arm sample.
