@@ -46,6 +46,42 @@ public sealed class ReleaseConsistencyTests
     }
 
     [Fact]
+    public void The_version_Visual_Studio_shows_in_Help_About_matches_the_product_version()
+    {
+        // [InstalledProductRegistration("CodeBridge", "...", "x.y.z")] is what Help > About Visual Studio lists; it said 0.3.0 for four releases
+        var source = File.ReadAllText(Path.Combine(RepoRoot(), "src", "CodeBridge.VisualStudio", "CodeBridgePackage.cs"));
+        var registration = System.Text.RegularExpressions.Regex.Match(source, @"InstalledProductRegistration\([^)]*""(?<version>\d+\.\d+\.\d+)""\)");
+
+        Assert.True(registration.Success, "InstalledProductRegistration with a version was not found in CodeBridgePackage.cs");
+        Assert.Equal(ProductVersion(), registration.Groups["version"].Value);
+    }
+
+    [Fact]
+    public void Every_text_the_package_asks_Visual_Studio_to_load_by_number_exists_in_its_resources()
+    {
+        // [ProvideEditorFactory(typeof(...), 110, ...)] names the editor with string 110 of the package; without it Visual Studio logs
+        // "String load failed" and the editor has no name in Open With...
+        var assembly = typeof(ToolboxManifestLoader).Assembly;   // the extension assembly, without loading the package type (it needs Visual Studio)
+        using var stream = assembly.GetManifestResourceStream("VSPackage.resources");
+        Assert.True(stream != null, "The assembly has no resource called VSPackage.resources: " + string.Join(", ", assembly.GetManifestResourceNames()));
+
+        var texts = new System.Collections.Generic.Dictionary<string, string>();
+        using (var reader = new System.Resources.ResourceReader(stream!))
+        {
+            foreach (System.Collections.DictionaryEntry entry in reader)
+                texts[(string)entry.Key] = entry.Value?.ToString() ?? string.Empty;
+        }
+
+        var source = File.ReadAllText(Path.Combine(RepoRoot(), "src", "CodeBridge.VisualStudio", "CodeBridgePackage.cs"));
+        var referenced = System.Text.RegularExpressions.Regex.Matches(source, @"ProvideEditorFactory\(typeof\([^)]*\),\s*(?<id>\d+)")
+            .Cast<System.Text.RegularExpressions.Match>().Select(match => match.Groups["id"].Value).ToList();
+
+        Assert.NotEmpty(referenced);
+        foreach (var id in referenced)
+            Assert.True(texts.TryGetValue(id, out var text) && text.Length > 0, "String " + id + " is not in VSPackage.resx");
+    }
+
+    [Fact]
     public void Shipped_source_does_not_contain_developer_machine_paths()
     {
         var sourceRoot = Path.Combine(RepoRoot(), "src");
