@@ -69,8 +69,8 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
-		<!-- A phone has no USB serial port (use Wi-Fi), and this native library is not 16 KB page aligned (Google Play requirement). -->
-		<PackageReference Include="runtime.linux-x64.runtime.native.System.IO.Ports" Version="8.0.0" ExcludeAssets="all" />
+		<!-- A phone has no USB serial port (use Wi-Fi), and this native library is not 16 KB page aligned (Google Play requirement). Keep the version equal to the one System.IO.Ports 10 brings in. -->
+		<PackageReference Include="runtime.linux-x64.runtime.native.System.IO.Ports" Version="10.0.0" ExcludeAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>
