@@ -87,3 +87,12 @@ jobs:
       - run: pip install platformio
       - name: Build firmware
         run: pio run -d firmware/${{ matrix.project }} -e ${{ matrix.env }}
+
+  # The code that reads the lines of the protocol (firmware/esp32-bridge/src/protocol_parse.h), built on a PC with AddressSanitizer and UndefinedBehaviorSanitizer
+  # and run with random and mutated input: a read or a write out of bounds, an overflow, or an answer that differs from a plain reference fails the job.
+  firmware-fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fuzz the protocol parser
+        run: bash firmware/esp32-bridge/fuzz/run_fuzz.sh 30 1000000 1

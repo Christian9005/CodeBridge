@@ -16,6 +16,7 @@
  */
 
 #include <Arduino.h>
+#include "protocol_parse.h"   // reading the lines of the protocol; built on a PC and fuzzed too (../fuzz)
 #include <Wire.h>
 #include <SPI.h>
 #include <WiFi.h>
@@ -440,21 +441,8 @@ static bool isValidGpio(int pin) {
   return pin >= 0 && pin < SOC_GPIO_PIN_COUNT && !isReservedPin(pin);
 }
 
-// The protocol reads a field that is empty or not a number as 0 (getNextParam uses atoi). For a command that drives a pin that would mean GPIO0, a pin the
-// chip reads when it starts, so "DW" or "DW:abc:1" would pull it low. A command that drives pins requires its first `count` fields to be whole numbers.
-static bool numericFields(const char* params, int count) {
-  const char* p = params;
-  for (int i = 0; i < count; i++) {
-    const char* q = p;
-    if (*q == '-') q++;
-    if (*q < '0' || *q > '9') return false;
-    while (*q >= '0' && *q <= '9') q++;
-    if (i == count - 1) return *q == ':' || *q == '\0';
-    if (*q != ':') return false;
-    p = q + 1;
-  }
-  return true;
-}
+// A command that drives a pin requires its first `count` fields to be whole numbers (see protocol_parse.h): "DW:abc:1" must not pull GPIO0 low.
+static bool numericFields(const char* params, int count) { return cbp::numericFields(params, count); }
 
 void loadWifiConfig();
 void saveWifiConfig();
@@ -1368,9 +1356,9 @@ static bool meshHandleCommand(const char* cmd, int cmdLen, const char* params) {
 //  COMMAND ROUTER
 // ══════════════════════════════════════════════════════════════
 void processCommand(const char* cmd) {
-  const char* sep = strchr(cmd, ':');
-  int cmdLen = sep ? (sep - cmd) : strlen(cmd);
-  const char* params = sep ? sep + 1 : "";
+  size_t nameLength;
+  const char* params = cbp::splitCommand(cmd, &nameLength);
+  int cmdLen = (int)nameLength;
 
   if (cmdLen == 4 && strncmp(cmd, "AUTH", 4) == 0) { handleAuth(params); return; }
   if (cmdLen == 4 && strncmp(cmd, "WTOK", 4) == 0) { handleSetToken(params); return; }
@@ -3650,13 +3638,7 @@ void sendError(const char* msg) {
 // ══════════════════════════════════════════════════════════════
 //  UTILITIES
 // ══════════════════════════════════════════════════════════════
-// A field that is empty or not a number is 0 (numericFields rejects those where it matters). A number out of the range of int saturates; atoi does not define that.
-static int parseIntField(const char* text) {
-  long v = strtol(text, nullptr, 10);
-  if (v > INT32_MAX) return INT32_MAX;
-  if (v < INT32_MIN) return INT32_MIN;
-  return (int)v;
-}
+static int parseIntField(const char* text) { return cbp::parseInt(text); }
 
 int getNextParam(const char* &ptr) {
   int value = parseIntField(ptr);
@@ -3667,11 +3649,9 @@ int getNextParam(const char* &ptr) {
 }
 
 String getNextParamStr(const char* &ptr) {
-  const char* next = strchr(ptr, ':');
-  unsigned int length = next ? (unsigned int)(next - ptr) : (unsigned int)strlen(ptr);
+  cbp::Field field = cbp::nextField(ptr);
   String result;
-  result.concat(ptr, length);
-  ptr += next ? length + 1 : length;
+  result.concat(field.start, field.length);
   return result;
 }
 
@@ -3691,16 +3671,12 @@ int findOrCreatePwmChannel(int pin) {
 }
 
 uint8_t hexCharToNibble(char c) {
-  if (c >= '0' && c <= '9') return c - '0';
-  if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-  if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-  return 0;
+  return cbp::hexNibble(c);
 }
 
+// Never reads past the end of `hex`, whatever `len` is: a caller that forgot to check the length gets zeros, not the memory after the text.
 void hexStringToBytes(const char* hex, uint8_t* bytes, int len) {
-  for (int i = 0; i < len; i++) {
-    bytes[i] = (hexCharToNibble(hex[i*2]) << 4) | hexCharToNibble(hex[i*2+1]);
-  }
+  if (len > 0) cbp::hexToBytes(hex, strlen(hex), bytes, (size_t)len);
 }
 
 String bytesToHexString(const uint8_t* data, int len) {
