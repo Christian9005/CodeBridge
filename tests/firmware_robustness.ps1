@@ -129,6 +129,27 @@ try {
     Check 'neopixel with a negative count' 'NI:5:-3' 'ERR'
     Check 'neopixel with a huge count' 'NI:5:2147483647' 'ERR'
 
+    Write-Host "`nNothing answers at the address (an I2C bus with nothing wired to it): a clear error, at once"
+    # These used to wait about a second for data that never came, and IR, IRR, LI and OI answered OK. A real answer takes a few milliseconds.
+    foreach ($case in @(
+            @('i2c read from an absent device', 'IR:60:4'),
+            @('i2c register read from an absent device', 'IRR:60:0:4'),
+            @('lcd started with no lcd', 'LI:39:16:2'),
+            @('oled started with no oled', 'OI:60:128:64'))) {
+        $watch = [Diagnostics.Stopwatch]::StartNew()
+        $answer = Send $case[1]
+        $watch.Stop()
+        if ($null -ne $answer -and $answer.StartsWith('ERR') -and $watch.ElapsedMilliseconds -lt 300) {
+            $script:checks++
+            Write-Host ("  ok    {0}  ->  {1} ({2} ms)" -f $case[0], $answer, $watch.ElapsedMilliseconds)
+        } else {
+            $script:checks++
+            $script:failures.Add(("{0}  [{1}]  ->  expected ERR in under 300 ms, got '{2}' after {3} ms" -f $case[0], $case[1], $answer, $watch.ElapsedMilliseconds))
+            Write-Host ("  FAIL  {0}  (got '{1}' after {2} ms)" -f $case[0], $answer, $watch.ElapsedMilliseconds) -ForegroundColor Red
+        }
+    }
+    Check 'the board is fine afterwards' 'PING' 'OK:PONG'
+
     Write-Host "`nSlots are reused when a client connects again (these used to run out)"
     foreach ($i in 1..12) { $null = Send 'SA:13'; $null = Send 'SD:13' }
     Check 'servo attach after 12 attach/detach cycles' 'SA:13' 'OK'
