@@ -9,11 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-11-11
+
+A maintenance release of the firmware side: reading a full sample buffer no longer loses the samples, the interrupt counters no longer lose a pulse, and the code that reads the lines of the protocol is fuzzed with sanitizers in CI. The firmware is 0.9.3: **flash it again** (Upload Firmware in the editor). The libraries and the editor have no change of behaviour.
+
 ### Fixed
 - **Firmware: reading a full sample buffer lost the samples.** `SRD:<channel>:4096` on a full channel put all the frames in one `String` (about 60 KB, and the copy that grows it needs twice that): it did not fit, the board answered an empty line and the 4,096 frames were already gone (the next read started at sequence 4096; the free heap fell from 218 KB to 85 KB on the way). A read now answers with what fits in a 4 KB buffer (about 280 frames) and takes from the channel only those; the client already reads again. `tests/firmware_samples.ps1` checks it on a board.
 
 ### Changed
-- **Firmware 0.9.3** (not released yet, the prebuilt images are still 0.9.2): the GPIO interrupt state is now guarded by a spin lock. `GINTP` used to read the count and then set it to zero, so a pulse in between was lost; `GINTD` moved the table of handlers while their interrupts were still attached. Numbers out of the range of `int` are clamped in one place (`parseIntField`; same result as before, now defined). The firmware sources build with `-Wall -Wextra` and without warnings on the five chips. Replies (`sendOK`/`sendError`) are written without building a `String` per reply, a field of a command is copied once, an MQTT payload is appended in one step, and `INFO` also reports `minheap` and `maxblock`.
+- **Firmware 0.9.3**: the GPIO interrupt state is now guarded by a spin lock. `GINTP` used to read the count and then set it to zero, so a pulse in between was lost; `GINTD` moved the table of handlers while their interrupts were still attached. Numbers out of the range of `int` are clamped in one place (`parseIntField`; same result as before, now defined). The firmware sources build with `-Wall -Wextra` and without warnings on the five chips. Replies (`sendOK`/`sendError`) are written without building a `String` per reply, a field of a command is copied once, an MQTT payload is appended in one step, and `INFO` also reports `minheap` and `maxblock`.
 
 ### Added
 - **Fuzzing of the protocol parser** (`firmware/esp32-bridge/fuzz`, CI job `firmware-fuzz`): the code that reads the lines (`src/protocol_parse.h`: split a command, read a field as a number, check that a pin command has numeric fields, turn hex into bytes) no longer depends on Arduino, and is built on a PC with AddressSanitizer and UndefinedBehaviorSanitizer and run with random and mutated input, compared with a plain reference. `hexStringToBytes` now never reads past the end of its text, whatever the caller checked. The firmware behaves the same (75/75 robustness checks on a board).

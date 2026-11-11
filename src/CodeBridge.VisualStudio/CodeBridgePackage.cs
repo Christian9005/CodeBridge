@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 namespace CodeBridge.VisualStudio;
 
 [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-[InstalledProductRegistration("CodeBridge", "Visual flows and ESP32 toolbox integration for WinForms.", "0.8.0")]
+[InstalledProductRegistration("CodeBridge", "Visual flows and ESP32 toolbox integration for WinForms.", "0.8.1")]
 [ProvideMenuResource("CodeBridgeCommands.CTMENU", 1)]
 [Guid(PackageGuids.PackageGuidString)]
 [ProvideBindingPath]
