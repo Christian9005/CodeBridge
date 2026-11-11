@@ -1,6 +1,6 @@
 # The flow editor in a browser (proof of concept)
 
-`codebridge-web` is the flow editor in a web page, served from your own computer. It runs where .NET 8 runs (Windows, Linux, macOS, a Raspberry Pi), so it works without Visual Studio.
+`codebridge-web` is the flow editor in a web page, served from your own computer. It runs where .NET 10 runs (Windows, Linux, macOS, a Raspberry Pi), so it works without Visual Studio.
 
 ```powershell
 dotnet run --project src/CodeBridge.WebEditor -- --flow my-flow.cbflow --port simulator

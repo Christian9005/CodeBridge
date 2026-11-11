@@ -21,7 +21,10 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          # 10 builds everything; 8 is the runtime the tests of the libraries also run on while net8.0 is a target
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2

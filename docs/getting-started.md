@@ -5,7 +5,7 @@ CodeBridge allows you to control hardware such as the ESP32 directly from .NET a
 ## Prerequisites
 
 1. **Visual Studio 2022 (17.x) or later** with the **.NET desktop development** workload
-2. **.NET 8 SDK**
+2. **.NET 10 SDK** (the packages also work with .NET 8, which stops being supported on 10 November 2026)
 3. An **ESP32 development board** (ESP32 DevKit) and a USB **data** cable
 4. *Optional:* [`arduino-cli`](https://arduino.github.io/arduino-cli/) if you use an Arduino Uno
 
