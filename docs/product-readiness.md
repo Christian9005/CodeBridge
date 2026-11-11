@@ -21,7 +21,7 @@ Where CodeBridge stands, what is verified, and what is still missing before it c
 | Files of earlier releases | Golden `.cbflow` files saved by 0.5.4, 0.6.0 and 0.7.0, by the web editor and by hand must still load, validate, run, export and survive a save in the SDK, the web editor and the real Visual Studio editor ([tests/golden](../tests/golden/cbflow)) |
 | Damaged and hostile files | Every golden file cut at 120 places and damaged 150 ways, text that is not a flow, nesting 100,000 deep, wires in rings, names built to inject code into the exported C# |
 | Every block on every board | The 65 blocks of the ESP32 boards and the 24 of the Arduinos on all nine boards: valid, run on the virtual board, exported and compiled ([block matrix](block-board-matrix.md)); on an ESP32 DevKit with nothing wired, none of the 65 hangs or resets it |
-| Firmware commands | `tests/firmware_robustness.ps1` on an ESP32 DevKit (firmware 0.9.2): 75 checks (flash pins, numbers that overflow, malformed and oversized lines, a burst of 300 lines, 1,000 hostile commands), no failure, no reset |
+| Firmware commands | `tests/firmware_robustness.ps1` on an ESP32 DevKit (firmware 0.9.3): 75 checks (flash pins, numbers that overflow, malformed and oversized lines, a burst of 300 lines, 1,000 hostile commands), no failure, no reset |
 | `serve` for a long time | `tests/serve_soak.ps1`, 30 minutes on the virtual board (28,981 passes of the greenhouse flow) and on an ESP32 DevKit (1,741 passes; and 15 minutes at ten times the rate, 8,221 passes): no failed pass, memory flat at 21-23 MB, handles and threads steady, the log stays small, Ctrl+C stops it in under 2 seconds |
 | ESP32 DevKit | Real hardware: GPIO, sensors, Wi-Fi, OTA, mesh gateway, I2C with a BME280 through the built-in block and the .NET IoT driver |
 | XIAO ESP32-S3 | Real hardware: flashing, USB, mesh node (heard by the gateway) |
@@ -30,9 +30,9 @@ Where CodeBridge stands, what is verified, and what is still missing before it c
 ## Still missing
 
 **To publish**
-- The NuGet packages are published (0.8.0: Abstractions, Transport, ESP32, Flow, Designer.WinForms, Hosting, Blazor, HomeAssistant, PlatformIO and the
+- The NuGet packages are published (0.8.1: Abstractions, Transport, ESP32, Flow, Designer.WinForms, Hosting, Blazor, HomeAssistant, PlatformIO and the
   `CodeBridge.Mcp` tool); `CodeBridge.IotBindings` and the browser editor are not yet.
-- The extension is on the Visual Studio Marketplace (0.8.0) and in the GitHub releases (see [publishing](publishing.md)); code signing is still missing.
+- The extension is on the Visual Studio Marketplace (0.8.1) and in the GitHub releases (see [publishing](publishing.md)); code signing is still missing.
 - A name that stands out on the Marketplace: several unrelated extensions are already called "CodeBridge" (one of them an MCP tool), and on NuGet the id
   `CodeBridge.Core` belongs to another project. The display name should say what it is, for example "CodeBridge for .NET hardware (ESP32, Arduino)".
 - Screenshots and a short video for the Marketplace page and the README.
