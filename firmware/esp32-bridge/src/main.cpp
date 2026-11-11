@@ -16,6 +16,7 @@
  */
 
 #include <Arduino.h>
+#include "protocol_parse.h"   // reading the lines of the protocol; built on a PC and fuzzed too (../fuzz)
 #include <Wire.h>
 #include <SPI.h>
 #include <WiFi.h>
@@ -224,6 +225,7 @@ int mqttMsgTail = 0;
 // Buffered acquisition channels for dashboard-friendly sample streaming.
 #define MAX_SAMPLE_CHANNELS 4
 #define MAX_SAMPLE_BUFFER_CAPACITY 4096
+#define SAMPLE_READ_REPLY_BYTES 4096   // the most one SRD answers with
 struct SampleValue {
   uint32_t sequence;
   uint32_t elapsedMicros;
@@ -255,9 +257,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   if (next != mqttMsgTail) {
     mqttMsgQueue[mqttMsgHead].topic = String(topic);
     mqttMsgQueue[mqttMsgHead].payload = "";
-    for (unsigned int i = 0; i < length; i++) {
-      mqttMsgQueue[mqttMsgHead].payload += (char)payload[i];
-    }
+    mqttMsgQueue[mqttMsgHead].payload.concat((const char*)payload, length);
     mqttMsgHead = next;
   }
 }
@@ -441,21 +441,8 @@ static bool isValidGpio(int pin) {
   return pin >= 0 && pin < SOC_GPIO_PIN_COUNT && !isReservedPin(pin);
 }
 
-// The protocol reads a field that is empty or not a number as 0 (getNextParam uses atoi). For a command that drives a pin that would mean GPIO0, a pin the
-// chip reads when it starts, so "DW" or "DW:abc:1" would pull it low. A command that drives pins requires its first `count` fields to be whole numbers.
-static bool numericFields(const char* params, int count) {
-  const char* p = params;
-  for (int i = 0; i < count; i++) {
-    const char* q = p;
-    if (*q == '-') q++;
-    if (*q < '0' || *q > '9') return false;
-    while (*q >= '0' && *q <= '9') q++;
-    if (i == count - 1) return *q == ':' || *q == '\0';
-    if (*q != ':') return false;
-    p = q + 1;
-  }
-  return true;
-}
+// A command that drives a pin requires its first `count` fields to be whole numbers (see protocol_parse.h): "DW:abc:1" must not pull GPIO0 low.
+static bool numericFields(const char* params, int count) { return cbp::numericFields(params, count); }
 
 void loadWifiConfig();
 void saveWifiConfig();
@@ -1369,9 +1356,9 @@ static bool meshHandleCommand(const char* cmd, int cmdLen, const char* params) {
 //  COMMAND ROUTER
 // ══════════════════════════════════════════════════════════════
 void processCommand(const char* cmd) {
-  const char* sep = strchr(cmd, ':');
-  int cmdLen = sep ? (sep - cmd) : strlen(cmd);
-  const char* params = sep ? sep + 1 : "";
+  size_t nameLength;
+  const char* params = cbp::splitCommand(cmd, &nameLength);
+  int cmdLen = (int)nameLength;
 
   if (cmdLen == 4 && strncmp(cmd, "AUTH", 4) == 0) { handleAuth(params); return; }
   if (cmdLen == 4 && strncmp(cmd, "WTOK", 4) == 0) { handleSetToken(params); return; }
@@ -1762,6 +1749,8 @@ void handleInfo() {
   doc["chip"] = ESP.getChipModel();
   doc["freq"] = ESP.getCpuFreqMHz();
   doc["heap"] = ESP.getFreeHeap();
+  doc["minheap"] = ESP.getMinFreeHeap();     // the lowest the free heap has been since boot
+  doc["maxblock"] = ESP.getMaxAllocHeap();   // the largest block that can be allocated now: a heap that is free but in pieces shows here
   doc["flash"] = ESP.getFlashChipSize();
   doc["sdk"] = ESP.getSdkVersion();
   doc["auth"] = strlen(apiToken) > 0;
@@ -3170,23 +3159,26 @@ void handleSampleRead(const char* params) {
     return;
   }
 
-  String result = "";
+  // Up to 4096 frames of 33 characters would be one 130 KB String: more than the largest free block, and a String that cannot grow stops silently after the
+  // frames had already been taken out of the channel. A read answers with what fits here (a few hundred frames); the client asks again for the rest.
+  static char out[SAMPLE_READ_REPLY_BYTES];
+  size_t used = 0;
   int emitted = 0;
   while (channel.count > 0 && emitted < maxFrames) {
     SampleValue& sample = channel.buffer[channel.tail];
-    if (emitted > 0) result += ";";
-    result += String(sample.sequence);
-    result += ",";
-    result += String(sample.elapsedMicros);
-    result += ",";
-    result += String(sample.value);
+    char frame[40];
+    int n = snprintf(frame, sizeof(frame), "%s%lu,%lu,%d", emitted > 0 ? ";" : "", (unsigned long)sample.sequence, (unsigned long)sample.elapsedMicros, sample.value);
+    if (n < 0 || used + (size_t)n + 1 > sizeof(out)) break;
+    memcpy(out + used, frame, (size_t)n);
+    used += (size_t)n;
 
     channel.tail = (channel.tail + 1) % channel.capacity;
     channel.count--;
     emitted++;
   }
+  out[used] = '\0';
 
-  sendOK(result.c_str());
+  sendOK(out);
 }
 
 void handleSampleStop(const char* params) {
@@ -3610,47 +3602,43 @@ void handleMqttDisconnect() {
 // ══════════════════════════════════════════════════════════════
 //  RESPONSE ROUTING (Serial or TCP)
 // ══════════════════════════════════════════════════════════════
-void sendResponse(const char* response) {
+// One line of answer in two pieces (a label and the text after it), written where the command came from without joining them first.
+static void sendResponseParts(const char* label, const char* text) {
   if (activeResponseTarget == -2) {            // relayed over ESP-NOW: keep the answer for the reply frame
     if (meshReply.length()) meshReply += "\n";
-    meshReply += response;
+    meshReply += label;
+    meshReply += text;
     return;
   }
   if (activeResponseTarget < 0) {
-    Serial.println(response);
+    Serial.print(label);
+    Serial.println(text);
   } else {
     int idx = activeResponseTarget;
     if (idx < MAX_TCP_CLIENTS && tcpClients[idx] && tcpClients[idx].connected()) {
-      tcpClients[idx].println(response);
+      tcpClients[idx].print(label);
+      tcpClients[idx].println(text);
     }
   }
 }
 
+void sendResponse(const char* response) {
+  sendResponseParts("", response);
+}
+
 void sendOK(const char* data) {
-  String response;
-  if (strlen(data) > 0) {
-    response = "OK:" + String(data);
-  } else {
-    response = "OK";
-  }
-  sendResponse(response.c_str());
+  if (data && data[0]) sendResponseParts("OK:", data);
+  else sendResponseParts("OK", "");
 }
 
 void sendError(const char* msg) {
-  String response = "ERR:" + String(msg);
-  sendResponse(response.c_str());
+  sendResponseParts("ERR:", msg ? msg : "");
 }
 
 // ══════════════════════════════════════════════════════════════
 //  UTILITIES
 // ══════════════════════════════════════════════════════════════
-// A field that is empty or not a number is 0 (numericFields rejects those where it matters). A number out of the range of int saturates; atoi does not define that.
-static int parseIntField(const char* text) {
-  long v = strtol(text, nullptr, 10);
-  if (v > INT32_MAX) return INT32_MAX;
-  if (v < INT32_MIN) return INT32_MIN;
-  return (int)v;
-}
+static int parseIntField(const char* text) { return cbp::parseInt(text); }
 
 int getNextParam(const char* &ptr) {
   int value = parseIntField(ptr);
@@ -3661,15 +3649,9 @@ int getNextParam(const char* &ptr) {
 }
 
 String getNextParamStr(const char* &ptr) {
-  const char* next = strchr(ptr, ':');
+  cbp::Field field = cbp::nextField(ptr);
   String result;
-  if (next) {
-    result = String(ptr).substring(0, next - ptr);
-    ptr = next + 1;
-  } else {
-    result = String(ptr);
-    ptr = ptr + strlen(ptr);
-  }
+  result.concat(field.start, field.length);
   return result;
 }
 
@@ -3689,16 +3671,12 @@ int findOrCreatePwmChannel(int pin) {
 }
 
 uint8_t hexCharToNibble(char c) {
-  if (c >= '0' && c <= '9') return c - '0';
-  if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-  if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-  return 0;
+  return cbp::hexNibble(c);
 }
 
+// Never reads past the end of `hex`, whatever `len` is: a caller that forgot to check the length gets zeros, not the memory after the text.
 void hexStringToBytes(const char* hex, uint8_t* bytes, int len) {
-  for (int i = 0; i < len; i++) {
-    bytes[i] = (hexCharToNibble(hex[i*2]) << 4) | hexCharToNibble(hex[i*2+1]);
-  }
+  if (len > 0) cbp::hexToBytes(hex, strlen(hex), bytes, (size_t)len);
 }
 
 String bytesToHexString(const uint8_t* data, int len) {
