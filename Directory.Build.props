@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <!-- Single source of truth for every package, the VSIX and the toolbox manifest. -->
-    <Version>0.8.0</Version>
+    <Version>0.8.1</Version>
     <!-- net8.0 is kept on purpose (the libraries, FlowHost and the MCP tool) so that people still on .NET 8 can update; drop it with its line in each project when it stops mattering. -->
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <Authors>Christian Alexander Albarracin Adriano</Authors>
