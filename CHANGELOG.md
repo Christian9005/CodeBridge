@@ -9,7 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Firmware 0.9.3** (not released yet, the prebuilt images are still 0.9.2): the GPIO interrupt state is now guarded by a spin lock. `GINTP` used to read the count and then set it to zero, so a pulse in between was lost; `GINTD` moved the table of handlers while their interrupts were still attached. Numbers out of the range of `int` are clamped in one place (`parseIntField`; same result as before, now defined). The firmware sources build with `-Wall -Wextra` and without warnings on the five chips.
+
 ### Added
+- **`tests/firmware_interrupts.ps1`** (counts of `GINT`/`GINTP`/`GINTD` on a real board with real edges) and **`tests/firmware_heap.ps1`** (free heap and the latency of every command over thousands of mixed commands).
 - **`tests/serve_soak.ps1`**: runs `FlowHost serve` for as long as you say and measures it (memory, handles, threads, CPU, log size, passes, disconnections), then checks that nothing grows and that Ctrl+C stops it. First results are in [headless.md](docs/headless.md): 30 minutes on the virtual board (28,981 passes) and on an ESP32 DevKit (1,741 passes, and 8,221 more at ten times the rate), none failed, memory flat, Ctrl+C in under two seconds.
 
 ## [0.8.0] - 2026-11-09
