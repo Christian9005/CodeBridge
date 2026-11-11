@@ -41,7 +41,7 @@
 #include <Update.h>
 #include <PubSubClient.h>
 
-#define FIRMWARE_VERSION "0.9.3"
+#define FIRMWARE_VERSION "0.9.4"
 #define MAX_CMD_LENGTH 512
 #define SERIAL_BAUD 115200
 #define TCP_PORT 8080
@@ -1638,6 +1638,26 @@ void handlePwmWrite(const char* params) {
 // ══════════════════════════════════════════════════════════════
 //  I2C HANDLERS
 // ══════════════════════════════════════════════════════════════
+// Does something answer at `addr`? An address with nothing behind it is refused in a few milliseconds by this test; a read from it is not: the driver waits
+// about a second for data that never comes and the command used to answer OK with an empty reply. Every command that reads, and the displays that are
+// started over I2C, ask first.
+static bool i2cAnswers(int addr) {
+  Wire.beginTransmission((uint8_t)addr);
+  return Wire.endTransmission() == 0;
+}
+
+// The bytes the device sent, as hex in `out` (which has room for `capacity` characters, 2 per byte and the end).
+static int i2cReadHex(int addr, int len, char* out, size_t capacity) {
+  size_t got = Wire.requestFrom(addr, len);
+  size_t n = 0;
+  while (Wire.available() && n + 3 <= capacity) {
+    snprintf(out + n, capacity - n, "%02X", Wire.read());
+    n += 2;
+  }
+  out[n] = 0;
+  return got == 0 ? 0 : (int)(n / 2);
+}
+
 void handleI2cScan(const char* params) {
   String result = "";
   int count = 0;
@@ -1680,16 +1700,11 @@ void handleI2cRead(const char* params) {
 
   if (addr < 1 || addr > 126) { sendError("Invalid I2C address"); return; }
   if (len < 1 || len > 128) { sendError("Invalid length"); return; }
+  if (!i2cAnswers(addr)) { sendError("I2C device did not answer"); return; }
 
-  Wire.requestFrom(addr, len);
-  String result = "";
-  while (Wire.available()) {
-    uint8_t b = Wire.read();
-    char hex[3];
-    snprintf(hex, sizeof(hex), "%02X", b);
-    result += hex;
-  }
-  sendOK(result.c_str());
+  char hex[2 * 128 + 1];
+  if (i2cReadHex(addr, len, hex, sizeof(hex)) == 0) { sendError("I2C device sent nothing"); return; }
+  sendOK(hex);
 }
 
 void handleI2cWriteReg(const char* params) {
@@ -1722,19 +1737,14 @@ void handleI2cReadReg(const char* params) {
   if (addr < 1 || addr > 126) { sendError("Invalid I2C address"); return; }
   if (len < 1 || len > 128) { sendError("Invalid length"); return; }
 
+  if (!i2cAnswers(addr)) { sendError("I2C device did not answer"); return; }
   Wire.beginTransmission(addr);
   Wire.write((uint8_t)reg);
-  Wire.endTransmission(false);
+  if (Wire.endTransmission(false) != 0) { sendError("I2C device did not answer"); return; }
 
-  Wire.requestFrom(addr, len);
-  String result = "";
-  while (Wire.available()) {
-    uint8_t b = Wire.read();
-    char hex[3];
-    snprintf(hex, sizeof(hex), "%02X", b);
-    result += hex;
-  }
-  sendOK(result.c_str());
+  char hex[2 * 128 + 1];
+  if (i2cReadHex(addr, len, hex, sizeof(hex)) == 0) { sendError("I2C device sent nothing"); return; }
+  sendOK(hex);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1882,6 +1892,7 @@ void handleWifiStatus() {
 }
 
 // WSCAN — Scan available WiFi networks
+#define WIFI_SCAN_MS_PER_CHANNEL 120
 void handleWifiScan() {
   // A join attempt in progress (for example to a saved network that is not around) makes the scan fail and return nothing:
   // stop it for the scan and resume it afterwards.
@@ -1891,7 +1902,9 @@ void handleWifiScan() {
     delay(150);
   }
   WiFi.mode(WIFI_STA);
-  int n = WiFi.scanNetworks();
+  // 120 ms per channel instead of the default 300: a beacon comes every ~100 ms, and 13 channels at 300 ms (more while the board is connected) kept
+  // the board away from its commands for 7 to 9 seconds.
+  int n = WiFi.scanNetworks(false, false, false, WIFI_SCAN_MS_PER_CHANNEL);
   if (n < 0) {
     sendError("Wi-Fi scan failed");
     n = 0;
@@ -2684,6 +2697,8 @@ void handleOledInit(const char* params) {
   if (h <= 0) h = 64;
   if (addr <= 0) addr = 0x3C;
 
+  if (!i2cAnswers(addr)) { sendError("OLED not found on I2C"); return; }
+
   if (oledDisplay) delete oledDisplay;
   oledDisplay = new Adafruit_SSD1306(w, h, &Wire, -1);
   oledWidth = w;
@@ -2820,6 +2835,8 @@ void handleLcdInit(const char* params) {
   if (addr <= 0) addr = 0x27;
   if (cols <= 0) cols = 16;
   if (rows <= 0) rows = 2;
+
+  if (!i2cAnswers(addr)) { sendError("LCD not found on I2C"); return; }
 
   if (lcdDisplay) delete lcdDisplay;
   lcdDisplay = new LiquidCrystal_I2C(addr, cols, rows);

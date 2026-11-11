@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Firmware 0.9.4: commands that read from an I2C chip that is not there no longer wait and no longer answer OK.** `IR` and `IRR` to an address with nothing behind it waited about a second (and the core printed an error line on the serial port) and then answered an empty `OK`; `LI` and `OI` started a display that did not exist and answered `OK` too (the `module.lcd` and `module.oled` blocks "worked" with no screen connected). They now ask first whether something answers at the address (a few milliseconds) and answer `ERR:I2C device did not answer`, `ERR:LCD not found on I2C` or `ERR:OLED not found on I2C`. The hardware matrix on an ESP32 DevKit with nothing wired went from 33 blocks that "ran" and 32 that stopped to 31 and 34 (the two display blocks moved), in 5 seconds. The prebuilt images are still 0.9.3 until the next release; `tests/firmware_robustness.ps1` has 5 more checks (80).
+- **Firmware 0.9.4: `WSCAN` waits 120 ms per channel instead of 300** (a beacon comes about every 100 ms). With the board connected to a network it took 6.7 to 8.4 s; it now takes 1.6 to 7.8 s (median about 4 s). The time still varies while the board is associated, and it still holds the board for as long as it lasts.
+
 ## [0.8.1] - 2026-11-11
 
 A maintenance release of the firmware side: reading a full sample buffer no longer loses the samples, the interrupt counters no longer lose a pulse, and the code that reads the lines of the protocol is fuzzed with sanitizers in CI. The firmware is 0.9.3: **flash it again** (Upload Firmware in the editor). The libraries and the editor have no change of behaviour.
