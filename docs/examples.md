@@ -33,7 +33,7 @@ leaving it running day and night, Home Assistant and growing it to several beds.
 
 ## Using the SDK outside Visual Studio
 
-The same board works from any .NET 8 program. Each of these is a small, compiled sample in [`samples/`](../samples):
+The same board works from any .NET program (.NET 8 or .NET 10). Each of these is a small, compiled sample in [`samples/`](../samples):
 
 | Sample | What it shows |
 |---|---|

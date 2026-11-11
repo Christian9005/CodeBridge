@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **.NET 10** (.NET 8 stops being supported on 10 November 2026). The NuGet packages now target `net8.0` **and** `net10.0` (`net8.0-windows` and `net10.0-windows` for `CodeBridge.Designer.WinForms`), so people still on .NET 8 can keep updating; each package picks the build for the runtime of the app. When .NET 8 stops mattering, drop `net8.0` from the `TargetFrameworks` line of each project. `FlowHost` (the helper of the Visual Studio extension) and the `codebridge-mcp` tool stay on `net8.0` with `RollForward=LatestMajor`: they run with .NET 8 or newer, checked on a machine that has only the .NET 10 runtime. The web editor, the Unity link, the samples, the tests and the tools are `net10.0`, the WinForms project template generates `net10.0-windows`, and the tests of the core run on both runtimes. The CI and the release workflow install both SDKs. SourceLink goes to 10.0.403, which also removes the `Microsoft.Build.Tasks.Git` vulnerability warning that .NET 8 could not fix. The documentation asks for the .NET 10 SDK.
+
 ## [0.8.0] - 2026-11-09
 
 The flow editor gets a live link to Unity, a headless mode that keeps a flow running by itself, a browser editor and 25 more blocks for .NET IoT chips (all proofs of concept), and the whole thing is checked much harder: golden files of every earlier release, damaged and hostile files, every block on every board, and a real ESP32 on the bench. That checking found bugs that are fixed here, including a way for text in a `.cbflow` to become code in the exported C#, and commands that could reset the board. The firmware is 0.9.2: **flash it again** (Upload Firmware in the editor) to get the fixes.

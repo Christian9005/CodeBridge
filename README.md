@@ -38,11 +38,11 @@ and shows it all on a display. It runs on the simulator before you buy a single 
 
 | Package | Purpose | Target |
 |---|---|---|
-| `CodeBridge.Abstractions` | Abstractions (`IBoard`, `ITransport`), wire protocol, exceptions. The assembly and namespace are `CodeBridge.Core`; the NuGet id `CodeBridge.Core` belongs to another project | net8.0 |
-| `CodeBridge.Transport` | Serial and TCP/Wi-Fi transports, USB board discovery | net8.0 (Windows for USB discovery) |
-| `CodeBridge.ESP32` | ESP32 board + sensor/actuator drivers | net8.0 |
-| `CodeBridge.Flow` | Flow document model, validation, runtime | net8.0 |
-| `CodeBridge.Designer.WinForms` | WinForms Toolbox controls, designer, firmware flashing (ships the firmware) | net8.0-windows |
+| `CodeBridge.Abstractions` | Abstractions (`IBoard`, `ITransport`), wire protocol, exceptions. The assembly and namespace are `CodeBridge.Core`; the NuGet id `CodeBridge.Core` belongs to another project | net8.0, net10.0 |
+| `CodeBridge.Transport` | Serial and TCP/Wi-Fi transports, USB board discovery | net8.0, net10.0 (Windows for USB discovery) |
+| `CodeBridge.ESP32` | ESP32 board + sensor/actuator drivers | net8.0, net10.0 |
+| `CodeBridge.Flow` | Flow document model, validation, runtime | net8.0, net10.0 |
+| `CodeBridge.Designer.WinForms` | WinForms Toolbox controls, designer, firmware flashing (ships the firmware) | net8.0-windows, net10.0-windows |
 
 ```powershell
 dotnet add package CodeBridge.ESP32
