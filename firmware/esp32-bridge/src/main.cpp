@@ -224,6 +224,7 @@ int mqttMsgTail = 0;
 // Buffered acquisition channels for dashboard-friendly sample streaming.
 #define MAX_SAMPLE_CHANNELS 4
 #define MAX_SAMPLE_BUFFER_CAPACITY 4096
+#define SAMPLE_READ_REPLY_BYTES 4096   // the most one SRD answers with
 struct SampleValue {
   uint32_t sequence;
   uint32_t elapsedMicros;
@@ -255,9 +256,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   if (next != mqttMsgTail) {
     mqttMsgQueue[mqttMsgHead].topic = String(topic);
     mqttMsgQueue[mqttMsgHead].payload = "";
-    for (unsigned int i = 0; i < length; i++) {
-      mqttMsgQueue[mqttMsgHead].payload += (char)payload[i];
-    }
+    mqttMsgQueue[mqttMsgHead].payload.concat((const char*)payload, length);
     mqttMsgHead = next;
   }
 }
@@ -1762,6 +1761,8 @@ void handleInfo() {
   doc["chip"] = ESP.getChipModel();
   doc["freq"] = ESP.getCpuFreqMHz();
   doc["heap"] = ESP.getFreeHeap();
+  doc["minheap"] = ESP.getMinFreeHeap();     // the lowest the free heap has been since boot
+  doc["maxblock"] = ESP.getMaxAllocHeap();   // the largest block that can be allocated now: a heap that is free but in pieces shows here
   doc["flash"] = ESP.getFlashChipSize();
   doc["sdk"] = ESP.getSdkVersion();
   doc["auth"] = strlen(apiToken) > 0;
@@ -3170,23 +3171,26 @@ void handleSampleRead(const char* params) {
     return;
   }
 
-  String result = "";
+  // Up to 4096 frames of 33 characters would be one 130 KB String: more than the largest free block, and a String that cannot grow stops silently after the
+  // frames had already been taken out of the channel. A read answers with what fits here (a few hundred frames); the client asks again for the rest.
+  static char out[SAMPLE_READ_REPLY_BYTES];
+  size_t used = 0;
   int emitted = 0;
   while (channel.count > 0 && emitted < maxFrames) {
     SampleValue& sample = channel.buffer[channel.tail];
-    if (emitted > 0) result += ";";
-    result += String(sample.sequence);
-    result += ",";
-    result += String(sample.elapsedMicros);
-    result += ",";
-    result += String(sample.value);
+    char frame[40];
+    int n = snprintf(frame, sizeof(frame), "%s%lu,%lu,%d", emitted > 0 ? ";" : "", (unsigned long)sample.sequence, (unsigned long)sample.elapsedMicros, sample.value);
+    if (n < 0 || used + (size_t)n + 1 > sizeof(out)) break;
+    memcpy(out + used, frame, (size_t)n);
+    used += (size_t)n;
 
     channel.tail = (channel.tail + 1) % channel.capacity;
     channel.count--;
     emitted++;
   }
+  out[used] = '\0';
 
-  sendOK(result.c_str());
+  sendOK(out);
 }
 
 void handleSampleStop(const char* params) {
@@ -3610,35 +3614,37 @@ void handleMqttDisconnect() {
 // ══════════════════════════════════════════════════════════════
 //  RESPONSE ROUTING (Serial or TCP)
 // ══════════════════════════════════════════════════════════════
-void sendResponse(const char* response) {
+// One line of answer in two pieces (a label and the text after it), written where the command came from without joining them first.
+static void sendResponseParts(const char* label, const char* text) {
   if (activeResponseTarget == -2) {            // relayed over ESP-NOW: keep the answer for the reply frame
     if (meshReply.length()) meshReply += "\n";
-    meshReply += response;
+    meshReply += label;
+    meshReply += text;
     return;
   }
   if (activeResponseTarget < 0) {
-    Serial.println(response);
+    Serial.print(label);
+    Serial.println(text);
   } else {
     int idx = activeResponseTarget;
     if (idx < MAX_TCP_CLIENTS && tcpClients[idx] && tcpClients[idx].connected()) {
-      tcpClients[idx].println(response);
+      tcpClients[idx].print(label);
+      tcpClients[idx].println(text);
     }
   }
 }
 
+void sendResponse(const char* response) {
+  sendResponseParts("", response);
+}
+
 void sendOK(const char* data) {
-  String response;
-  if (strlen(data) > 0) {
-    response = "OK:" + String(data);
-  } else {
-    response = "OK";
-  }
-  sendResponse(response.c_str());
+  if (data && data[0]) sendResponseParts("OK:", data);
+  else sendResponseParts("OK", "");
 }
 
 void sendError(const char* msg) {
-  String response = "ERR:" + String(msg);
-  sendResponse(response.c_str());
+  sendResponseParts("ERR:", msg ? msg : "");
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3662,14 +3668,10 @@ int getNextParam(const char* &ptr) {
 
 String getNextParamStr(const char* &ptr) {
   const char* next = strchr(ptr, ':');
+  unsigned int length = next ? (unsigned int)(next - ptr) : (unsigned int)strlen(ptr);
   String result;
-  if (next) {
-    result = String(ptr).substring(0, next - ptr);
-    ptr = next + 1;
-  } else {
-    result = String(ptr);
-    ptr = ptr + strlen(ptr);
-  }
+  result.concat(ptr, length);
+  ptr += next ? length + 1 : length;
   return result;
 }
 
