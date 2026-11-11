@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`tests/serve_soak.ps1`**: runs `FlowHost serve` for as long as you say and measures it (memory, handles, threads, CPU, log size, passes, disconnections), then checks that nothing grows and that Ctrl+C stops it. First results are in [headless.md](docs/headless.md): 30 minutes on the virtual board (28,981 passes) and on an ESP32 DevKit (1,741 passes, and 8,221 more at ten times the rate), none failed, memory flat, Ctrl+C in under two seconds.
+
 ## [0.8.0] - 2026-11-09
 
 The flow editor gets a live link to Unity, a headless mode that keeps a flow running by itself, a browser editor and 25 more blocks for .NET IoT chips (all proofs of concept), and the whole thing is checked much harder: golden files of every earlier release, damaged and hostile files, every block on every board, and a real ESP32 on the bench. That checking found bugs that are fixed here, including a way for text in a `.cbflow` to become code in the exported C#, and commands that could reset the board. The firmware is 0.9.2: **flash it again** (Upload Firmware in the editor) to get the fixes.
