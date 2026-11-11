@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-- **.NET 10** (.NET 8 stops being supported on 10 November 2026). The NuGet packages now target `net8.0` **and** `net10.0` (`net8.0-windows` and `net10.0-windows` for `CodeBridge.Designer.WinForms`), so people still on .NET 8 can keep updating; each package picks the build for the runtime of the app. When .NET 8 stops mattering, drop `net8.0` from the `TargetFrameworks` line of each project. `FlowHost` (the helper of the Visual Studio extension) and the `codebridge-mcp` tool stay on `net8.0` with `RollForward=LatestMajor`: they run with .NET 8 or newer, checked on a machine that has only the .NET 10 runtime. The web editor, the Unity link, the samples, the tests and the tools are `net10.0`, the WinForms project template generates `net10.0-windows`, and the tests of the core run on both runtimes. The CI and the release workflow install both SDKs. SourceLink goes to 10.0.403, which also removes the `Microsoft.Build.Tasks.Git` vulnerability warning that .NET 8 could not fix. The documentation asks for the .NET 10 SDK.
+### Added
+- **`tests/serve_soak.ps1`**: runs `FlowHost serve` for as long as you say and measures it (memory, handles, threads, CPU, log size, passes, disconnections), then checks that nothing grows and that Ctrl+C stops it. First results are in [headless.md](docs/headless.md): 30 minutes on the virtual board (28,981 passes) and on an ESP32 DevKit (1,741 passes, and 8,221 more at ten times the rate), none failed, memory flat, Ctrl+C in under two seconds.
 
 ## [0.8.0] - 2026-11-09
 
