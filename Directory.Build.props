@@ -2,6 +2,8 @@
   <PropertyGroup>
     <!-- Single source of truth for every package, the VSIX and the toolbox manifest. -->
     <Version>0.8.0</Version>
+    <!-- net8.0 is kept on purpose (the libraries, FlowHost and the MCP tool) so that people still on .NET 8 can update; drop it with its line in each project when it stops mattering. -->
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <Authors>Christian Alexander Albarracin Adriano</Authors>
     <Company>CodeBridge</Company>
     <Copyright>Copyright (c) 2026 Christian Alexander Albarracin Adriano</Copyright>
@@ -30,6 +32,6 @@
   </ItemGroup>
 
   <ItemGroup Condition="$(MSBuildProjectDirectory.StartsWith('$(MSBuildThisFileDirectory)src')) And '$(MSBuildProjectName)' != 'CodeBridge.VisualStudio'">
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.403" PrivateAssets="all" />
   </ItemGroup>
 </Project>

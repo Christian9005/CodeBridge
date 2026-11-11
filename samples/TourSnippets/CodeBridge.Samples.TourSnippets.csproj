@@ -2,7 +2,7 @@
 
   <!-- The C# equivalents of the five example flows. They are compiled in CI and shown in the Visual Studio "CodeBridge Tour". -->
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>

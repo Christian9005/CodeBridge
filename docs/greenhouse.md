@@ -43,7 +43,7 @@ Every pass reads both sensors, decides, and switches the relays. With **Loop** (
 
 **In Visual Studio:** open `samples/SmartGreenhouse/greenhouse.cbflow`, choose **Simulator** as the port, tick **Loop** and press **Run**. Each block shows its values as it runs; the virtual board answers the BME280 and the LCD, and the soil probe follows a slow wave, so you see the pump relay switch on and off.
 
-**Without Visual Studio** (Windows, Linux or macOS, .NET 8):
+**Without Visual Studio** (Windows, Linux or macOS, .NET 10):
 
 ```bash
 dotnet run --project src/CodeBridge.WebEditor -- --flow samples/SmartGreenhouse/greenhouse.cbflow --port simulator

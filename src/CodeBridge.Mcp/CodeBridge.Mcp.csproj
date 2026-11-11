@@ -9,6 +9,8 @@
     <AssemblyName>codebridge-mcp</AssemblyName>
     <RootNamespace>CodeBridge.Mcp</RootNamespace>
     <PackAsTool>true</PackAsTool>
+    <!-- a tool built for .NET 8 also runs where only .NET 10 is installed -->
+    <RollForward>LatestMajor</RollForward>
     <ToolCommandName>codebridge-mcp</ToolCommandName>
     <Description>MCP server for CodeBridge: lets an AI assistant learn a board (pins, capabilities, rules), design and validate flows, and test them on the built-in simulator before touching hardware.</Description>
     <PackageTags>$(PackageTags);mcp;model-context-protocol;ai;agents</PackageTags>
