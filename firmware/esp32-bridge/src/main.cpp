@@ -40,7 +40,7 @@
 #include <Update.h>
 #include <PubSubClient.h>
 
-#define FIRMWARE_VERSION "0.9.2"
+#define FIRMWARE_VERSION "0.9.3"
 #define MAX_CMD_LENGTH 512
 #define SERIAL_BAUD 115200
 #define TCP_PORT 8080
@@ -101,10 +101,10 @@ int owPin = -1;
 DallasTemperature* dallasSensors = nullptr;
 
 // ── Servo ───────────────────────────────────────────────────
-#define MAX_SERVOS 8
-Servo servos[MAX_SERVOS];
-int servoPins[MAX_SERVOS];
-bool servoActive[MAX_SERVOS];
+#define BRIDGE_MAX_SERVOS 8
+Servo servos[BRIDGE_MAX_SERVOS];
+int servoPins[BRIDGE_MAX_SERVOS];
+bool servoActive[BRIDGE_MAX_SERVOS];
 int servoCount = 0;
 
 // ── NeoPixel ────────────────────────────────────────────────
@@ -176,14 +176,26 @@ struct InterruptEvent {
 InterruptEvent intPins[MAX_INTERRUPT_PINS];
 int intPinCount = 0;
 
-void IRAM_ATTR isrHandler0() { intPins[0].count++; intPins[0].lastTrigger = millis(); intPins[0].triggered = true; }
-void IRAM_ATTR isrHandler1() { intPins[1].count++; intPins[1].lastTrigger = millis(); intPins[1].triggered = true; }
-void IRAM_ATTR isrHandler2() { intPins[2].count++; intPins[2].lastTrigger = millis(); intPins[2].triggered = true; }
-void IRAM_ATTR isrHandler3() { intPins[3].count++; intPins[3].lastTrigger = millis(); intPins[3].triggered = true; }
-void IRAM_ATTR isrHandler4() { intPins[4].count++; intPins[4].lastTrigger = millis(); intPins[4].triggered = true; }
-void IRAM_ATTR isrHandler5() { intPins[5].count++; intPins[5].lastTrigger = millis(); intPins[5].triggered = true; }
-void IRAM_ATTR isrHandler6() { intPins[6].count++; intPins[6].lastTrigger = millis(); intPins[6].triggered = true; }
-void IRAM_ATTR isrHandler7() { intPins[7].count++; intPins[7].lastTrigger = millis(); intPins[7].triggered = true; }
+// The handlers run in interrupt context while the main loop reads and clears the same fields: without a lock a pulse that arrives between "read the count" and
+// "set it to zero" is lost, and so is the "triggered" flag of a pulse that arrives while the flag is being cleared. Both sides hold this lock for a few instructions.
+static portMUX_TYPE intMux = portMUX_INITIALIZER_UNLOCKED;
+
+static void IRAM_ATTR isrRecord(int i) {
+  portENTER_CRITICAL_ISR(&intMux);
+  intPins[i].count++;
+  intPins[i].lastTrigger = millis();
+  intPins[i].triggered = true;
+  portEXIT_CRITICAL_ISR(&intMux);
+}
+
+void IRAM_ATTR isrHandler0() { isrRecord(0); }
+void IRAM_ATTR isrHandler1() { isrRecord(1); }
+void IRAM_ATTR isrHandler2() { isrRecord(2); }
+void IRAM_ATTR isrHandler3() { isrRecord(3); }
+void IRAM_ATTR isrHandler4() { isrRecord(4); }
+void IRAM_ATTR isrHandler5() { isrRecord(5); }
+void IRAM_ATTR isrHandler6() { isrRecord(6); }
+void IRAM_ATTR isrHandler7() { isrRecord(7); }
 
 typedef void (*IsrFunc)();
 IsrFunc isrHandlers[MAX_INTERRUPT_PINS] = {
@@ -402,6 +414,7 @@ int parseSampleChannelId(const String& channelId);
 void sendOK(const char* data = "");
 void sendError(const char* msg);
 void sendResponse(const char* response);
+static int parseIntField(const char* text);
 int getNextParam(const char* &ptr);
 String getNextParamStr(const char* &ptr);
 int findOrCreatePwmChannel(int pin);
@@ -529,7 +542,7 @@ void setup() {
   for (int i = 0; i < MAX_PWM_CHANNELS; i++) {
     pwmChannels[i] = {-1, i, false};
   }
-  for (int i = 0; i < MAX_SERVOS; i++) {
+  for (int i = 0; i < BRIDGE_MAX_SERVOS; i++) {
     servoPins[i] = -1;
     servoActive[i] = false;
   }
@@ -1271,7 +1284,7 @@ static bool meshHandleCommand(const char* cmd, int cmdLen, const char* params) {
   if (is("MESH")) {
     char line[140];
     snprintf(line, sizeof(line), "%s,%s,%u,%d,%d,%s,%u,%u,%u,%u", meshEnabled ? "on" : "off", meshMacString(meshSelfMac).c_str(),
-             meshRadioUp ? meshCurrentChannel() : 0, meshLocked || wifiConnected ? 1 : 0, meshHasKey ? 1 : 0, meshName,
+             meshRadioUp ? (unsigned)meshCurrentChannel() : 0u, meshLocked || wifiConnected ? 1 : 0, meshHasKey ? 1 : 0, meshName,
              (unsigned)meshRawRx, (unsigned)meshBadTags, (unsigned)meshTxDelivered, (unsigned)meshTxLost);
     sendOK(line);
     return true;
@@ -1307,7 +1320,7 @@ static bool meshHandleCommand(const char* cmd, int cmdLen, const char* params) {
   if (is("MESHCH")) {
     // MESHCH:<1-13> pins the radio channel of a board without Wi-Fi (it then never searches); MESHCH:0 goes back to searching.
     if (activeResponseTarget != -1) { sendError("MESHCH is only accepted over USB"); return true; }
-    int ch = atoi(params);
+    int ch = parseIntField(params);
     if (ch < 0 || ch > 13) { sendError("Channel must be 0-13"); return true; }
     meshFixedChannel = (uint8_t)ch;
     preferences.begin("codebridge", false);
@@ -2147,7 +2160,7 @@ void handleOwTemp(const char* params) {
 //  SERVO HANDLERS
 // ══════════════════════════════════════════════════════════════
 int findServo(int pin) {
-  for (int i = 0; i < MAX_SERVOS; i++) {
+  for (int i = 0; i < BRIDGE_MAX_SERVOS; i++) {
     if (servoActive[i] && servoPins[i] == pin) return i;
   }
   return -1;
@@ -2165,7 +2178,7 @@ void handleServoAttach(const char* params) {
 
   int idx = findServo(pin);
   if (idx < 0) {
-    for (int i = 0; i < MAX_SERVOS; i++) {
+    for (int i = 0; i < BRIDGE_MAX_SERVOS; i++) {
       if (!servoActive[i]) { idx = i; break; }   // a slot freed by a detach is used again
     }
     if (idx < 0) { sendError("Max servos reached"); return; }
@@ -3278,15 +3291,17 @@ void handleInterruptDetach(const char* params) {
   for (int i = 0; i < intPinCount; i++) {
     if (intPins[i].pin == pin) {
       detachInterrupt(digitalPinToInterrupt(pin));
-      // Shift remaining entries
-      for (int j = i; j < intPinCount - 1; j++) {
-        intPins[j] = intPins[j + 1];
-        // Re-attach with correct handler index
-        detachInterrupt(digitalPinToInterrupt(intPins[j].pin));
+      // Every later entry moves one slot down, and a handler is tied to its slot: silence them, move the table while nothing can write to it, attach them again.
+      for (int j = i + 1; j < intPinCount; j++) detachInterrupt(digitalPinToInterrupt(intPins[j].pin));
+      portENTER_CRITICAL(&intMux);
+      for (int j = i; j < intPinCount - 1; j++) intPins[j] = intPins[j + 1];
+      intPins[intPinCount - 1] = {-1, 0, 0, 0, false};
+      portEXIT_CRITICAL(&intMux);
+      intPinCount--;
+      for (int j = i; j < intPinCount; j++) {
         int mode = (intPins[j].edge == 1) ? RISING : (intPins[j].edge == 2) ? FALLING : CHANGE;
         attachInterrupt(digitalPinToInterrupt(intPins[j].pin), isrHandlers[j], mode);
       }
-      intPinCount--;
       sendOK();
       return;
     }
@@ -3299,11 +3314,19 @@ void handleInterruptPoll() {
   String result = "";
   bool first = true;
   for (int i = 0; i < intPinCount; i++) {
-    if (intPins[i].triggered) {
-      if (!first) result += ",";
-      result += String(intPins[i].pin) + ":" + String(intPins[i].count) + ":" + String(intPins[i].edge);
+    bool fired;
+    uint32_t pulses;
+    portENTER_CRITICAL(&intMux);
+    fired = intPins[i].triggered;
+    pulses = intPins[i].count;
+    if (fired) {
       intPins[i].triggered = false;
       intPins[i].count = 0;
+    }
+    portEXIT_CRITICAL(&intMux);
+    if (fired) {
+      if (!first) result += ",";
+      result += String(intPins[i].pin) + ":" + String((unsigned long)pulses) + ":" + String(intPins[i].edge);
       first = false;
     }
   }
@@ -3379,6 +3402,8 @@ void handleDeepSleepPin(const char* params) {
     return;
   }
 #else
+  (void)level;
+  (void)mask;
   sendError("Wake-up by pin is not supported on this chip");
   return;
 #endif
@@ -3619,8 +3644,16 @@ void sendError(const char* msg) {
 // ══════════════════════════════════════════════════════════════
 //  UTILITIES
 // ══════════════════════════════════════════════════════════════
+// A field that is empty or not a number is 0 (numericFields rejects those where it matters). A number out of the range of int saturates; atoi does not define that.
+static int parseIntField(const char* text) {
+  long v = strtol(text, nullptr, 10);
+  if (v > INT32_MAX) return INT32_MAX;
+  if (v < INT32_MIN) return INT32_MIN;
+  return (int)v;
+}
+
 int getNextParam(const char* &ptr) {
-  int value = atoi(ptr);
+  int value = parseIntField(ptr);
   const char* next = strchr(ptr, ':');
   if (next) ptr = next + 1;
   else ptr = ptr + strlen(ptr);
