@@ -66,7 +66,13 @@ function FreeHeap {
     $serial.Write("INFO`n")
     for ($i = 0; $i -lt 6; $i++) {
         try { $line = $serial.ReadLine().Trim() } catch [System.TimeoutException] { return $null }
-        if ($line -match '"heap":(\d+)') { return [int]$Matches[1] }
+        if ($line -match '"heap":(\d+)') {
+            $heap = [int]$Matches[1]
+            # firmware 0.9.3 and later also report the lowest free heap since boot and the largest block that can be allocated (a heap in pieces shows there)
+            if ($line -match '"minheap":(\d+)') { $script:minHeap = [int]$Matches[1] }
+            if ($line -match '"maxblock":(\d+)') { if ($null -eq $script:smallestBlock -or [int]$Matches[1] -lt $script:smallestBlock) { $script:smallestBlock = [int]$Matches[1] }; $script:lastBlock = [int]$Matches[1] }
+            return $heap
+        }
     }
     return $null
 }
@@ -165,7 +171,8 @@ $script:latency.Values | Where-Object { $_.Slow -gt 0 -or $_.TimedOut -gt 0 } | 
 "Slowest of the others: " + (($script:latency.Values | Where-Object { $_.Slow -eq 0 -and $_.TimedOut -eq 0 } | Sort-Object MaxMs -Descending | Select-Object -First 4 | ForEach-Object { "$($_.Name) $($_.MaxMs) ms" }) -join ', ')
 ''
 "Free heap: start $heap0, after warm-up $baseline, final $final, lowest $lowest, highest $highest"
-"Trend after warm-up: $slopePer100 bytes per 100 rounds; net change $(-$lost) bytes over $($heaps.Count - $WarmupRounds) rounds ($(($heaps.Count - $WarmupRounds) * $round.Count) commands)"
+if ($null -ne $script:minHeap) { "Lowest free heap since boot (reported by the board): $($script:minHeap) bytes; largest free block: last $($script:lastBlock), smallest seen $($script:smallestBlock) bytes" }
+"Trend after warm-up:$slopePer100 bytes per 100 rounds; net change $(-$lost) bytes over $($heaps.Count - $WarmupRounds) rounds ($(($heaps.Count - $WarmupRounds) * $round.Count) commands)"
 if ($problems.Count -gt 0) {
     $problems | ForEach-Object { Write-Host "  PROBLEM: $_" -ForegroundColor Red }
     exit 1
